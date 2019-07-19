@@ -6,6 +6,7 @@
 C_SRCS += \
 ../src/synergy_gen/common_data.c \
 ../src/synergy_gen/hal_data.c \
+../src/synergy_gen/lcd_thread.c \
 ../src/synergy_gen/main.c \
 ../src/synergy_gen/pin_data.c \
 ../src/synergy_gen/system_thread.c 
@@ -13,6 +14,7 @@ C_SRCS += \
 OBJS += \
 ./src/synergy_gen/common_data.o \
 ./src/synergy_gen/hal_data.o \
+./src/synergy_gen/lcd_thread.o \
 ./src/synergy_gen/main.o \
 ./src/synergy_gen/pin_data.o \
 ./src/synergy_gen/system_thread.o 
@@ -20,6 +22,7 @@ OBJS += \
 C_DEPS += \
 ./src/synergy_gen/common_data.d \
 ./src/synergy_gen/hal_data.d \
+./src/synergy_gen/lcd_thread.d \
 ./src/synergy_gen/main.d \
 ./src/synergy_gen/pin_data.d \
 ./src/synergy_gen/system_thread.d 
@@ -29,7 +32,7 @@ C_DEPS += \
 src/synergy_gen/%.o: ../src/synergy_gen/%.c
 	@echo 'Building file: $<'
 	@echo 'Invoking: GNU ARM Cross C Compiler'
-	C:\Renesas\e2_studio740\Utilities\\/isdebuild arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O2 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wunused -Wuninitialized -Wall -Wextra -Wmissing-declarations -Wconversion -Wpointer-arith -Wshadow -Wlogical-op -Waggregate-return -Wfloat-equal  -g3 -D_RENESAS_SYNERGY_ -I"C:\repos\Proyecto_Integrador\synergy_cfg\ssp_cfg\bsp" -I"C:\repos\Proyecto_Integrador\synergy_cfg\ssp_cfg\driver" -I"C:\repos\Proyecto_Integrador\synergy\ssp\inc" -I"C:\repos\Proyecto_Integrador\synergy\ssp\inc\bsp" -I"C:\repos\Proyecto_Integrador\synergy\ssp\inc\bsp\cmsis\Include" -I"C:\repos\Proyecto_Integrador\synergy\ssp\inc\driver\api" -I"C:\repos\Proyecto_Integrador\synergy\ssp\inc\driver\instances" -I"C:\repos\Proyecto_Integrador\src" -I"C:\repos\Proyecto_Integrador\src\synergy_gen" -I"C:\repos\Proyecto_Integrador\synergy_cfg\ssp_cfg\framework" -I"C:\repos\Proyecto_Integrador\synergy_cfg\ssp_cfg\framework\el" -I"C:\repos\Proyecto_Integrador\synergy\ssp\inc\framework\el" -I"C:\repos\Proyecto_Integrador\synergy\ssp\src\framework\el\tx" -std=c99 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -c -o "$@" -x c "$<"
+	C:\Renesas\e2_studio\Utilities\\/isdebuild arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O2 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wunused -Wuninitialized -Wall -Wextra -Wmissing-declarations -Wconversion -Wpointer-arith -Wshadow -Wlogical-op -Waggregate-return -Wfloat-equal  -g3 -D_RENESAS_SYNERGY_ -I"C:\REPOS\Proyecto_Integrador\synergy_cfg\ssp_cfg\bsp" -I"C:\REPOS\Proyecto_Integrador\synergy_cfg\ssp_cfg\driver" -I"C:\REPOS\Proyecto_Integrador\synergy\ssp\inc" -I"C:\REPOS\Proyecto_Integrador\synergy\ssp\inc\bsp" -I"C:\REPOS\Proyecto_Integrador\synergy\ssp\inc\bsp\cmsis\Include" -I"C:\REPOS\Proyecto_Integrador\synergy\ssp\inc\driver\api" -I"C:\REPOS\Proyecto_Integrador\synergy\ssp\inc\driver\instances" -I"C:\REPOS\Proyecto_Integrador\src" -I"C:\REPOS\Proyecto_Integrador\src\synergy_gen" -I"C:\REPOS\Proyecto_Integrador\synergy_cfg\ssp_cfg\framework" -I"C:\REPOS\Proyecto_Integrador\synergy\ssp\inc\framework\api" -I"C:\REPOS\Proyecto_Integrador\synergy\ssp\inc\framework\instances" -I"C:\REPOS\Proyecto_Integrador\synergy\ssp\inc\framework\tes" -I"C:\REPOS\Proyecto_Integrador\synergy_cfg\ssp_cfg\framework\el" -I"C:\REPOS\Proyecto_Integrador\synergy\ssp\inc\framework\el" -I"C:\REPOS\Proyecto_Integrador\synergy\ssp\src\framework\el\tx" -std=c99 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -c -o "$@" -x c "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

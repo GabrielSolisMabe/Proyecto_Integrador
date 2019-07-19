@@ -174,8 +174,7 @@ static volatile uint32_t * const gp_mstp[] =
     &(R_MSTP->MSTPCRD),
 };
 
-static ssp_err_t r_bsp_module_start_stop (ssp_feature_t const * const p_feature, bool stop, bool force);
-static uint32_t r_bsp_get_mstp_mask (ssp_feature_t const * const p_feature);
+static ssp_err_t r_bsp_module_start_stop (ssp_feature_t const * const p_feature, bool stop);
 
 /*******************************************************************************************************************//**
  * @brief Stop module (enter module stop).  Stopping a module disables clocks to the peripheral to save power.
@@ -192,20 +191,7 @@ static uint32_t r_bsp_get_mstp_mask (ssp_feature_t const * const p_feature);
  **********************************************************************************************************************/
 ssp_err_t R_BSP_ModuleStop(ssp_feature_t const * const p_feature)
 {
-	return r_bsp_module_start_stop(p_feature, true, false);
-}
-
-/**********************************************************************************************************************
- * @brief Stop module (enter module stop) even if the module is used for multiple channels.
- *
- * @param[in] p_feature Pointer to definition of the feature, defined by ssp_feature_t.
- *
- * @retval SSP_SUCCESS          Module is stopped
- * @retval SSP_ERR_ASSERTION    p_feature::id is invalid
- **********************************************************************************************************************/
-ssp_err_t R_BSP_ModuleStopAlways(ssp_feature_t const * const p_feature)
-{
-    return r_bsp_module_start_stop(p_feature, true, true);
+	return r_bsp_module_start_stop(p_feature, true);
 }
 
 /*******************************************************************************************************************//**
@@ -220,75 +206,32 @@ ssp_err_t R_BSP_ModuleStopAlways(ssp_feature_t const * const p_feature)
  **********************************************************************************************************************/
 ssp_err_t R_BSP_ModuleStart(ssp_feature_t const * const p_feature)
 {
-	return r_bsp_module_start_stop(p_feature, false, false);
-}
-
-/***********************************************************************************************************************
- * @brief Get the module state.
- *
- * @param[in]  p_feature  Pointer to definition of the feature, defined by ssp_feature_t.
- * @param[out] p_stop     Pointer to a boolean that will contain the module stopped state
- *
- * @retval SSP_SUCCESS               Module is started
- * @retval SSP_ERR_ASSERTION         p_feature::id is invalid
- *                                   p_stop is invalid
- * @retval SSP_ERR_INVALID_ARGUMENT  Module has no module stop bit.
- **********************************************************************************************************************/
-ssp_err_t R_BSP_ModuleStateGet(ssp_feature_t const * const p_feature, bool * const p_stop)
-{
-    bsp_mstp_data_t data = {0};
-
-#if BSP_CFG_PARAM_CHECKING_ENABLE
-    SSP_ASSERT(p_feature->id < SSP_IP_MAX);
-    SSP_ASSERT(p_stop != NULL);
-#endif
-
-    /** The g_bsp_module_stop array must have entries for each ssp_ip_t enum value. */
-    /* LDRA will complain about "Statement with no side effect" w/o SSP_PARAMETER_NOT_USED */
-    SSP_PARAMETER_NOT_USED(BSP_COMPILE_TIME_ASSERT(SSP_IP_MAX == sizeof(g_bsp_module_stop)));
-
-    data.byte = g_bsp_module_stop[p_feature->id];
-    if (BSP_MSTP_DATA_INVALID == data.byte)
-    {
-        /* Module has no module stop bit, clocks are enabled by default. */
-        return SSP_ERR_INVALID_ARGUMENT;
-    }
-
-    uint32_t mask = r_bsp_get_mstp_mask(p_feature);
-
-    volatile uint32_t * p_mstp_base = gp_mstp[data.bit.reg];
-
-    /** Save the current module state */
-    *p_stop = ((*p_mstp_base & mask) > 0);
-
-    return SSP_SUCCESS;
+	return r_bsp_module_start_stop(p_feature, false);
 }
 
 /*******************************************************************************************************************//**
  * @brief Start module (cancel module stop) or stop module (enter module stop).
  *
  * @note Some module stop bits are shared between peripherals.  Entering module stop is not permitted for these
- * peripherals unless force is true.
+ * peripherals.
  *
  * @param[in] p_feature  Pointer to definition of the feature, defined by ssp_feature_t.
  * @param[in] stop       true to stop module, false to start module
- * @param[in] force      Set to true if the module should be stopped even if it is shared.
  *
  * @retval SSP_SUCCESS               Module is stopped or started based on stop parameter
  * @retval SSP_ERR_ASSERTION         p_feature::id is invalid
  * @retval SSP_ERR_INVALID_ARGUMENT  Module has no module stop bit, or module stop bit is shared and entering module
  *                                   stop is not supported because it could affect other modules.
  **********************************************************************************************************************/
-static ssp_err_t r_bsp_module_start_stop(ssp_feature_t const * const p_feature, bool stop, bool force)
+static ssp_err_t r_bsp_module_start_stop (ssp_feature_t const * const p_feature, bool stop)
 {
-    bsp_mstp_data_t data = {0};
+    bsp_mstp_data_t data = {0U};
 
 #if BSP_CFG_PARAM_CHECKING_ENABLE
     SSP_ASSERT(p_feature->id < SSP_IP_MAX);
 #endif
 
     /** The g_bsp_module_stop array must have entries for each ssp_ip_t enum value. */
-    /* LDRA will complain about "Statement with no side effect" w/o SSP_PARAMETER_NOT_USED */
     SSP_PARAMETER_NOT_USED(BSP_COMPILE_TIME_ASSERT(SSP_IP_MAX == sizeof(g_bsp_module_stop)));
 
     data.byte = g_bsp_module_stop[p_feature->id];
@@ -298,12 +241,39 @@ static ssp_err_t r_bsp_module_start_stop(ssp_feature_t const * const p_feature, 
         return SSP_ERR_INVALID_ARGUMENT;
     }
 
-    uint32_t mask = r_bsp_get_mstp_mask(p_feature);
+    uint32_t mask = (1U << (data.bit.bit - (p_feature->channel + p_feature->unit)));
+    if (data.bit.exception)
+    {
+        mask = (1U << (data.bit.bit));
+        switch (p_feature->id)
+        {
+            case SSP_IP_GPT:
+                if (p_feature->channel > HW_GPT_MSTPD5_MAX_CH)
+                {
+                    mask = (1U << (data.bit.bit + 1U));
+                }
 
-    volatile uint32_t * p_mstp_base = gp_mstp[data.bit.reg];
+                break;
+            case SSP_IP_USB:
+                if (1U == p_feature->unit)
+                {
+                    mask = (1U << (data.bit.bit + 1U));
+                }
+
+                break;
+            default:
+            {
+                /** Do nothing. */
+                break;
+            }
+        }
+    }
+
+    volatile uint32_t * p_mstp_base;
+    p_mstp_base = gp_mstp[data.bit.reg];
     if (stop)
     {
-        if (!data.bit.exception || force)
+        if (!data.bit.exception)
         {
             SSP_CRITICAL_SECTION_DEFINE;
             SSP_CRITICAL_SECTION_ENTER;
@@ -333,45 +303,6 @@ static ssp_err_t r_bsp_module_start_stop(ssp_feature_t const * const p_feature, 
     }
 
     return SSP_SUCCESS;
-}
-
-/*******************************************************************************************************************//**
- * @brief Get the correct MSTP mask for a peripheral
- *
- * @param[in] p_feature  Pointer to definition of the feature, defined by ssp_feature_t.
- *
- * @retval Mask for MSTP bit for peripheral
- **********************************************************************************************************************/
-static uint32_t r_bsp_get_mstp_mask(ssp_feature_t const * const p_feature)
-{
-    bsp_mstp_data_t data = {0};
-    data.byte = g_bsp_module_stop[p_feature->id];
-
-    uint32_t mask = (1U << (data.bit.bit - (p_feature->channel + p_feature->unit)));
-    if (data.bit.exception)
-    {
-        mask = (1U << (data.bit.bit));
-        switch (p_feature->id)
-        {
-            case SSP_IP_GPT:
-                if (p_feature->channel > HW_GPT_MSTPD5_MAX_CH)
-                {
-                    mask = (1U << (data.bit.bit + 1U));
-                }
-
-            break;
-            case SSP_IP_USB:
-                if (1U == p_feature->unit)
-                {
-                    mask = (1U << (data.bit.bit + 1U));
-                }
-
-            break;
-            default:
-            break;
-        }
-    }
-    return mask;
 }
 #endif /* if defined(BSP_MCU_GROUP_S7G2) */
 
