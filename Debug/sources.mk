@@ -33,6 +33,4 @@ synergy/ssp/src/driver/r_fmi \
 synergy/ssp/src/driver/r_gpt \
 synergy/ssp/src/driver/r_icu \
 synergy/ssp/src/driver/r_ioport \
-src/gui \
-src/lcd_setup \
 
