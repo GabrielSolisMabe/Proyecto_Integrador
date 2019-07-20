@@ -282,10 +282,10 @@ __STATIC_INLINE void HW_ADC_TemperatureSensorAddCfg(ADC_BASE_PTR p_regs, uint16_
 __STATIC_INLINE void HW_ADC_CalibrationRegRead(TSN_CALIB_BASE_PTR p_regs, uint32_t * p_calibration_data)
 {
     /** Read into memory to prevent compiler warning when performing "|" on volatile register data*/
-    uint32_t high = p_regs->TSCDRH;
-    uint32_t low = p_regs->TSCDRL;
-    /** Read the calibration data from ROM and shift to fit into result variable*/
-    *p_calibration_data = ((high << 8) | low);
+    uint32_t data = p_regs -> TSCDR;
+    /** Read the calibration data from ROM and mask the upper 20 bits as the lower 12 bits carry the data*/
+    *p_calibration_data = (data & 0x00000FFF);
+
 }
 __STATIC_INLINE void HW_ADC_GroupPrioritySet(ADC_BASE_PTR p_regs, hw_adc_group_priority_t value)
 {
@@ -341,7 +341,7 @@ __STATIC_INLINE void HW_ADC_Deselect_data_inversion(ADC_BASE_PTR const p_regs)
 __STATIC_INLINE void HW_ADC_ADICR_Set (ADC_BASE_PTR const p_regs, uint8_t value)
 {
 #if defined R_S16ADC_BASE
-    p_regs->ADICR_b.ADIC = value;
+    p_regs->ADICR_b.ADIC = (uint8_t) (value & 0x03);
 #else
     SSP_PARAMETER_NOT_USED(p_regs);
     SSP_PARAMETER_NOT_USED(value);

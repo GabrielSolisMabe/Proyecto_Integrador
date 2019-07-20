@@ -12,10 +12,10 @@ RM := rm -rf
 -include sources.mk
 -include synergy/ssp/src/driver/r_sci_spi/subdir.mk
 -include synergy/ssp/src/driver/r_ioport/subdir.mk
+-include synergy/ssp/src/driver/r_gpt/subdir.mk
 -include synergy/ssp/src/driver/r_fmi/subdir.mk
 -include synergy/ssp/src/driver/r_elc/subdir.mk
 -include synergy/ssp/src/driver/r_dtc/subdir.mk
--include synergy/ssp/src/driver/r_cgc/hw/subdir.mk
 -include synergy/ssp/src/driver/r_cgc/subdir.mk
 -include synergy/ssp/src/driver/r_adc/subdir.mk
 -include synergy/ssp/src/bsp/mcu/s7g2/subdir.mk
@@ -28,29 +28,14 @@ RM := rm -rf
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)
-ifneq ($(strip $(SRC_DEPS)),)
--include $(SRC_DEPS)
-endif
-ifneq ($(strip $(JMP_DEPS)),)
--include $(JMP_DEPS)
-endif
-ifneq ($(strip $(PP_DEPS)),)
--include $(PP_DEPS)
-endif
 ifneq ($(strip $(SX_DEPS)),)
 -include $(SX_DEPS)
-endif
-ifneq ($(strip $(FSY_DEPS)),)
--include $(FSY_DEPS)
 endif
 ifneq ($(strip $(ASM_DEPS)),)
 -include $(ASM_DEPS)
 endif
 ifneq ($(strip $(S_UPPER_DEPS)),)
 -include $(S_UPPER_DEPS)
-endif
-ifneq ($(strip $(P_DEPS)),)
--include $(P_DEPS)
 endif
 ifneq ($(strip $(C_DEPS)),)
 -include $(C_DEPS)
@@ -74,7 +59,7 @@ all: Proyecto_Integrador.elf secondary-outputs
 Proyecto_Integrador.elf: $(OBJS) $(USER_OBJS) $(LINKER_SCRIPT)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GNU ARM Cross C Linker'
-	$(file > Proyecto_Integrador.elf.in,-mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O2 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wunused -Wuninitialized -Wall -Wextra -Wmissing-declarations -Wconversion -Wpointer-arith -Wshadow -Wlogical-op -Waggregate-return -Wfloat-equal  -g3 -T "C:\\REPOS\\Proyecto_Integrador\\script/s7g2.ld" -Xlinker --gc-sections -L "C:\\REPOS\\Proyecto_Integrador\\synergy\\ssp\\src\\bsp\\cmsis\\DSP_Lib\\cm4_gcc" -L "C:\\REPOS\\Proyecto_Integrador\\synergy\\ssp\\src\\framework\\el\\tx\\cm4_gcc" -Wl,-Map,"Proyecto_Integrador.map" --specs=nano.specs --specs=rdimon.specs -o "Proyecto_Integrador.elf" -Wl,--start-group $(OBJS) $(USER_OBJS) $(LIBS) -Wl,--end-group)
+	$(file > Proyecto_Integrador.elf.in,-mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O2 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wunused -Wuninitialized -Wall -Wextra -Wmissing-declarations -Wconversion -Wpointer-arith -Wshadow -Wlogical-op -Waggregate-return -Wfloat-equal  -g3 -T "C:\\repos\\Proyecto_Integrador\\script/s7g2.ld" -Xlinker --gc-sections -L "C:\\repos\\Proyecto_Integrador\\synergy\\ssp\\src\\bsp\\cmsis\\DSP_Lib\\cm4_gcc" -L "C:\\repos\\Proyecto_Integrador\\synergy\\ssp\\src\\framework\\el\\tx\\cm4_gcc" -Wl,-Map,"Proyecto_Integrador.map" --specs=nano.specs --specs=rdimon.specs -o "Proyecto_Integrador.elf" -Wl,--start-group $(OBJS) $(USER_OBJS) $(LIBS) -Wl,--end-group)
 	arm-none-eabi-gcc @"Proyecto_Integrador.elf.in"
 	@echo 'Finished building target: $@'
 	@echo ' '
@@ -93,30 +78,10 @@ Proyecto_Integrador.siz: Proyecto_Integrador.elf
 
 # Other Targets
 clean:
-ifneq ($(strip $(SRC_DEPS)),)
-	-$(file > clean_SRC_DEPS.tmp, $(SRC_DEPS))
-	-@ xargs -s 6000 -t -a clean_SRC_DEPS.tmp $(RM)
-	-@$(RM) clean_SRC_DEPS.tmp
-endif
-ifneq ($(strip $(JMP_DEPS)),)
-	-$(file > clean_JMP_DEPS.tmp, $(JMP_DEPS))
-	-@ xargs -s 6000 -t -a clean_JMP_DEPS.tmp $(RM)
-	-@$(RM) clean_JMP_DEPS.tmp
-endif
-ifneq ($(strip $(PP_DEPS)),)
-	-$(file > clean_PP_DEPS.tmp, $(PP_DEPS))
-	-@ xargs -s 6000 -t -a clean_PP_DEPS.tmp $(RM)
-	-@$(RM) clean_PP_DEPS.tmp
-endif
 ifneq ($(strip $(SX_DEPS)),)
 	-$(file > clean_SX_DEPS.tmp, $(SX_DEPS))
 	-@ xargs -s 6000 -t -a clean_SX_DEPS.tmp $(RM)
 	-@$(RM) clean_SX_DEPS.tmp
-endif
-ifneq ($(strip $(FSY_DEPS)),)
-	-$(file > clean_FSY_DEPS.tmp, $(FSY_DEPS))
-	-@ xargs -s 6000 -t -a clean_FSY_DEPS.tmp $(RM)
-	-@$(RM) clean_FSY_DEPS.tmp
 endif
 ifneq ($(strip $(OBJS)),)
 	-$(file > clean_OBJS.tmp, $(OBJS))
@@ -142,11 +107,6 @@ ifneq ($(strip $(S_UPPER_DEPS)),)
 	-$(file > clean_S_UPPER_DEPS.tmp, $(S_UPPER_DEPS))
 	-@ xargs -s 6000 -t -a clean_S_UPPER_DEPS.tmp $(RM)
 	-@$(RM) clean_S_UPPER_DEPS.tmp
-endif
-ifneq ($(strip $(P_DEPS)),)
-	-$(file > clean_P_DEPS.tmp, $(P_DEPS))
-	-@ xargs -s 6000 -t -a clean_P_DEPS.tmp $(RM)
-	-@$(RM) clean_P_DEPS.tmp
 endif
 ifneq ($(strip $(C_DEPS)),)
 	-$(file > clean_C_DEPS.tmp, $(C_DEPS))

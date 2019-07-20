@@ -71,10 +71,10 @@
 static IRQn_Type dtc_irq_lookup(elc_event_t const event);
 static void r_dtc_initialize_repeat_block_mode(transfer_cfg_t const * const    p_cfg);
 static ssp_err_t r_dtc_state_initialize(dtc_instance_ctrl_t * p_ctrl,transfer_cfg_t const * const    p_cfg );
+#if DTC_CFG_PARAM_CHECKING_ENABLE
 static ssp_err_t r_dtc_parameter_check(dtc_instance_ctrl_t * p_ctrl,transfer_cfg_t const * const    p_cfg );
 static ssp_err_t r_dtc_block_reset_parameter_check(dtc_instance_ctrl_t * p_ctrl,uint16_t const length, uint16_t const num_transfers);
 static ssp_err_t r_dtc_reset_parameter_check(dtc_instance_ctrl_t * p_ctrl,uint16_t const num_transfers);
-#if DTC_CFG_PARAM_CHECKING_ENABLE
 static ssp_err_t r_dtc_enable_alignment_check(transfer_info_t * p_info);
 #endif
 
@@ -256,8 +256,10 @@ ssp_err_t R_DTC_Reset (transfer_ctrl_t         * const   p_api_ctrl,
 {
     ssp_err_t err = SSP_SUCCESS;
     dtc_instance_ctrl_t * p_ctrl = (dtc_instance_ctrl_t *) p_api_ctrl;
+#if DTC_CFG_PARAM_CHECKING_ENABLE
     err =  r_dtc_reset_parameter_check(p_ctrl,num_transfers );
     DTC_ERROR_RETURN(SSP_SUCCESS == err, err);
+#endif
 
     /** Disable transfers on this activation source. */
     HW_ICU_DTCDisable(gp_icu_regs, p_ctrl->irq);
@@ -566,8 +568,10 @@ ssp_err_t R_DTC_BlockReset (transfer_ctrl_t         * const   p_api_ctrl,
 {
     ssp_err_t err = SSP_SUCCESS;
     dtc_instance_ctrl_t * p_ctrl = (dtc_instance_ctrl_t *) p_api_ctrl;
+#if DTC_CFG_PARAM_CHECKING_ENABLE
     err =  r_dtc_block_reset_parameter_check(p_ctrl,length,num_transfers );
     DTC_ERROR_RETURN(SSP_SUCCESS == err, err);
+#endif
 
     /** Disable transfers on this activation source. */
     HW_ICU_DTCDisable(gp_icu_regs, p_ctrl->irq);
@@ -708,11 +712,10 @@ static ssp_err_t r_dtc_state_initialize(dtc_instance_ctrl_t * p_ctrl,transfer_cf
     SSP_ASSERT(NULL != p_cfg);
     SSP_ASSERT(NULL != p_cfg->p_info);
     err =  r_dtc_parameter_check(p_ctrl,p_cfg);
-
     DTC_ERROR_RETURN(SSP_SUCCESS == err, err);
-
-#endif /* if DTC_CFG_PARAM_CHECKING_ENABLE */
-
+#endif
+    SSP_PARAMETER_NOT_USED(p_ctrl);
+    SSP_PARAMETER_NOT_USED(p_cfg);
     /** DTC requires a one time initialization.  This will be handled only the first time this function
      *  is called. This initialization:
      *  -# Acquires the BSP hardware lock for the DTC to keep this section thread safe and prevent use of
@@ -747,6 +750,7 @@ static ssp_err_t r_dtc_state_initialize(dtc_instance_ctrl_t * p_ctrl,transfer_cf
     return err;
 }
 
+#if DTC_CFG_PARAM_CHECKING_ENABLE
 /*******************************************************************************************************************//**
  * @brief   For dtc parameter checking.
  *
@@ -781,7 +785,6 @@ static ssp_err_t r_dtc_parameter_check(dtc_instance_ctrl_t * p_ctrl,transfer_cfg
  **********************************************************************************************************************/
 static ssp_err_t r_dtc_reset_parameter_check(dtc_instance_ctrl_t * p_ctrl, uint16_t const num_transfers)
 {
-#if DTC_CFG_PARAM_CHECKING_ENABLE
     SSP_ASSERT(NULL != p_ctrl);
     if (TRANSFER_MODE_NORMAL != gp_dtc_vector_table[p_ctrl->irq]->mode)
     {
@@ -792,7 +795,6 @@ static ssp_err_t r_dtc_reset_parameter_check(dtc_instance_ctrl_t * p_ctrl, uint1
     {
         SSP_ASSERT(0 != gp_dtc_vector_table[p_ctrl->irq]->length);
     }
-#endif
 
     return SSP_SUCCESS;
 }
@@ -810,18 +812,15 @@ static ssp_err_t r_dtc_reset_parameter_check(dtc_instance_ctrl_t * p_ctrl, uint1
  **********************************************************************************************************************/
 static ssp_err_t r_dtc_block_reset_parameter_check(dtc_instance_ctrl_t * p_ctrl,uint16_t const length, uint16_t const num_transfers)
 {
-#if DTC_CFG_PARAM_CHECKING_ENABLE
     SSP_ASSERT(NULL != p_ctrl);
     DTC_ERROR_RETURN(TRANSFER_MODE_BLOCK == gp_dtc_vector_table[p_ctrl->irq]->mode, SSP_ERR_UNSUPPORTED);
     SSP_ASSERT(0 != num_transfers);
     SSP_ASSERT(0 != length);
     DTC_ERROR_RETURN(p_ctrl->id == DTC_ID, SSP_ERR_NOT_OPEN);
-#endif
 
     return SSP_SUCCESS;
 }
 
-#if DTC_CFG_PARAM_CHECKING_ENABLE
 /*******************************************************************************************************************//**
  * Alignment checking for source and destination pointers.
  *

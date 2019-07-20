@@ -59,6 +59,15 @@ Includes   <System Includes> , "Project Includes"
 /** Physical address the QSPI device is mapped to */
 #define BSP_PRV_QSPI_DEVICE_PHYSICAL_ADDRESS (0x60000000U)
 
+/** When page program uses multiple data lines, the address is on one line. */
+#define QSPI_PAGE_PROGRAM_ADDRESS_ONE_LINE     (0x1U)
+
+/** When page program uses multiple data lines, the data is on 4 lines. */
+#define QSPI_PAGE_PROGRAM_DATA_LINES           (0x4U)
+
+/** Quad input page program command. */
+#define QSPI_COMMAND_PAGE_PROGRAM_QUAD         (0x32U)
+
 /***********************************************************************************************************************
  * Typedef definitions
  **********************************************************************************************************************/

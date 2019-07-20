@@ -30,6 +30,12 @@ SSP_HEADER
 /***********************************************************************************************************************
  * Macro definitions
  **********************************************************************************************************************/
+/* Define this macro to use the on-board Micrel PHY chip.
+ * The source file used for the Micrel KSZ8081 PHY chip is located at synergy/ssp/src/framework/sf_el_nx/phy/ether_phy.c
+ * Remove/Undefine this macro to use the other PHY chip and implement new PHY functions as defined in
+ * interface file (synergy/ssp/inc/framework/instances/sf_el_nx.h)
+ */
+
 #define BSP_BOARD_PHY_KSZ8081
 
 /***********************************************************************************************************************

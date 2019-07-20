@@ -45,6 +45,9 @@
 #define TX_PORT_H_TOP_LEVEL
 
 #define TX_INCLUDE_USER_DEFINE_FILE
+#ifdef TX_SRC_USER_H_
+#error "Include order error detected: tx_port.h must be included before tx_src_user.h because tx_src_user.h undefines macros defined in tx_port.h"
+#endif
 #if   defined(__IAR_SYSTEMS_ICC__)
     #if   (__CORE__ == __ARM7EM__)
         #include "./cm4_iar/tx_port.h"
@@ -59,7 +62,9 @@
     #if   __ARM_ARCH_7EM__
         #include "./cm4_gcc/tx_port.h"
     #elif __ARM_ARCH_6M__
-        #include "./cm0plus_gcc/tx_port.h"
+        #include "./cm0plus_gcc/tx_port.h"    
+    #elif __ARM_ARCH_8M_BASE__
+        #include "./cm23_gcc/tx_port.h"
     #else
         #warning Unsupported Architecture
     #endif

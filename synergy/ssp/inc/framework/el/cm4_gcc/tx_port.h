@@ -1,6 +1,6 @@
 /**************************************************************************/ 
 /*                                                                        */ 
-/*            Copyright (c) 1996-2017 by Express Logic Inc.               */ 
+/*            Copyright (c) 1996-2018 by Express Logic Inc.               */ 
 /*                                                                        */ 
 /*  This software is copyrighted by and is the sole property of Express   */ 
 /*  Logic, Inc.  All rights, title, ownership, or other interests         */ 
@@ -91,8 +91,7 @@
 #include "tx_user.h"
 #endif
 
-
-/* Define default timer ticks as a simple expression suitable
+/* Define default timer ticks as a simple expression suitable 
    for preprocessor expressions */
 #ifndef TX_TIMER_TICKS_PER_SECOND
 #define TX_TIMER_TICKS_PER_SECOND (100UL)
@@ -479,7 +478,7 @@ extern void * __RAM_segment_used_end__;
 
 #ifdef TX_THREAD_INIT
 CHAR                            _tx_version_id[] = 
-                                    "Copyright (c) 1996-2017 Express Logic Inc. * ThreadX Synergy/GNU Version G5.8.5.2 SN: 4154-280-5000 *";
+                                    "Copyright (c) 1996-2018 Express Logic Inc. * ThreadX Synergy/GNU Version G5.8sp4 SN: 4154-280-5000 *";
 #else
 extern  CHAR                    _tx_version_id[100];
 #endif
