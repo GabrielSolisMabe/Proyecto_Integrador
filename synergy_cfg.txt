@@ -293,6 +293,9 @@ Synergy Configuration
   Module "ADC Driver on r_adc"
     Parameter Checking: Enabled
     
+  Module "Timer Driver on r_gpt"
+    Parameter Checking: Default (BSP)
+    
   HAL
     Instance "g_elc ELC Driver on r_elc"
       Name [Fixed]: g_elc
@@ -674,6 +677,22 @@ Synergy Configuration
       Callback: NULL
       Scan End Interrupt Priority: Disabled
       Scan End Group B Interrupt Priority: Disabled
+      
+    Instance "g_timer2 Timer Driver on r_gpt"
+      Name: g_timer2
+      Channel: 2
+      Mode: PWM
+      Period Value: 1000
+      Period Unit: Hertz
+      Duty Cycle Value: 50
+      Duty Cycle Unit: Unit Percent
+      Auto Start: True
+      GTIOCA Output Enabled: False
+      GTIOCA Stop Level: Pin Level Low
+      GTIOCB Output Enabled: False
+      GTIOCB Stop Level: Pin Level Low
+      Callback: NULL
+      Overflow Interrupt Priority: Disabled
       
     Object "Message_Queue Queue"
       Name: MessageQueue

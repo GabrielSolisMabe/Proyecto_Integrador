@@ -15,10 +15,9 @@ SSP_VECTOR_DEFINE_CHAN(gpt_counter_overflow_isr, GPT, COUNTER_OVERFLOW, 2);
 static gpt_instance_ctrl_t g_timer2_ctrl;
 static const timer_on_gpt_cfg_t g_timer2_extend =
 { .gtioca =
-{ .output_enabled = true, .stop_level = GPT_PIN_LEVEL_LOW },
+{ .output_enabled = false, .stop_level = GPT_PIN_LEVEL_LOW },
   .gtiocb =
-  { .output_enabled = false, .stop_level = GPT_PIN_LEVEL_LOW },
-  .shortest_pwm_signal = GPT_SHORTEST_LEVEL_OFF, };
+  { .output_enabled = false, .stop_level = GPT_PIN_LEVEL_LOW } };
 static const timer_cfg_t g_timer2_cfg =
 { .mode = TIMER_MODE_PWM, .period = 1000, .unit = TIMER_UNIT_FREQUENCY_HZ, .duty_cycle = 50, .duty_cycle_unit =
           TIMER_PWM_UNIT_PERCENT,

@@ -4,9 +4,9 @@
 #include "bsp_api.h"
 #include "tx_api.h"
 #include "hal_data.h"
-#ifdef __cplusplus
+#ifdef __cplusplus 
 extern "C" void system_thread_entry(void);
-#else
+#else 
 extern void system_thread_entry(void);
 #endif
 #include "r_gpt.h"

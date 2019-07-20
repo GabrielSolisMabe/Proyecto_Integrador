@@ -23,8 +23,4 @@ void system_thread_entry(void)
      g_timer2.p_api->dutyCycleSet(g_timer2.p_ctrl, PwmPercent, TIMER_PWM_UNIT_PERCENT, 0); //used to change the dutycycle manually
      tx_thread_sleep(10);
      }
-
 }
-
-
-

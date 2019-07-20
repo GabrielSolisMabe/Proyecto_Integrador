@@ -82,8 +82,7 @@ static void bsp_clock_set_postchange(bsp_clock_set_callback_args_t * p_args);
  **********************************************************************************************************************/
 void bsp_clock_init (void)
 {
-    ssp_err_t err = SSP_SUCCESS;
-    g_cgc_on_cgc.init();
+	g_cgc_on_cgc.init();
 
     R_BSP_CacheSet(BSP_CACHE_STATE_ON);                            // Turn on cache.
 
@@ -93,7 +92,7 @@ void bsp_clock_init (void)
     if (BSP_CFG_CLOCK_SOURCE != CGC_CLOCK_PLL)
     {
         clock = BSP_CFG_CLOCK_SOURCE;
-        err = g_cgc_on_cgc.clockStart(clock, NULL);
+        g_cgc_on_cgc.clockStart(clock, NULL);
     }
     else
     {
@@ -118,15 +117,9 @@ void bsp_clock_init (void)
             /** Wait for PLL clock source to stabilize */
         }
 
-        err = g_cgc_on_cgc.clockStart(CGC_CLOCK_PLL, &pll_cfg);
+        g_cgc_on_cgc.clockStart(CGC_CLOCK_PLL, &pll_cfg);
 
         clock = CGC_CLOCK_PLL;
-    }
-
-    /** If the system clock has failed to start call the unrecoverable error handler. */
-    if((SSP_SUCCESS != err) && (SSP_ERR_CLOCK_ACTIVE != err))
-    {
-        BSP_CFG_HANDLE_UNRECOVERABLE_ERROR(0);
     }
 
     /** MOCO, LOCO, and subclock do not have stabilization flags that can be checked. */
@@ -149,13 +142,8 @@ void bsp_clock_init (void)
     sys_cfg.bclk_div  = BSP_CFG_BCK_DIV;
 
     /** Set which clock to use for system clock and divisors for all system clocks. */
-    err = g_cgc_on_cgc.systemClockSet(clock, &sys_cfg);
+    g_cgc_on_cgc.systemClockSet(clock, &sys_cfg);
 
-    /** If the system clock has failed to be configured properly call the unrecoverable error handler. */
-    if(SSP_SUCCESS != err)
-    {
-        BSP_CFG_HANDLE_UNRECOVERABLE_ERROR(0);
-    }
 
     /** Set USB clock divisor. */
     g_cgc_on_cgc.usbClockCfg(BSP_CFG_UCK_DIV);
@@ -341,6 +329,7 @@ static void bsp_clock_set_postchange(bsp_clock_set_callback_args_t * p_args)
         bsp_clocks_rom_wait_set( p_args->new_rom_wait_state);
     }
 }
+
 #endif
 
 /** @} (end defgroup BSP_MCU_CLOCKS) */
