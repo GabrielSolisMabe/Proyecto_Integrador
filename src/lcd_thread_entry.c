@@ -1,12 +1,41 @@
-#include "lcd_thread.h"
+#include <lcd_thread.h>
+#include <system_thread.h>
+#include "gx_api.h"
+#include "gui/gui_adc_specifications.h"
+#include "gui/gui_adc_resources.h"
+#include "lcd_setup/lcd.h"
 
+GX_WINDOW_ROOT * p_window_root;
+
+
+GX_WINDOW_ROOT * p_window_root;
 /* LCD Thread entry function */
 void lcd_thread_entry(void)
 {
+    /* Initializes GUIX. */
+    gx_system_initialize();
+    /* Initializes GUIX drivers. */
+    g_sf_el_gx.p_api->open(g_sf_el_gx.p_ctrl, g_sf_el_gx.p_cfg);
+
+    gx_studio_display_configure(DISPLAY_1,
+                                    g_sf_el_gx.p_api->setup,
+                                    LANGUAGE_ENGLISH,
+                                    DISPLAY_1_THEME_1,
+                                    &p_window_root);
+
+    g_sf_el_gx.p_api->canvasInit(g_sf_el_gx.p_ctrl, p_window_root);
+
+    /* Lets GUIX run. */
+    gx_system_start();
+
+    /** Open the SPI driver to initialize the LCD (SK-S7G2) **/
+    g_spi_lcdc.p_api->open(g_spi_lcdc.p_ctrl, g_spi_lcdc.p_cfg);
+
+    /** Setup the ILI9341V (SK-S7G2) **/
+    ILI9341V_Init();
+
     while (1)
     {
-        g_spi_lcdc.p_api->open(g_spi_lcdc.p_ctrl, g_spi_lcdc.p_cfg);
-
         tx_thread_sleep (1);
     }
 }
@@ -16,5 +45,6 @@ void g_lcd_spi_callback (spi_callback_args_t * p_args)
 {
     if (p_args->event == SPI_EVENT_TRANSFER_COMPLETE)
     {
+       tx_semaphore_ceiling_put(&g_main_semaphore_lcdc, 1);
     }
 }
