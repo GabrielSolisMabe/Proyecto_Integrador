@@ -1,6 +1,6 @@
 /***********************************************************************************************************************
  * Copyright [2015-2017] Renesas Electronics Corporation and/or its licensors. All Rights Reserved.
- * 
+ *
  * This file is part of Renesas SynergyTM Software Package (SSP)
  *
  * The contents of this file (the "contents") are proprietary and confidential to Renesas Electronics Corporation
@@ -99,6 +99,8 @@ typedef enum e_ssp_err
     SSP_ERR_INVALID_FACTORY_FLASH   = 28,       ///< Factory flash is not available on this MCU
     SSP_ERR_INVALID_FMI_DATA        = 29,       ///< Linked FMI data table is not valid
     SSP_ERR_INVALID_STATE           = 30,       ///< API or command not valid in the current state
+    SSP_ERR_NOT_ERASED              = 31,       ///< Erase verification failed
+    SSP_ERR_SECTOR_RELEASE_FAILED   = 32,       ///< Sector release failed
 
     /** Start of RTOS only error codes */
     SSP_ERR_INTERNAL                = 100,      ///< Internal error
@@ -137,6 +139,7 @@ typedef enum e_ssp_err
     SSP_ERR_PE_FAILURE              = 500,      ///< Unable to enter Programming mode.
     SSP_ERR_CMD_LOCKED              = 501,      ///< Peripheral in command locked state
     SSP_ERR_FCLK                    = 502,      ///< FCLK must be >= 4 MHz
+    SSP_ERR_INVALID_LINKED_ADDRESS  = 503,      ///< Function or data are linked at an invalid region of memory
 
     /** Start of CAC Specific */
     SSP_ERR_INVALID_CAC_REF_CLOCK   = 600,      ///< Measured clock rate < reference clock rate
@@ -211,7 +214,7 @@ typedef enum e_ssp_err
 	SSP_ERR_CTSU_OFFSET_ADJUSTMENT_FAILED = 0x8080,
 	/** Safety check failed **/
 	SSP_ERR_CTSU_SAFETY_CHECK_FAILED = 0x8100,
-	
+
     /** Start of SDMMC specific */
     SSP_ERR_CARD_INIT_FAILED     = 40000,       ///< SD card or eMMC device failed to initialize.
     SSP_ERR_CARD_NOT_INSERTED    = 40001,       ///< SD card not installed.
@@ -235,20 +238,26 @@ typedef enum e_ssp_err
     SSP_ERR_CAN_MESSAGE_LOST       = 60006,        ///< Receive message has been overwritten or overrun.
 
     /** Start of SF_WIFI Specific */
-    SSP_ERR_WIFI_CONFIG_FAILED    = 70000,     ///< WiFi module Configuration failed.
-    SSP_ERR_WIFI_INIT_FAILED      = 70001,     ///< WiFi module initialization failed.
-    SSP_ERR_WIFI_TRANSMIT_FAILED  = 70002,     ///< Transmission failed
-    SSP_ERR_WIFI_INVALID_MODE     = 70003,     ///< API called when provisioned in client mode
-    SSP_ERR_WIFI_FAILED           = 70004,     ///< WiFi Failed.
-    
+    SSP_ERR_WIFI_CONFIG_FAILED              = 70000,    ///< WiFi module Configuration failed.
+    SSP_ERR_WIFI_INIT_FAILED                = 70001,    ///< WiFi module initialization failed.
+    SSP_ERR_WIFI_TRANSMIT_FAILED            = 70002,    ///< Transmission failed
+    SSP_ERR_WIFI_INVALID_MODE               = 70003,    ///< API called when provisioned in client mode
+    SSP_ERR_WIFI_FAILED                     = 70004,    ///< WiFi Failed.
+    SSP_ERR_WIFI_WPS_MULTIPLE_PB_SESSIONS   = 70005,    ///< Another Push button session is already in progress
+    SSP_ERR_WIFI_WPS_M2D_RECEIVED           = 70006,    ///< M2D Error code received which means Registrar is unable to authenticate with the Enrollee
+    SSP_ERR_WIFI_WPS_AUTHENTICATION_FAILED  = 70007,    ///< WPS authentication failed
+    SSP_ERR_WIFI_WPS_CANCELLED              = 70008,    ///< WPS Request was not accepted by underlying driver
+    SSP_ERR_WIFI_WPS_INVALID_PIN            = 70009,    ///< Invalid WPS Pin
+
     /** Start of SF_CELLULAR Specific */
-    SSP_ERR_CELLULAR_CONFIG_FAILED     = 80000,     ///< Cellular module Configuration failed.
-    SSP_ERR_CELLULAR_INIT_FAILED       = 80001,     ///< Cellular module initialization failed.
-    SSP_ERR_CELLULAR_TRANSMIT_FAILED   = 80002,     ///< Transmission failed
-    SSP_ERR_CELLULAR_FW_UPTODATE       = 80003,     ///< Firmware is uptodate
-    SSP_ERR_CELLULAR_FW_UPGRADE_FAILED = 80004,     ///< Firmware upgrade failed
-    SSP_ERR_CELLULAR_FAILED            = 80005,     ///< Cellular Failed.
-    SSP_ERR_CELLULAR_INVALID_STATE     = 80006,     ///< API Called in invalid state.
+    SSP_ERR_CELLULAR_CONFIG_FAILED       = 80000,     ///< Cellular module Configuration failed.
+    SSP_ERR_CELLULAR_INIT_FAILED         = 80001,     ///< Cellular module initialization failed.
+    SSP_ERR_CELLULAR_TRANSMIT_FAILED     = 80002,     ///< Transmission failed
+    SSP_ERR_CELLULAR_FW_UPTODATE         = 80003,     ///< Firmware is uptodate
+    SSP_ERR_CELLULAR_FW_UPGRADE_FAILED   = 80004,     ///< Firmware upgrade failed
+    SSP_ERR_CELLULAR_FAILED              = 80005,     ///< Cellular Failed.
+    SSP_ERR_CELLULAR_INVALID_STATE       = 80006,     ///< API Called in invalid state.
+    SSP_ERR_CELLULAR_REGISTRATION_FAILED = 80007,     ///< Cellular Network registration failed
 
     /** Start of SF_BLE specific */
     SSP_ERR_BLE_FAILED              = 90001,        ///< BLE operation failed
@@ -290,7 +299,6 @@ typedef enum e_ssp_err
      *        Refer to sf_cryoto_err.h for Crypto error codes.
      */
 
-	/** Start of <XXX> specific */
 } ssp_err_t;
 
 /** ioctl commands. */
@@ -302,6 +310,8 @@ typedef enum e_ssp_command
     SSP_COMMAND_CTRL_ERASE_SECTOR    =4,     ///< Erase sectors.
     SSP_COMMAND_GET_WRITE_PROTECTED  =5,     ///< Get Write Protection status.
     SSP_COMMAND_SET_BLOCK_SIZE       =6,     ///< Set block size
+    SSP_COMMAND_GET_SECTOR_RELEASE   =7,     ///< Get flash sector release information.
+    SSP_COMMAND_CTRL_SECTOR_RELEASE  =8,     ///< Release sectors.
 } ssp_command_t;
 
 

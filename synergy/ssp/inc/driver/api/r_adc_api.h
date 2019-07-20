@@ -63,7 +63,7 @@ SSP_HEADER
  **********************************************************************************************************************/
 /** Version Number of API.  */
 #define ADC_API_VERSION_MAJOR   (1U)
-#define ADC_API_VERSION_MINOR   (6U)
+#define ADC_API_VERSION_MINOR   (10U)
 
 /*****************************************************************************
 Typedef definitions
@@ -107,7 +107,7 @@ typedef enum e_adc_add
     ADC_ADD_SIXTEEN         = 0x05,///< Add sixteen samples
     ADC_ADD_AVERAGE_TWO     = 0x81,///< Average two samples
     ADC_ADD_AVERAGE_FOUR    = 0x83,///< Average four samples
-    ADC_ADD_AVERAGE_SIXTEEN = 0x05,///< Add sixteen samples
+    ADC_ADD_AVERAGE_SIXTEEN = 0x85,///< Add sixteen samples
 } adc_add_t;
 
 /** ADC clear after read definitions */
@@ -238,12 +238,12 @@ typedef struct st_adc_info
 /** ADC channel(s) configuration       */
 typedef struct st_adc_channel_cfg
 {
-    uint32_t      scan_mask;          ///< Channels/bits: bit 0 is ch0; bit 15 is ch15. Use `#%define ADC_MASK_xxx`
+    uint32_t      scan_mask;          ///< Channels/bits: bit 0 is ch0; bit 15 is ch15. Use `#%define ADC_MASK_CHANNEL_x`
                                       ///< from r_adc.h.
-    uint32_t      scan_mask_group_b;  ///< Valid for group modes. Use `#%define ADC_MASK_xxx`  from r_adc.h.
+    uint32_t      scan_mask_group_b;  ///< Valid for group modes. Use `#%define ADC_MASK_CHANNEL_x`  from r_adc.h.
     adc_group_a_t priority_group_a;   ///< Valid for group modes.
-    uint32_t      add_mask;           ///< Valid if add enabled in Open(). Use `#%define ADC_MASK_xxx`  from r_adc.h.
-    uint8_t       sample_hold_mask;   ///< Channels/bits 0-2. Use `#%define ADC_MASK_xxx`  from r_adc.h.
+    uint32_t      add_mask;           ///< Valid if add enabled in Open(). Use `#%define ADC_MASK_CHANNEL_x`  from r_adc.h.
+    uint8_t       sample_hold_mask;   ///< Channels/bits 0-2. Use `#%define ADC_MASK_CHANNEL_x`  from r_adc.h.
     uint8_t       sample_hold_states; ///< Number of states to be used for sample and hold. Affects channels 0-2.
 } adc_channel_cfg_t;
 

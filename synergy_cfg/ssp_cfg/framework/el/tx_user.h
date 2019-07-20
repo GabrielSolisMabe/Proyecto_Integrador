@@ -4,4 +4,10 @@
 #if (SYNERGY_NOT_DEFINED)
 #include "tx_src_user.h"
 #endif
+#if (SYNERGY_NOT_DEFINED)
+#include "lx_nor_src_user.h"
+#endif
+#if (SYNERGY_NOT_DEFINED)
+#include "lx_nand_src_user.h"
+#endif
 #endif /* TX_USER_H_ */

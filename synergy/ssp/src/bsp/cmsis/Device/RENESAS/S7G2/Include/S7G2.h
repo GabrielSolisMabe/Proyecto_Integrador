@@ -323,14 +323,15 @@ typedef struct {
 
 typedef struct {
   union {
-    __IO uint16_t  DELSRn;                          /*!< DMAC Event Link Setting Register %s                                   */
-    
-    struct {
-      __IO uint16_t  DELS       :  9;               /*!< Event selection to DMAC Start request                                 */
-    } DELSRn_b;                                     /*!< BitSize                                                               */
-  };
-  __I  uint8_t  RESERVED10[2];   // Padding changed from uint16_t
-} R_ICU_DELSRn_Type;
+	        __IO uint32_t DELSRn; /*!< DMAC Event Link Setting Register %s                                   */
+
+	        struct {
+	            __IO uint32_t DELS : 9; /*!< Event selection to DMAC Start request                                 */
+	                 uint32_t      : 7;
+                __IO uint32_t IR   : 1; /*!< Interrupt Status Flag for DMAC              */
+	        }DELSRn_b; /*!< BitSize                                                               */
+	    };
+}R_ICU_DELSRn_Type;
 
 typedef struct {
   union {
@@ -8540,27 +8541,6 @@ typedef struct {                                    /*!< R_MSTP Structure       
 
 
 /* ================================================================================ */
-/* ================                    R_SRCRAM                    ================ */
-/* ================================================================================ */
-
-
-/**
-  * @brief RAM for Sampling Rate Converter  (R_SRCRAM)
-  */
-
-typedef struct {                                    /*!< R_SRCRAM Structure                                                    */
-  
-  union {
-    __IO uint32_t  SRCFCTRn[2048];                  /*!< Filter Coefficient Table[%s]                                          */
-    
-    struct {
-      __IO uint32_t  SRCFCOE    : 22;               /*!< Stores a filter coefficient value.                                    */
-    } SRCFCTRn_b[2048];                             /*!< BitSize                                                               */
-  };
-} R_SRCRAM_Type;
-
-
-/* ================================================================================ */
 /* ================                      R_SRC                     ================ */
 /* ================================================================================ */
 
@@ -8571,6 +8551,16 @@ typedef struct {                                    /*!< R_SRCRAM Structure     
 
 typedef struct {                                    /*!< R_SRC Structure                                                       */
   
+    union {
+      __IO uint32_t  SRCFCTRn[5552];                  /*!< Filter Coefficient Table[%s]                                          */
+
+      struct {
+        __IO uint32_t  SRCFCOE    : 22;               /*!< Stores a filter coefficient value.                                    */
+      } SRCFCTRn_b[5552];                             /*!< BitSize                                                               */
+    };
+
+    __I  uint8_t RESERVED[588 * 4];                  /*!< Padding changed from uint32_t                                           */
+
   union {
     __O  uint32_t  SRCID;                           /*!< Input Data Register                                                   */
     
@@ -8651,6 +8641,7 @@ typedef struct {                                    /*!< R_SRC Structure        
                                                          the output FIFO.                                                      */
     } SRCSTAT_b;                                    /*!< BitSize                                                               */
   };
+
 } R_SRC_Type;
 
 
@@ -10213,25 +10204,30 @@ typedef struct {                                    /*!< R_TSN Structure        
 
 /**
   * @brief Temperature Sensor (R_TSN).
-  * This structure defines the control structure for the TSN peripheral.
-  * This register is only present on the CM0 devices
+ * This structure defines the calibration structure for the TSN peripheral.
+  * This register is only present on the CM0 devices and S5 devices
   */
 typedef struct {                                    /*!< R_TSN Structure                                                       */
-                                                        /*!< Calibration data registers. Valid only on the CM0 devices             */
-    union {
-      __I  uint8_t   TSCDRL;                            /*!< Calibration data register (Low)                                         */
-      struct {
-        __I  uint8_t   TSCDRL       :  8;               /*!< Lower byte of the calibration data.                                   */
-      } TSCDRL_b;                                       /*!< BitSize                                                               */
-    };
+                                                        /*!< Calibration data registers. Valid only on the CM0 devices and S5 devices */
+	union {
+        struct{
+           union {
+              __I  uint8_t   TSCDRL;                            /*!< Calibration data register (Low)                                         */
+              struct {
+                __I  uint8_t   TSCDRL       :  8;               /*!< Lower byte of the calibration data.                                   */
+              } TSCDRL_b;                                       /*!< BitSize                                                               */
+            };
 
-    union {
-      __I  uint8_t   TSCDRH;                            /*!< Calibration data register (High)                                        */
-      struct {
-        __I  uint8_t   TSCDRH       :  8;               /*!< Higher byte of the calibration data. Only lower 4 bytes are valid     */
-      } TSCDRH_b;                                       /*!< BitSize                                                               */
+            union {
+              __I  uint8_t   TSCDRH;                            /*!< Calibration data register (High)                                        */
+              struct {
+                __I  uint8_t   TSCDRH       :  8;               /*!< Higher byte of the calibration data. Only lower 4 bytes are valid     */
+              } TSCDRH_b;                                       /*!< BitSize                                                               */
+            };
+            __I  uint16_t  RESERVED;
+        } TSCDR_b;
+      __I  uint32_t  TSCDR;
     };
-  __I  uint16_t  RESERVED;
 
 } R_TSN_Calibration_Type;
 
@@ -14477,35 +14473,52 @@ typedef struct {                                    /*!< R_SCI0 Structure       
       } TDRHL_b;                                    /*!< BitSize                                                               */
     };
   };
-  
+
   union {
     union {
-      __I  uint16_t  FRDR;                          /*!< Receive FIFO Data Register (FCRL.FM=1)                                */
-      
+      __I  uint8_t   FRDRH;                          /*!< Receive FIFO Data Register (stores High byte)                        */
+
       struct {
-        __I  uint16_t  RDAT     :  9;               /*!< Serial receive data(Valid only in asynchronous mode(including
-                                                         multi-processor) or clock synchronous mode, and FIFO selected)        */
-        __I  uint16_t  MPB      :  1;               /*!< Multi-processor bit flag(Valid only in asynchronous mode with
-                                                         SMR.MP=1 and FIFO selected) It can read multi-processor bit
-                                                          corresponded to serial receive data(RDATA[8:0])                      */
-        __I  uint16_t  DR       :  1;               /*!< Receive data ready flag(It is same as SSR.DR)                         */
-        __I  uint16_t  PER      :  1;               /*!< Parity error flag                                                     */
-        __I  uint16_t  FER      :  1;               /*!< Framing error flag                                                    */
-        __I  uint16_t  ORER     :  1;               /*!< Overrun error flag(It is same as SSR.ORER)                            */
-        __I  uint16_t  RDF      :  1;               /*!< Receive FIFO data full flag(It is same as SSR.RDF)                    */
-      } FRDR_b;                                     /*!< BitSize                                                               */
+
+        __I  uint8_t   RDAT     :  1;                /*!< Serial receive data 9th bit(Valid only in asynchronous mode(including
+                                                            multi-processor) or clock synchronous mode, and FIFO selected)     */
+        __I  uint8_t   MPB      :  1;                /*!< Multi-processor bit flag(Valid only in asynchronous mode with
+                                                            SMR.MP=1 and FIFO selected) It can read multi-processor bit
+                                                            corresponded to serial receive data(RDATA[8:0])                    */
+        __I  uint8_t   DR       :  1;                /*!< Receive data ready flag(It is same as SSR.DR)                        */
+        __I  uint8_t   PER      :  1;                /*!< Parity error flag                                                    */
+        __I  uint8_t   FER      :  1;                /*!< Framing error flag                                                   */
+        __I  uint8_t   ORER     :  1;                /*!< Overrun error flag(It is same as SSR.ORER)                           */
+        __I  uint8_t   RDF      :  1;                /*!< Receive FIFO data full flag(It is same as SSR.RDF)                   */
+      } FRDRH_b;                                     /*!< BitSize                                                              */
     };
-    
+
     union {
-      __I  uint16_t  RDRHL;                         /*!< Receive Data Register                                                 */
-      
+      __I  uint8_t   RDRH;                           /*!< Receive Data Register High byte.                                     */
+
       struct {
-        __I  uint16_t  RDRL     :  8;               /*!< RDRL is an 8-bit register that stores receive data low byte.          */
-        __I  uint16_t  RDRH     :  8;               /*!< RDRH is an 8-bit register that stores receive data high byte.         */
-      } RDRHL_b;                                    /*!< BitSize                                                               */
+        __I  uint8_t   RDRH     :  8;               /*!< RDRH is an 8-bit register that stores receive data high byte.         */
+      } RDRH_b;                                     /*!< BitSize                                                               */
     };
   };
-  
+
+  union {
+    union {
+      __I  uint8_t   FRDRL;                        /*!< Receive FIFO Data Register (stores Lower byte)                         */
+        struct {
+        __I  uint8_t   RDAT     :  8;              /*!< Serial receive data store 8-bit (Valid only in asynchronous mode
+                                                     (including multi-processor) or clock synchronous mode, and FIFO selected) */
+        } FRDRL_b;                                 /*!< BitSize                                                                */
+    };
+
+    union {
+      __I  uint8_t   RDRL;                         /*!< Receive Data Register low byte.                                        */
+        struct {
+        __I  uint8_t   RDRL     :  8;              /*!< RDRL is an 8-bit register that stores receive data low byte.           */
+        } RDRL_b;                                   /*!< BitSize                                                               */
+    };
+  };
+
   union {
     __IO uint8_t   MDDR;                            /*!< Modulation Duty Register                                              */
     
@@ -14807,6 +14820,14 @@ typedef struct {                                    /*!< R_RSPI0 Structure      
       __IO uint16_t  SLNDEN     :  1;               /*!< SSL Negation Delay Setting Enable                                     */
       __IO uint16_t  SCKDEN     :  1;               /*!< RSPCK Delay Setting Enable                                            */
     } SPCMDn_b[8];                                  /*!< BitSize                                                               */
+  };
+
+  union {
+   __IO uint8_t   SPDCR2;                          /*!< RSPI swap setting bit.                                                 */
+
+   struct {
+    __IO uint8_t   BYSW       :  1;               /*!< BitSize                                                                 */
+    } SPDCR2_b;
   };
 } R_RSPI0_Type;
 
@@ -15380,9 +15401,7 @@ typedef struct {                                    /*!< R_GPTA0 Structure      
     __IO uint32_t  GTINTAD;                         /*!< General PWM Timer Interrupt Output Setting Register                   */
     
     struct {
-           uint32_t             :  6;
-      __IO uint32_t  GTINTPR    :  2;               /*!< GTPR Compare Match Interrupt Enable                                   */
-           uint32_t             :  8;
+           uint32_t             : 16;
       __IO uint32_t  ADTRAUEN   :  1;               /*!< GTADTRA Compare Match (Up-Counting) A/D Converter Start Request
                                                          Interrupt Enable                                                      */
       __IO uint32_t  ADTRADEN   :  1;               /*!< GTADTRA Compare Match (Down-Counting) A/D Converter Start Request
@@ -16150,9 +16169,7 @@ typedef struct {                                    /*!< R_GPTB0 Structure      
     __IO uint32_t  GTINTAD;                         /*!< General PWM Timer Interrupt Output Setting Register                   */
     
     struct {
-           uint32_t             :  6;
-      __IO uint32_t  GTINTPR    :  2;               /*!< GTPR Compare Match Interrupt Enable                                   */
-           uint32_t             : 16;
+           uint32_t             : 24;
       __IO uint32_t  GRP        :  2;               /*!< Output Disable Source Select                                          */
            uint32_t             :  3;
       __IO uint32_t  GRPABH     :  1;               /*!< Same Time Output Level High Disable Request Enable                    */
@@ -16364,52 +16381,29 @@ typedef struct {                                    /*!< R_GPT_OPS Structure    
 
 typedef struct {                                    /*!< R_GPT_ODC Structure                                                   */
   
-  union {
     union {
-      __IO uint32_t  GTDLYCR;                       /*!< PWM Output Delay Control Register                                     */
+      __IO uint16_t  GTDLYCR;                       /*!< PWM Output Delay Control Register                                     */
       
       struct {
-        __IO uint32_t  DLLEN    :  1;               /*!< DLL Operation Enable                                                  */
-        __IO uint32_t  DLYRST   :  1;               /*!< PWM Delay Generation Circuit Reset                                    */
-             uint32_t           : 14;
-        __IO uint32_t  DLYBS0   :  1;               /*!< PWM Delay Generation Circuit bypass for channel 0                     */
-        __IO uint32_t  DLYBS1   :  1;               /*!< PWM Delay Generation Circuit bypass for channel 1                     */
-        __IO uint32_t  DLYBS2   :  1;               /*!< PWM Delay Generation Circuit bypass for channel 2                     */
-        __IO uint32_t  DLYBS3   :  1;               /*!< PWM Delay Generation Circuit bypass for channel 3                     */
-             uint32_t           :  4;
-        __IO uint32_t  DLYEN0   :  1;               /*!< PWM Delay Generation Circuit enable for channel 0                     */
-        __IO uint32_t  DLYEN1   :  1;               /*!< PWM Delay Generation Circuit enable for channel 1                     */
-        __IO uint32_t  DLYEN2   :  1;               /*!< PWM Delay Generation Circuit enable for channel 2                     */
-        __IO uint32_t  DLYEN3   :  1;               /*!< PWM Delay Generation Circuit enable for channel 3                     */
+        __IO uint16_t  DLLEN    :  1;               /*!< DLL Operation Enable                                                  */
+        __IO uint16_t  DLYRST   :  1;               /*!< PWM Delay Generation Circuit Reset                                    */
       } GTDLYCR_b;                                  /*!< BitSize                                                               */
     };
     
-    struct {
-      union {
-        __IO uint16_t  GTDLYCR1;                    /*!< PWM Output Delay Control Register1                                    */
-        
-        struct {
-          __IO uint16_t  DLLEN  :  1;               /*!< DLL Operation Enable                                                  */
-          __IO uint16_t  DLYRST :  1;               /*!< PWM Delay Generation Circuit Reset                                    */
-        } GTDLYCR1_b;                               /*!< BitSize                                                               */
-      };
-      
-      union {
-        __IO uint16_t  GTDLYCR2;                    /*!< PWM Output Delay Control Register2                                    */
-        
-        struct {
-          __IO uint16_t  DLYBS0 :  1;               /*!< PWM Delay Generation Circuit bypass for channel 0                     */
-          __IO uint16_t  DLYBS1 :  1;               /*!< PWM Delay Generation Circuit bypass for channel 1                     */
-          __IO uint16_t  DLYBS2 :  1;               /*!< PWM Delay Generation Circuit bypass for channel 2                     */
-          __IO uint16_t  DLYBS3 :  1;               /*!< PWM Delay Generation Circuit bypass for channel 3                     */
-               uint16_t         :  4;
-          __IO uint16_t  DLYEN0 :  1;               /*!< PWM Delay Generation Circuit enable for channel 0                     */
-          __IO uint16_t  DLYEN1 :  1;               /*!< PWM Delay Generation Circuit enable for channel 1                     */
-          __IO uint16_t  DLYEN2 :  1;               /*!< PWM Delay Generation Circuit enable for channel 2                     */
-          __IO uint16_t  DLYEN3 :  1;               /*!< PWM Delay Generation Circuit enable for channel 3                     */
-        } GTDLYCR2_b;                               /*!< BitSize                                                               */
-      };
-    };
+    union {
+      __IO uint16_t  GTDLYCR2;                      /*!< PWM Output Delay Control Register2                                    */
+
+      struct {
+        __IO uint16_t  DLYBS0 :  1;                 /*!< PWM Delay Generation Circuit bypass for channel 0                     */
+        __IO uint16_t  DLYBS1 :  1;                 /*!< PWM Delay Generation Circuit bypass for channel 1                     */
+        __IO uint16_t  DLYBS2 :  1;                 /*!< PWM Delay Generation Circuit bypass for channel 2                     */
+        __IO uint16_t  DLYBS3 :  1;                 /*!< PWM Delay Generation Circuit bypass for channel 3                     */
+             uint16_t         :  4;
+        __IO uint16_t  DLYEN0 :  1;                 /*!< PWM Delay Generation Circuit enable for channel 0                     */
+        __IO uint16_t  DLYEN1 :  1;                 /*!< PWM Delay Generation Circuit enable for channel 1                     */
+        __IO uint16_t  DLYEN2 :  1;                 /*!< PWM Delay Generation Circuit enable for channel 2                     */
+        __IO uint16_t  DLYEN3 :  1;                 /*!< PWM Delay Generation Circuit enable for channel 3                     */
+    } GTDLYCR2_b;                                   /*!< BitSize                                                               */
   };
   __I  uint8_t RESERVED[5 * 4];
   R_GPT_ODC_GTDLYRnRC0_Type GTDLYRnRC0[4];          /*!< GTIOC%s Rising Output Delay Register Cluster 0                        */
@@ -19291,8 +19285,7 @@ typedef struct {                                    /*!< R_QSPI Structure       
 #define R_IWDT_BASE                     0x40044400UL
 #define R_CAC_BASE                      0x40044600UL
 #define R_MSTP_BASE                     0x40047000UL
-#define R_SRCRAM_BASE                   0x40048000UL
-#define R_SRC_BASE                      0x4004DFF0UL
+#define R_SRC_BASE                      0x40048000UL
 #define R_SSI0_BASE                     0x4004E000UL
 #define R_SSI1_BASE                     0x4004E100UL
 #define R_CAN0_BASE                     0x40050000UL
@@ -19304,6 +19297,7 @@ typedef struct {                                    /*!< R_QSPI Structure       
 #define R_S12ADC0_BASE                  0x4005C000UL
 #define R_S12ADC1_BASE                  0x4005C200UL
 #define R_TSN_BASE                      0x4005D000UL
+#define R_TSN_CONTROL_BASE              0X4005D000UL
 #define R_DAC_BASE                      0x4005E000UL
 #define R_AMI_BASE                      0x4005F000UL
 #define R_USBHS_BASE                    0x40060000UL
@@ -19419,7 +19413,6 @@ typedef struct {                                    /*!< R_QSPI Structure       
 #define R_IWDT                          ((R_IWDT_Type             *) R_IWDT_BASE)
 #define R_CAC                           ((R_CAC_Type              *) R_CAC_BASE)
 #define R_MSTP                          ((R_MSTP_Type             *) R_MSTP_BASE)
-#define R_SRCRAM                        ((R_SRCRAM_Type           *) R_SRCRAM_BASE)
 #define R_SRC                           ((R_SRC_Type              *) R_SRC_BASE)
 #define R_SSI0                          ((R_SSI0_Type             *) R_SSI0_BASE)
 #define R_SSI1                          ((R_SSI0_Type             *) R_SSI1_BASE)
@@ -19431,7 +19424,8 @@ typedef struct {                                    /*!< R_QSPI Structure       
 #define R_DOC                           ((R_DOC_Type              *) R_DOC_BASE)
 #define R_S12ADC0                       ((R_S12ADC0_Type          *) R_S12ADC0_BASE)
 #define R_S12ADC1                       ((R_S12ADC0_Type          *) R_S12ADC1_BASE)
-#define R_TSN                           ((R_TSN_Type              *) R_TSN_BASE)
+#define R_TSN                           ((R_TSN_Control_Type      *) R_TSN_BASE)
+#define R_TSN_CONTROL                   ((R_TSN_Control_Type      *) R_TSN_CONTROL_BASE)
 #define R_DAC                           ((R_DAC_Type              *) R_DAC_BASE)
 #define R_AMI                           ((R_AMI_Type              *) R_AMI_BASE)
 #define R_USBHS                         ((R_USBHS_Type            *) R_USBHS_BASE)

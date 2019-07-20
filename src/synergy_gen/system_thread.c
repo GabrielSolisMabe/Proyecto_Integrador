@@ -8,6 +8,26 @@ static uint8_t system_thread_stack[1024] BSP_PLACE_IN_SECTION_V2(".stack.system_
 void tx_startup_err_callback(void *p_instance, void *p_data);
 void tx_startup_common_init(void);
 #if (BSP_IRQ_DISABLED) != BSP_IRQ_DISABLED
+#if !defined(SSP_SUPPRESS_ISR_g_timer2) && !defined(SSP_SUPPRESS_ISR_GPT2)
+SSP_VECTOR_DEFINE_CHAN(gpt_counter_overflow_isr, GPT, COUNTER_OVERFLOW, 2);
+#endif
+#endif
+static gpt_instance_ctrl_t g_timer2_ctrl;
+static const timer_on_gpt_cfg_t g_timer2_extend =
+{ .gtioca =
+{ .output_enabled = true, .stop_level = GPT_PIN_LEVEL_LOW },
+  .gtiocb =
+  { .output_enabled = false, .stop_level = GPT_PIN_LEVEL_LOW },
+  .shortest_pwm_signal = GPT_SHORTEST_LEVEL_OFF, };
+static const timer_cfg_t g_timer2_cfg =
+{ .mode = TIMER_MODE_PWM, .period = 1000, .unit = TIMER_UNIT_FREQUENCY_HZ, .duty_cycle = 50, .duty_cycle_unit =
+          TIMER_PWM_UNIT_PERCENT,
+  .channel = 2, .autostart = true, .p_callback = NULL, .p_context = &g_timer2, .p_extend = &g_timer2_extend, .irq_ipl =
+          (BSP_IRQ_DISABLED), };
+/* Instance structure to use this module. */
+const timer_instance_t g_timer2 =
+{ .p_ctrl = &g_timer2_ctrl, .p_cfg = &g_timer2_cfg, .p_api = &g_timer_on_gpt };
+#if (BSP_IRQ_DISABLED) != BSP_IRQ_DISABLED
 #if !defined(SSP_SUPPRESS_ISR_g_adc0) && !defined(SSP_SUPPRESS_ISR_ADC0)
 SSP_VECTOR_DEFINE_CHAN(adc_scan_end_isr, ADC, SCAN_END, 0);
 #endif

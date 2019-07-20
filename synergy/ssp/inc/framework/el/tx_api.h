@@ -1,6 +1,6 @@
 /**************************************************************************/ 
 /*                                                                        */ 
-/*            Copyright (c) 1996-2017 by Express Logic Inc.               */ 
+/*            Copyright (c) 1996-2018 by Express Logic Inc.               */ 
 /*                                                                        */ 
 /*  This software is copyrighted by and is the sole property of Express   */ 
 /*  Logic, Inc.  All rights, title, ownership, or other interests         */ 
@@ -38,7 +38,7 @@
 /*  APPLICATION INTERFACE DEFINITION                       RELEASE        */ 
 /*                                                                        */ 
 /*    tx_api.h                                            PORTABLE C      */ 
-/*                                                           5.8          */ 
+/*                                                           5.8 SP4      */ 
 /*  AUTHOR                                                                */ 
 /*                                                                        */ 
 /*    William E. Lamie, Express Logic, Inc.                               */ 
@@ -120,6 +120,18 @@
 /*                                            definitions, added support  */ 
 /*                                            for optional extensions,    */ 
 /*                                            resulting in version 5.8    */ 
+/*  03-11-2018     William E. Lamie         Modified comment(s), added    */ 
+/*                                            a macro to disable warning  */ 
+/*                                            of parameter not used,      */ 
+/*                                            resulting in version 5.8 SP1*/ 
+/*  06-30-2018     William E. Lamie         Modified comment(s), added    */ 
+/*                                            a symbol for identifying    */ 
+/*                                            service pack release number,*/ 
+/*                                            resulting in version 5.8 SP2*/ 
+/*  08-03-2018     William E. Lamie         Modified comment(s), and      */ 
+/*                                            changed to SP3              */ 
+/*  10-10-2018     William E. Lamie         Modified comment(s), and      */ 
+/*                                            changed to SP4              */ 
 /*                                                                        */ 
 /**************************************************************************/ 
 
@@ -152,6 +164,7 @@ extern   "C" {
 #define EL_PRODUCT_THREADX
 #define THREADX_MAJOR_VERSION           5
 #define THREADX_MINOR_VERSION           8
+#define THREADX_SERVICE_PACK_VERSION    4
 
 
 /* API input parameters and general constants.  */
@@ -1868,6 +1881,14 @@ VOID                    *_tx_misra_timer_indirect_to_void_pointer_convert(TX_TIM
 CHAR                    *_tx_misra_const_char_to_char_pointer_convert(const char *pointer);
 TX_THREAD               *_tx_misra_void_to_thread_pointer_convert(VOID  *pointer);
 UCHAR                   *_tx_misra_char_to_uchar_pointer_convert(CHAR  *pointer);
+VOID                    _tx_misra_event_flags_group_not_used(TX_EVENT_FLAGS_GROUP *group_ptr);
+VOID                    _tx_misra_event_flags_set_notify_not_used(VOID (*events_set_notify)(TX_EVENT_FLAGS_GROUP *notify_group_ptr));
+VOID                    _tx_misra_queue_not_used(TX_QUEUE *queue_ptr);
+VOID                    _tx_misra_queue_send_notify_not_used(VOID (*queue_send_notify)(TX_QUEUE *notify_queue_ptr));
+VOID                    _tx_misra_semaphore_not_used(TX_SEMAPHORE *semaphore_ptr);
+VOID                    _tx_misra_semaphore_put_notify_not_used(VOID (*semaphore_put_notify)(TX_SEMAPHORE *notify_semaphore_ptr));
+VOID                    _tx_misra_thread_not_used(TX_THREAD *thread_ptr);
+VOID                    _tx_misra_thread_entry_exit_notify_not_used(VOID (*thread_entry_exit_notify)(TX_THREAD *notify_thread_ptr, UINT id));
 
 
 #define TX_MEMSET(a,b,c)                                _tx_misra_memset((a), (UINT) (b), (UINT) (c))
@@ -1916,6 +1937,15 @@ UCHAR                   *_tx_misra_char_to_uchar_pointer_convert(CHAR  *pointer)
 #define TX_CONST_CHAR_TO_CHAR_POINTER_CONVERT(a)        _tx_misra_const_char_to_char_pointer_convert((a))
 #define TX_VOID_TO_THREAD_POINTER_CONVERT(a)            _tx_misra_void_to_thread_pointer_convert((a))
 #define TX_CHAR_TO_UCHAR_POINTER_CONVERT(a)             _tx_misra_char_to_uchar_pointer_convert((a))
+#define TX_EVENT_FLAGS_GROUP_NOT_USED(a)                _tx_misra_event_flags_group_not_used((a))
+#define TX_EVENT_FLAGS_SET_NOTIFY_NOT_USED(a)           _tx_misra_event_flags_set_notify_not_used((a))
+#define TX_QUEUE_NOT_USED(a)                            _tx_misra_queue_not_used((a))
+#define TX_QUEUE_SEND_NOTIFY_NOT_USED(a)                _tx_misra_queue_send_notify_not_used((a))
+#define TX_SEMAPHORE_NOT_USED(a)                        _tx_misra_semaphore_not_used((a))
+#define TX_SEMAPHORE_PUT_NOTIFY_NOT_USED(a)             _tx_misra_semaphore_put_notify_not_used((a))
+#define TX_THREAD_NOT_USED(a)                           _tx_misra_thread_not_used((a))
+#define TX_THREAD_ENTRY_EXIT_NOTIFY_NOT_USED(a)         _tx_misra_thread_entry_exit_notify_not_used((a))
+
 
 #else
 
@@ -1974,6 +2004,30 @@ UCHAR                   *_tx_misra_char_to_uchar_pointer_convert(CHAR  *pointer)
 #define TX_CONST_CHAR_TO_CHAR_POINTER_CONVERT(a)        ((CHAR *) ((VOID *) (a)))
 #define TX_VOID_TO_THREAD_POINTER_CONVERT(a)            ((TX_THREAD *) ((VOID *) (a)))
 #define TX_CHAR_TO_UCHAR_POINTER_CONVERT(a)             ((UCHAR *) ((VOID *) (a)))
+#ifndef TX_EVENT_FLAGS_GROUP_NOT_USED
+#define TX_EVENT_FLAGS_GROUP_NOT_USED(a)                ((void)(a))
+#endif
+#ifndef TX_EVENT_FLAGS_SET_NOTIFY_NOT_USED
+#define TX_EVENT_FLAGS_SET_NOTIFY_NOT_USED(a)           ((void)(a))
+#endif
+#ifndef TX_QUEUE_NOT_USED
+#define TX_QUEUE_NOT_USED(a)                            ((void)(a))
+#endif
+#ifndef TX_QUEUE_SEND_NOTIFY_NOT_USED
+#define TX_QUEUE_SEND_NOTIFY_NOT_USED(a)                ((void)(a))
+#endif
+#ifndef TX_SEMAPHORE_NOT_USED
+#define TX_SEMAPHORE_NOT_USED(a)                        ((void)(a))
+#endif
+#ifndef TX_SEMAPHORE_PUT_NOTIFY_NOT_USED
+#define TX_SEMAPHORE_PUT_NOTIFY_NOT_USED(a)             ((void)(a))
+#endif
+#ifndef TX_THREAD_NOT_USED
+#define TX_THREAD_NOT_USED(a)                           ((void)(a))
+#endif
+#ifndef TX_THREAD_ENTRY_EXIT_NOTIFY_NOT_USED
+#define TX_THREAD_ENTRY_EXIT_NOTIFY_NOT_USED(a)         ((void)(a))
+#endif
 
 #endif
 

@@ -17,56 +17,35 @@
  * included in this file may be subject to different terms.
  **********************************************************************************************************************/
 
-/**********************************************************************************************************************
- * File Name    : r_cgc.h
- * Description  : Clock Generation Circuit (CGC) Module instance header file.
- **********************************************************************************************************************/
-
-#ifndef R_CGC_H
-#define R_CGC_H
-
-/*******************************************************************************************************************//**
- * @ingroup HAL_Library
- * @defgroup CGC CGC
- * @brief Driver for the Clock Generation Circuit.
- *
- * This module supports the Clock Generation Circuit. It implements
- * the following interfaces:
- *   - @ref CGC_API
- * @{
- **********************************************************************************************************************/
-
-/***********************************************************************************************************************
- * Includes
- **********************************************************************************************************************/
-#include "bsp_api.h"
-#include "r_cgc_cfg.h"
-#include "r_cgc_api.h"
+#ifndef R_GPT_PRIVATE_API_H
+#define R_GPT_PRIVATE_API_H
 
 /** Common macro for SSP header files. There is also a corresponding SSP_FOOTER macro at the end of this file. */
 SSP_HEADER
 
 /***********************************************************************************************************************
- * Macro definitions
+ * Private Instance API Functions. DO NOT USE! Use functions through Interface API structure instead.
  **********************************************************************************************************************/
-#define CGC_CODE_VERSION_MAJOR (1U)
-#define CGC_CODE_VERSION_MINOR (13U)
-
-
-/**********************************************************************************************************************
-Exported global variables
-***********************************************************************************************************************/
-/** @cond INC_HEADER_DEFS_SEC */
-/** Filled in Interface API structure for this Instance. */
-extern const cgc_api_t g_cgc_on_cgc;
-/** @endcond */
-
-/*******************************************************************************************************************//**
- * @} (end defgroup CGC)
- **********************************************************************************************************************/
+ssp_err_t R_GPT_TimerOpen (timer_ctrl_t      * const p_ctrl,
+                           timer_cfg_t const * const p_cfg);
+ssp_err_t R_GPT_Stop (timer_ctrl_t  * const p_ctrl);
+ssp_err_t R_GPT_Start (timer_ctrl_t * const p_ctrl);
+ssp_err_t R_GPT_Reset (timer_ctrl_t * const p_ctrl);
+ssp_err_t R_GPT_PeriodSet (timer_ctrl_t * const p_ctrl,
+                           timer_size_t   const period,
+                           timer_unit_t   const unit);
+ssp_err_t R_GPT_DutyCycleSet (timer_ctrl_t   * const p_ctrl,
+                              timer_size_t     const duty_cycle,
+                              timer_pwm_unit_t const unit,
+                              uint8_t          const pin);
+ssp_err_t R_GPT_CounterGet (timer_ctrl_t * const p_ctrl,
+                            timer_size_t * const p_value);
+ssp_err_t R_GPT_InfoGet (timer_ctrl_t   * const p_ctrl,
+                           timer_info_t * const p_info);
+ssp_err_t R_GPT_Close (timer_ctrl_t     * const p_ctrl);
+ssp_err_t R_GPT_VersionGet (ssp_version_t * const p_version);
 
 /** Common macro for SSP header files. There is also a corresponding SSP_HEADER macro at the top of this file. */
 SSP_FOOTER
 
-/* R_CGC_H */
-#endif // ifndef R_CGC_H
+#endif /* R_GPT_PRIVATE_API_H */
