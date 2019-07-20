@@ -30,6 +30,8 @@ RM := rm -rf
 -include synergy/ssp/src/bsp/cmsis/Device/RENESAS/S7G2/Source/subdir.mk
 -include synergy/board/s7g2_sk/subdir.mk
 -include src/synergy_gen/subdir.mk
+-include src/lcd_setup/subdir.mk
+-include src/gui/subdir.mk
 -include src/subdir.mk
 -include subdir.mk
 -include objects.mk
@@ -68,33 +70,33 @@ endif
 
 # Add inputs and outputs from these tool invocations to the build variables 
 SECONDARY_FLASH += \
-Proyecto_Integrador.srec \
+1.srec \
 
 SECONDARY_SIZE += \
-Proyecto_Integrador.siz \
+1.siz \
 
 
 # All Target
-all: Proyecto_Integrador.elf secondary-outputs
+all: 1.elf secondary-outputs
 
 # Tool invocations
-Proyecto_Integrador.elf: $(OBJS) $(USER_OBJS) $(LINKER_SCRIPT)
+1.elf: $(OBJS) $(USER_OBJS) $(LINKER_SCRIPT)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GNU ARM Cross C Linker'
-	$(file > Proyecto_Integrador.elf.in,-mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O2 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wunused -Wuninitialized -Wall -Wextra -Wmissing-declarations -Wconversion -Wpointer-arith -Wshadow -Wlogical-op -Waggregate-return -Wfloat-equal  -g3 -T "C:\\REPOS\\Proyecto_Integrador\\script/s7g2.ld" -Xlinker --gc-sections -L "C:\\REPOS\\Proyecto_Integrador\\synergy\\ssp\\src\\bsp\\cmsis\\DSP_Lib\\cm4_gcc" -L "C:\\REPOS\\Proyecto_Integrador\\synergy\\ssp\\src\\framework\\el\\gx\\cm4_gcc" -L "C:\\REPOS\\Proyecto_Integrador\\synergy\\ssp\\src\\framework\\el\\tx\\cm4_gcc" -Wl,-Map,"Proyecto_Integrador.map" --specs=nano.specs --specs=rdimon.specs -o "Proyecto_Integrador.elf" -Wl,--start-group $(OBJS) $(USER_OBJS) $(LIBS) -Wl,--end-group)
-	arm-none-eabi-gcc @"Proyecto_Integrador.elf.in"
+	$(file > 1.elf.in,-mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O2 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wunused -Wuninitialized -Wall -Wextra -Wmissing-declarations -Wconversion -Wpointer-arith -Wshadow -Wlogical-op -Waggregate-return -Wfloat-equal  -g3 -T "C:\\REP\\1\\script/s7g2.ld" -Xlinker --gc-sections -L "C:\\REP\\1\\synergy\\ssp\\src\\bsp\\cmsis\\DSP_Lib\\cm4_gcc" -L "C:\\REP\\1\\synergy\\ssp\\src\\framework\\el\\gx\\cm4_gcc" -L "C:\\REP\\1\\synergy\\ssp\\src\\framework\\el\\tx\\cm4_gcc" -Wl,-Map,"1.map" --specs=nano.specs --specs=rdimon.specs -o "1.elf" -Wl,--start-group $(OBJS) $(USER_OBJS) $(LIBS) -Wl,--end-group)
+	arm-none-eabi-gcc @"1.elf.in"
 	@echo 'Finished building target: $@'
 	@echo ' '
 
-Proyecto_Integrador.srec: Proyecto_Integrador.elf
+1.srec: 1.elf
 	@echo 'Invoking: GNU ARM Cross Create Flash Image'
-	arm-none-eabi-objcopy -O srec "Proyecto_Integrador.elf"  "Proyecto_Integrador.srec"
+	arm-none-eabi-objcopy -O srec "1.elf"  "1.srec"
 	@echo 'Finished building: $@'
 	@echo ' '
 
-Proyecto_Integrador.siz: Proyecto_Integrador.elf
+1.siz: 1.elf
 	@echo 'Invoking: GNU ARM Cross Print Size'
-	arm-none-eabi-size --format=berkeley "Proyecto_Integrador.elf"
+	arm-none-eabi-size --format=berkeley "1.elf"
 	@echo 'Finished building: $@'
 	@echo ' '
 
@@ -160,7 +162,7 @@ ifneq ($(strip $(C_DEPS)),)
 	-@ xargs -s 6000 -t -a clean_C_DEPS.tmp $(RM)
 	-@$(RM) clean_C_DEPS.tmp
 endif
-	-$(RM)  Proyecto_Integrador.elf
+	-$(RM)  1.elf
 	-@echo ' '
 
 secondary-outputs: $(SECONDARY_FLASH) $(SECONDARY_SIZE)

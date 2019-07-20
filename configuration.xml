@@ -572,6 +572,11 @@
           </stack>
         </stack>
       </stack>
+      <object id="rtos.threadx.object.semaphore.609313826">
+        <property id="rtos.threadx.object.semaphore.name" value="New Semaphore"/>
+        <property id="rtos.threadx.object.semaphore.symbol" value="g_main_semaphore_lcdc"/>
+        <property id="rtos.threadx.object.semaphore.count" value="0"/>
+      </object>
     </context>
     <context id="rtos.threadx.thread.1211494167">
       <property id="_symbol" value="system_thread"/>

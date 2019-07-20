@@ -579,6 +579,11 @@ Synergy Configuration
               
         Instance "D/AVE 2D Driver on dave2d"
           Instance "D/AVE 2D Port on sf_tes_2d_drw"
+    Object "g_main_semaphore_lcdc Semaphore"
+      Name: New Semaphore
+      Symbol: g_main_semaphore_lcdc
+      Initial count: 0
+      
   Thread "System Thread"
     Symbol: system_thread
     Name: System Thread
