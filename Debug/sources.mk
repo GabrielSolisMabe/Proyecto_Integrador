@@ -30,7 +30,9 @@ C_DEPS :=
 
 # Every subdirectory with source files must be described here
 SUBDIRS := \
+src/gui \
 src \
+src/lcd_setup \
 src/synergy_gen \
 synergy/board/s7g2_sk \
 synergy/ssp/src/bsp/cmsis/Device/RENESAS/S7G2/Source \
@@ -42,6 +44,13 @@ synergy/ssp/src/driver/r_cgc \
 synergy/ssp/src/driver/r_dtc \
 synergy/ssp/src/driver/r_elc \
 synergy/ssp/src/driver/r_fmi \
+synergy/ssp/src/driver/r_glcd \
 synergy/ssp/src/driver/r_ioport \
+synergy/ssp/src/driver/r_jpeg_common \
+synergy/ssp/src/driver/r_jpeg_decode \
 synergy/ssp/src/driver/r_sci_spi \
+synergy/ssp/src/framework/sf_el_gx \
+synergy/ssp/src/framework/sf_jpeg_decode \
+synergy/ssp/src/framework/sf_tes_2d_drw \
+synergy/ssp/src/framework/tes/dave2d \
 

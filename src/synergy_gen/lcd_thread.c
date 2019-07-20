@@ -121,6 +121,7 @@ const spi_cfg_t g_spi_lcdc_cfg =
 /* Instance structure to use this module. */
 const spi_instance_t g_spi_lcdc =
 { .p_ctrl = &g_spi_lcdc_ctrl, .p_cfg = &g_spi_lcdc_cfg, .p_api = &g_spi_on_sci };
+TX_SEMAPHORE g_main_semaphore_lcdc;
 extern bool g_ssp_common_initialized;
 extern uint32_t g_ssp_common_thread_count;
 extern TX_SEMAPHORE g_ssp_common_initialized_semaphore;
@@ -131,6 +132,12 @@ void lcd_thread_create(void)
     g_ssp_common_thread_count++;
 
     /* Initialize each kernel object. */
+    UINT err_g_main_semaphore_lcdc;
+    err_g_main_semaphore_lcdc = tx_semaphore_create (&g_main_semaphore_lcdc, (CHAR *) "New Semaphore", 0);
+    if (TX_SUCCESS != err_g_main_semaphore_lcdc)
+    {
+        tx_startup_err_callback (&g_main_semaphore_lcdc, 0);
+    }
 
     UINT err;
     err = tx_thread_create (&lcd_thread, (CHAR *) "LCD Thread", lcd_thread_func, (ULONG) NULL, &lcd_thread_stack, 1024,
