@@ -10,15 +10,8 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
--include synergy/ssp/src/framework/tes/dave2d/subdir.mk
--include synergy/ssp/src/framework/sf_tes_2d_drw/subdir.mk
--include synergy/ssp/src/framework/sf_jpeg_decode/subdir.mk
--include synergy/ssp/src/framework/sf_el_gx/subdir.mk
 -include synergy/ssp/src/driver/r_sci_spi/subdir.mk
--include synergy/ssp/src/driver/r_jpeg_decode/subdir.mk
--include synergy/ssp/src/driver/r_jpeg_common/subdir.mk
 -include synergy/ssp/src/driver/r_ioport/subdir.mk
--include synergy/ssp/src/driver/r_glcd/subdir.mk
 -include synergy/ssp/src/driver/r_fmi/subdir.mk
 -include synergy/ssp/src/driver/r_elc/subdir.mk
 -include synergy/ssp/src/driver/r_dtc/subdir.mk
@@ -30,8 +23,6 @@ RM := rm -rf
 -include synergy/ssp/src/bsp/cmsis/Device/RENESAS/S7G2/Source/subdir.mk
 -include synergy/board/s7g2_sk/subdir.mk
 -include src/synergy_gen/subdir.mk
--include src/lcd_setup/subdir.mk
--include src/gui/subdir.mk
 -include src/subdir.mk
 -include subdir.mk
 -include objects.mk
@@ -83,7 +74,7 @@ all: Proyecto_Integrador.elf secondary-outputs
 Proyecto_Integrador.elf: $(OBJS) $(USER_OBJS) $(LINKER_SCRIPT)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GNU ARM Cross C Linker'
-	$(file > Proyecto_Integrador.elf.in,-mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O2 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wunused -Wuninitialized -Wall -Wextra -Wmissing-declarations -Wconversion -Wpointer-arith -Wshadow -Wlogical-op -Waggregate-return -Wfloat-equal  -g3 -T "C:\\REPOS\\Proyecto_Integrador\\script/s7g2.ld" -Xlinker --gc-sections -L "C:\\REPOS\\Proyecto_Integrador\\synergy\\ssp\\src\\bsp\\cmsis\\DSP_Lib\\cm4_gcc" -L "C:\\REPOS\\Proyecto_Integrador\\synergy\\ssp\\src\\framework\\el\\gx\\cm4_gcc" -L "C:\\REPOS\\Proyecto_Integrador\\synergy\\ssp\\src\\framework\\el\\tx\\cm4_gcc" -Wl,-Map,"Proyecto_Integrador.map" --specs=nano.specs --specs=rdimon.specs -o "Proyecto_Integrador.elf" -Wl,--start-group $(OBJS) $(USER_OBJS) $(LIBS) -Wl,--end-group)
+	$(file > Proyecto_Integrador.elf.in,-mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -O2 -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -Wunused -Wuninitialized -Wall -Wextra -Wmissing-declarations -Wconversion -Wpointer-arith -Wshadow -Wlogical-op -Waggregate-return -Wfloat-equal  -g3 -T "C:\\REPOS\\Proyecto_Integrador\\script/s7g2.ld" -Xlinker --gc-sections -L "C:\\REPOS\\Proyecto_Integrador\\synergy\\ssp\\src\\bsp\\cmsis\\DSP_Lib\\cm4_gcc" -L "C:\\REPOS\\Proyecto_Integrador\\synergy\\ssp\\src\\framework\\el\\tx\\cm4_gcc" -Wl,-Map,"Proyecto_Integrador.map" --specs=nano.specs --specs=rdimon.specs -o "Proyecto_Integrador.elf" -Wl,--start-group $(OBJS) $(USER_OBJS) $(LIBS) -Wl,--end-group)
 	arm-none-eabi-gcc @"Proyecto_Integrador.elf.in"
 	@echo 'Finished building target: $@'
 	@echo ' '
