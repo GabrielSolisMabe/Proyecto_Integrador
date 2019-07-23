@@ -691,12 +691,22 @@ Synergy Configuration
       Duty Cycle Value: 50
       Duty Cycle Unit: Unit Percent
       Auto Start: True
-      GTIOCA Output Enabled: False
+      GTIOCA Output Enabled: True
       GTIOCA Stop Level: Pin Level Low
       GTIOCB Output Enabled: False
       GTIOCB Stop Level: Pin Level Low
       Callback: NULL
       Overflow Interrupt Priority: Disabled
+      
+    Instance "g_external_irq5 External IRQ Driver on r_icu"
+      Name: g_external_irq5
+      Channel: 5
+      Trigger: Rising
+      Digital Filtering: Disabled
+      Digital Filtering Sample Clock (Only valid when Digital Filtering is Enabled): PCLK / 64
+      Interrupt enabled after initialization: True
+      Callback: external_irq5_callback
+      Pin Interrupt Priority: Priority 6
       
     Instance "g_timer0 Timer Driver on r_gpt"
       Name: g_timer0
@@ -714,33 +724,6 @@ Synergy Configuration
       GTIOCB Stop Level: Pin Level Low
       Callback: NULL
       Overflow Interrupt Priority: Disabled
-      
-    Instance "g_external_irq5 External IRQ Driver on r_icu"
-      Name: g_external_irq5
-      Channel: 5
-      Trigger: Rising
-      Digital Filtering: Disabled
-      Digital Filtering Sample Clock (Only valid when Digital Filtering is Enabled): PCLK / 64
-      Interrupt enabled after initialization: True
-      Callback: external_irq5_callback
-      Pin Interrupt Priority: Priority 6
-      
-    Instance "g_timer1 Timer Driver on r_gpt"
-      Name: g_timer1
-      Channel: 1
-      Mode: Periodic
-      Duty Cycle Range (only applicable in PWM mode): Shortest: 2 PCLK, Longest: (Period - 1) PCLK
-      Period Value: 100
-      Period Unit: Milliseconds
-      Duty Cycle Value: 50
-      Duty Cycle Unit: Unit Percent
-      Auto Start: True
-      GTIOCA Output Enabled: False
-      GTIOCA Stop Level: Pin Level Low
-      GTIOCB Output Enabled: False
-      GTIOCB Stop Level: Pin Level Low
-      Callback: timer1_callback
-      Overflow Interrupt Priority: Priority 7
       
     Object "Message_Queue Queue"
       Name: MessageQueue

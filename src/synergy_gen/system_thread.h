@@ -20,19 +20,14 @@ extern "C"
 {
 #endif
 /** Timer on GPT Instance. */
-extern const timer_instance_t g_timer1;
-#ifndef timer1_callback
-void timer1_callback(timer_callback_args_t *p_args);
+extern const timer_instance_t g_timer0;
+#ifndef NULL
+void NULL(timer_callback_args_t *p_args);
 #endif
 /* External IRQ on ICU Instance. */
 extern const external_irq_instance_t g_external_irq5;
 #ifndef external_irq5_callback
 void external_irq5_callback(external_irq_callback_args_t *p_args);
-#endif
-/** Timer on GPT Instance. */
-extern const timer_instance_t g_timer0;
-#ifndef NULL
-void NULL(timer_callback_args_t *p_args);
 #endif
 /** Timer on GPT Instance. */
 extern const timer_instance_t g_timer2;
