@@ -442,6 +442,7 @@ ssp_err_t R_GLCD_Close (display_ctrl_t * const p_api_ctrl)
     HW_GLCD_VposInterruptDisable(p_glcd_reg);
     HW_GLCD_GR1UnderflowInterruptDisable(p_glcd_reg);
     HW_GLCD_GR2UnderflowInterruptDisable(p_glcd_reg);
+    HW_GLCD_BackgroundOperationDisable(p_glcd_reg);
 
     /** Reset the GLCD hardware */
     HW_GLCD_SoftwareReset(p_glcd_reg);
@@ -480,6 +481,9 @@ ssp_err_t R_GLCD_Start (display_ctrl_t * const p_api_ctrl)
     /** Start to output the vertical and horizontal synchronization signals and screen data. */
     R_GLCDC_Type * p_glcd_reg = p_ctrl->p_reg;
     HW_GLCD_BackgroundOperationEnable(p_glcd_reg);
+
+    /** Enable Line detect function    */
+    HW_GLCD_VposDetectEnable(p_glcd_reg);
 
     p_ctrl->state = DISPLAY_STATE_DISPLAYING;
 
@@ -731,11 +735,16 @@ ssp_err_t R_GLCD_StatusGet  (display_ctrl_t const * const p_api_ctrl, display_st
  * @par    Implements
  * - display_api_t::versionGet.
  *
- * @retval  p_version. The version number.
+ * @retval  SSP_SUCCESS          Version information available in p_version.
+ * @retval  SSP_ERR_ASSERTION    NULL pointer is passed to function.
  * @note    This function is re-entrant.
  **********************************************************************************************************************/
 ssp_err_t R_GLCD_VersionGet (ssp_version_t * p_version)
 {
+#if (GLCD_CFG_PARAM_CHECKING_ENABLE)
+    GLCD_ERROR_RETURN(NULL != p_version, SSP_ERR_ASSERTION);
+#endif
+
     *p_version = module_version;
     return SSP_SUCCESS;
 }  /* End of function R_GLCD_VersionGet() */
@@ -1999,7 +2008,6 @@ void glcdc_underflow_2_isr (void)
 static void r_glcd_interrupt_enable(R_GLCDC_Type * p_glcd_reg, IRQn_Type* line_detect_irq, IRQn_Type* underflow_1_irq, IRQn_Type* underflow_2_irq)
 {
     /** Enable the GLCD interrupts */
-    HW_GLCD_VposDetectEnable(p_glcd_reg);
     HW_GLCD_GR1UnderflowDetectEnable(p_glcd_reg);
     HW_GLCD_GR2UnderflowDetectEnable(p_glcd_reg);
     HW_GLCD_VposInterruptEnable(p_glcd_reg);

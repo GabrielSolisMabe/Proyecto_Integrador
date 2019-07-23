@@ -56,17 +56,19 @@
 #include "gx_api.h"
 #include "bsp_api.h"
 #include "r_display_api.h"
-#include "gx_display.h"
 
 /** Common macro for SSP header files. There is also a corresponding SSP_FOOTER macro at the end of this file. */
 SSP_HEADER
+
+/* Includes GUIX Display component */
+#include "gx_display.h"
 
 /**********************************************************************************************************************
  * Macro definitions
  **********************************************************************************************************************/
 /** The API version of GUIX integrated driver framework */
 #define SF_EL_GX_API_VERSION_MAJOR       (1U)
-#define SF_EL_GX_API_VERSION_MINOR       (5U)
+#define SF_EL_GX_API_VERSION_MINOR       (9U)
 
 /***********************************************************************************************************************
  * Typedef definitions
@@ -116,6 +118,7 @@ typedef struct st_sf_el_gx_cfg
 {
     display_instance_t    * p_display_instance;    ///< Pointer to a display instance
     display_runtime_cfg_t * p_display_runtime_cfg; ///< Pointer to a runtime display configuration
+    display_frame_layer_t   inherit_frame_layer;   ///< Configured Inherit Screen Layer
     void                  * p_canvas;              ///< Pointer to a canvas(reserved)
     void                  * p_framebuffer_a;       ///< Pointer to a frame buffer(A)
     void                  * p_framebuffer_b;       ///< Pointer to a frame buffer(B)

@@ -54,7 +54,7 @@ SSP_HEADER
  * Macro definitions
  **********************************************************************************************************************/
 #define IOPORT_CODE_VERSION_MAJOR (1U)
-#define IOPORT_CODE_VERSION_MINOR (4U)
+#define IOPORT_CODE_VERSION_MINOR (6U)
 
 /***********************************************************************************************************************
  * Typedef definitions

@@ -225,6 +225,8 @@ typedef struct
      * - R_CGC_ClocksCfg()
      *  @note The BSP module calls this function at startup, but it can also be called from the application to change
      *  clocks at runtime.
+     *  @param[in]   p_clock_cfg     Pointer to a structure that contains the dividers or multipliers to be used when
+     *                              configuring the PLL.
      */
     ssp_err_t (* clocksCfg)(cgc_clocks_cfg_t const * const p_clock_cfg);
 
@@ -258,6 +260,7 @@ typedef struct
     /** Get the system clock information.
      * @par Implemented as
      * - R_CGC_SystemClockGet()
+     * @param[in]   p_set_clock_cfg Pointer to clock configuration structure
      * @param[out]  clock_source    Returns the current system clock.
      * @param[out]  p_clock_cfg     Returns the current system clock dividers.
      */

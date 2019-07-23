@@ -6,9 +6,8 @@
 #include "lcd_setup/lcd.h"
 
 GX_WINDOW_ROOT * p_window_root;
+extern GX_CONST GX_STUDIO_WIDGET * gui_adc_widget_table[];
 
-
-GX_WINDOW_ROOT * p_window_root;
 /* LCD Thread entry function */
 void lcd_thread_entry(void)
 {
@@ -25,6 +24,27 @@ void lcd_thread_entry(void)
 
     g_sf_el_gx.p_api->canvasInit(g_sf_el_gx.p_ctrl, p_window_root);
 
+    GX_CONST GX_STUDIO_WIDGET ** pp_studio_widget = &gui_adc_widget_table[0];
+        GX_WIDGET * p_first_screen = NULL;
+
+        while (GX_NULL != *pp_studio_widget)
+        {
+
+            if (0 == strcmp("window1", (char *) (*pp_studio_widget)->widget_name))
+            {
+                gx_studio_named_widget_create((*pp_studio_widget)->widget_name, (GX_WIDGET *) p_window_root, GX_NULL);
+            }
+            else
+            {
+                gx_studio_named_widget_create((*pp_studio_widget)->widget_name, GX_NULL, GX_NULL);
+            }
+
+            pp_studio_widget++;
+        }
+
+        gx_widget_attach(p_window_root, p_first_screen);
+        gx_widget_show(p_window_root);
+
     /* Lets GUIX run. */
     gx_system_start();
 
@@ -36,6 +56,7 @@ void lcd_thread_entry(void)
 
     while (1)
     {
+        gx_prompt_text_set(&window1.window1_prompt, "10");
         tx_thread_sleep (1);
     }
 }

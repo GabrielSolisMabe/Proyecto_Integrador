@@ -166,7 +166,7 @@ extern INT          gx_get_dave_error(INT get_index);
 #endif
 extern VOID         gx_display_list_flush(GX_DISPLAY * display);
 extern VOID         gx_display_list_open(GX_DISPLAY * display);
-extern d2_device  * gx_dave2d_set_clip(GX_DRAW_CONTEXT * context);
+extern d2_device  * gx_dave2d_context_clip_set(GX_DRAW_CONTEXT *context);
 extern VOID         gx_dave2d_rotate_canvas_to_working_param_set (d2_rotation_param_t * p_param, GX_DISPLAY *p_display,
                                                                                             GX_CANVAS * p_canvas);
 #endif
@@ -310,7 +310,7 @@ VOID _gx_dave2d_horizontal_line_8bpp(GX_DRAW_CONTEXT * context,
 {
     gx_display_list_flush(context -> gx_draw_context_display);
 
-    d2_device * dave = gx_dave2d_set_clip(context);
+    d2_device * dave = gx_dave2d_context_clip_set(context);
 
     CHECK_DAVE_STATUS(d2_setfillmode(dave, d2_fm_color))
     CHECK_DAVE_STATUS(d2_selectrendermode(dave, d2_rm_solid))
@@ -340,7 +340,7 @@ VOID _gx_dave2d_vertical_line_8bpp(GX_DRAW_CONTEXT * context,
                              INT ystart, INT yend, INT xpos, INT width, GX_COLOR color)
 {
 
-    d2_device * dave = gx_dave2d_set_clip(context);
+    d2_device * dave = gx_dave2d_context_clip_set(context);
     CHECK_DAVE_STATUS(d2_selectrendermode(dave, d2_rm_solid))
     CHECK_DAVE_STATUS(d2_setfillmode(dave, d2_fm_color))
     CHECK_DAVE_STATUS(d2_setantialiasing(dave, 0))
@@ -365,7 +365,7 @@ VOID _gx_dave2d_vertical_line_8bpp(GX_DRAW_CONTEXT * context,
 /*LDRA_INSPECTED 219 S GUIX defined functions start with underscore. */
 VOID _gx_dave2d_simple_line_draw_8bpp(GX_DRAW_CONTEXT * context, INT xstart, INT ystart, INT xend, INT yend)
 {
-    d2_device * dave = gx_dave2d_set_clip(context);
+    d2_device * dave = gx_dave2d_context_clip_set(context);
     CHECK_DAVE_STATUS(d2_setantialiasing(dave, 0))
     CHECK_DAVE_STATUS(d2_selectrendermode(dave, d2_rm_solid))
     CHECK_DAVE_STATUS(d2_setblendmode(dave, d2_bm_zero, d2_bm_zero))
@@ -392,7 +392,7 @@ VOID _gx_dave2d_simple_wide_line_8bpp(GX_DRAW_CONTEXT * context, INT xstart, INT
                                 INT xend, INT yend)
 {
 
-    d2_device * dave = gx_dave2d_set_clip(context);
+    d2_device * dave = gx_dave2d_context_clip_set(context);
 
     CHECK_DAVE_STATUS(d2_setantialiasing(dave, 0))
     CHECK_DAVE_STATUS(d2_selectrendermode(dave, d2_rm_solid))
@@ -418,7 +418,7 @@ VOID _gx_dave2d_simple_wide_line_8bpp(GX_DRAW_CONTEXT * context, INT xstart, INT
 /*LDRA_INSPECTED 219 S GUIX defined functions start with underscore. */
 VOID _gx_dave2d_horizontal_pattern_line_draw_8bpp(GX_DRAW_CONTEXT * context, INT xstart, INT xend, INT ypos)
 {
-    d2_device * dave = gx_dave2d_set_clip(context);
+    d2_device * dave = gx_dave2d_context_clip_set(context);
 
     CHECK_DAVE_STATUS(d2_setantialiasing(dave, 0))
     CHECK_DAVE_STATUS(d2_selectrendermode(dave, d2_rm_solid))
@@ -445,7 +445,7 @@ VOID _gx_dave2d_horizontal_pattern_line_draw_8bpp(GX_DRAW_CONTEXT * context, INT
 /*LDRA_INSPECTED 219 S GUIX defined functions start with underscore. */
 VOID _gx_dave2d_vertical_pattern_line_draw_8bpp(GX_DRAW_CONTEXT * context, INT ystart, INT yend, INT xpos)
 {
-    d2_device * dave = gx_dave2d_set_clip(context);
+    d2_device * dave = gx_dave2d_context_clip_set(context);
 
     CHECK_DAVE_STATUS(d2_setantialiasing(dave, 0))
     CHECK_DAVE_STATUS(d2_selectrendermode(dave, d2_rm_solid))
@@ -480,7 +480,7 @@ VOID _gx_dave2d_pixelmap_draw_8bpp(GX_DRAW_CONTEXT * context, INT xpos, INT ypos
         mode |= d2_mode_rle;
     }
 
-    d2_device * dave = gx_dave2d_set_clip(context);
+    d2_device * dave = gx_dave2d_context_clip_set(context);
 
     d2_setalphablendmode(dave,d2_bm_one, d2_bm_zero);
     d2_setalpha(dave, 0xff);
@@ -545,7 +545,7 @@ VOID _gx_dave2d_polygon_draw_8bpp(GX_DRAW_CONTEXT * context, GX_POINT * vertex, 
         data[index++] = (d2_point)(D2_FIX4((USHORT)val));
     }
 
-    d2_device * dave = gx_dave2d_set_clip(context);
+    d2_device * dave = gx_dave2d_context_clip_set(context);
 
     /** Make sure anti-aliasing is off. */
     CHECK_DAVE_STATUS(d2_setantialiasing(dave,0))
@@ -604,7 +604,7 @@ VOID _gx_dave2d_polygon_fill_8bpp(GX_DRAW_CONTEXT * context, GX_POINT * vertex, 
         data[index++] = (d2_point)(D2_FIX4((USHORT)val));
     }
 
-    d2_device * dave = gx_dave2d_set_clip(context);
+    d2_device * dave = gx_dave2d_context_clip_set(context);
     gx_display_list_flush(context -> gx_draw_context_display);
 
     GX_VALUE temp_width = brush->gx_brush_width;
@@ -736,7 +736,8 @@ VOID _gx_dave2d_glyph_4bit_draw_8bpp(GX_DRAW_CONTEXT * context, GX_RECTANGLE * d
 /*LDRA_INSPECTED 219 S GUIX defined functions start with underscore. */
 VOID _gx_dave2d_circle_draw_8bpp(GX_DRAW_CONTEXT * context, INT xcenter, INT ycenter, UINT r)
 {
-    GX_BRUSH * brush = &context->gx_draw_context_brush;
+    GX_BRUSH  * brush = &context->gx_draw_context_brush;
+    d2_device * dave;
 
     /** Return to caller if the polygon is filled, the outline has already been drawn. */
     if (brush->gx_brush_style & ((UINT)GX_BRUSH_SOLID_FILL|(UINT)GX_BRUSH_PIXELMAP_FILL))
@@ -744,16 +745,7 @@ VOID _gx_dave2d_circle_draw_8bpp(GX_DRAW_CONTEXT * context, INT xcenter, INT yce
         return;
     }
 
-    context->gx_draw_context_clip->gx_rectangle_top =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_top - brush->gx_brush_width);
-    context->gx_draw_context_clip->gx_rectangle_left =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_left - brush->gx_brush_width);
-    context->gx_draw_context_clip->gx_rectangle_right =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_right + brush->gx_brush_width);
-    context->gx_draw_context_clip->gx_rectangle_bottom =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_bottom + brush->gx_brush_width);
-
-    d2_device * dave = gx_dave2d_set_clip(context);
+    dave = gx_dave2d_context_clip_set(context);
 
     /** Make sure anti-aliasing is off. */
     CHECK_DAVE_STATUS(d2_setantialiasing(dave, 0))
@@ -783,16 +775,7 @@ VOID _gx_dave2d_circle_fill_8bpp(GX_DRAW_CONTEXT * context, INT xcenter, INT yce
     GX_BRUSH  * brush = &context->gx_draw_context_brush;
     GX_COLOR    brush_color = brush->gx_brush_fill_color;
 
-    d2_device * dave = gx_dave2d_set_clip(context);
-
-    context->gx_draw_context_clip->gx_rectangle_top =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_top - brush->gx_brush_width);
-    context->gx_draw_context_clip->gx_rectangle_left =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_left - brush->gx_brush_width);
-    context->gx_draw_context_clip->gx_rectangle_right =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_right + brush->gx_brush_width);
-    context->gx_draw_context_clip->gx_rectangle_bottom =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_bottom + brush->gx_brush_width);
+    d2_device * dave = gx_dave2d_context_clip_set(context);
 
     /** Make sure anti-aliasing is off. */
     CHECK_DAVE_STATUS(d2_setantialiasing(dave, 0))
@@ -824,14 +807,6 @@ VOID _gx_dave2d_circle_fill_8bpp(GX_DRAW_CONTEXT * context, INT xcenter, INT yce
                                             0))
 
     brush->gx_brush_width = temp_width;
-    if (brush->gx_brush_width > 0)
-    {
-        UINT brush_style =  brush->gx_brush_style;
-        brush->gx_brush_style = (UINT)(brush->gx_brush_style & 
-                                                (UINT)(~((UINT)GX_BRUSH_PIXELMAP_FILL|(UINT)GX_BRUSH_SOLID_FILL)));
-        _gx_dave2d_circle_draw_8bpp(context, xcenter, ycenter, r);
-        brush->gx_brush_style = brush_style;
-    }
 }
 
 /*******************************************************************************************************************//**
@@ -863,15 +838,6 @@ VOID _gx_dave2d_arc_draw_8bpp(GX_DRAW_CONTEXT * context, INT xcenter, INT ycente
                                                     (UINT)(~((UINT)GX_BRUSH_SOLID_FILL|(UINT)GX_BRUSH_PIXELMAP_FILL)));
     }
 
-    context->gx_draw_context_clip->gx_rectangle_top =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_top - brush->gx_brush_width);
-    context->gx_draw_context_clip->gx_rectangle_left =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_left - brush->gx_brush_width);
-    context->gx_draw_context_clip->gx_rectangle_right =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_right + brush->gx_brush_width);
-    context->gx_draw_context_clip->gx_rectangle_bottom =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_bottom + brush->gx_brush_width);
-
     INT s_angle =  - start_angle;
     INT e_angle =  - end_angle;
 
@@ -892,7 +858,7 @@ VOID _gx_dave2d_arc_draw_8bpp(GX_DRAW_CONTEXT * context, INT xcenter, INT ycente
         flags = 0;
     }
 
-    d2_device * dave = gx_dave2d_set_clip(context);
+    d2_device * dave = gx_dave2d_context_clip_set(context);
 
     CHECK_DAVE_STATUS(d2_setantialiasing(dave, 0))
     CHECK_DAVE_STATUS(d2_setfillmode(dave, d2_fm_color))
@@ -961,16 +927,7 @@ VOID _gx_dave2d_pie_fill_8bpp(GX_DRAW_CONTEXT * context, INT xcenter, INT ycente
     INT         cos2;
     d2_u32      flags;
     GX_COLOR    brush_color = brush->gx_brush_fill_color;
-    d2_device * dave = gx_dave2d_set_clip(context);
-
-    context->gx_draw_context_clip->gx_rectangle_top =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_top - brush->gx_brush_width);
-    context->gx_draw_context_clip->gx_rectangle_left =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_left - brush->gx_brush_width);
-    context->gx_draw_context_clip->gx_rectangle_right =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_right + brush->gx_brush_width);
-    context->gx_draw_context_clip->gx_rectangle_bottom =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_bottom + brush->gx_brush_width);
+    d2_device * dave = gx_dave2d_context_clip_set(context);
 
     INT s_angle =  - start_angle;
     INT e_angle =  - end_angle;

@@ -52,27 +52,11 @@ SSP_HEADER
  * Macro definitions
  **********************************************************************************************************************/
 #define GPT_CODE_VERSION_MAJOR (1U)
-#define GPT_CODE_VERSION_MINOR (7U)
+#define GPT_CODE_VERSION_MINOR (11U)
 
 /***********************************************************************************************************************
  * Typedef definitions
  **********************************************************************************************************************/
-/** Channel control block. DO NOT INITIALIZE.  Initialization occurs when timer_api_t::open is called. */
-typedef struct st_gpt_instance_ctrl
-{
-    /** Callback provided when a timer ISR occurs.  NULL indicates no CPU interrupt. */
-    void (* p_callback)(timer_callback_args_t * p_args);
-
-    /** Placeholder for user data.  Passed to the user callback in ::timer_callback_args_t. */
-    void const *    p_context;
-    void       *    p_reg;        ///< Base register for this channel
-    uint32_t        open;         ///< Whether or not channel is open
-    uint8_t         channel;      ///< Channel number.
-    bool            one_shot;     ///< Whether or not timer is in one shot mode
-    IRQn_Type       irq;          ///< Counter overflow IRQ number
-    timer_variant_t variant;      ///< Timer variant
-} gpt_instance_ctrl_t;
-
 /** Level of GPT pin */
 typedef enum e_gpt_pin_level
 {
@@ -80,6 +64,15 @@ typedef enum e_gpt_pin_level
     GPT_PIN_LEVEL_HIGH     = 1,     ///< Pin level high
     GPT_PIN_LEVEL_RETAINED = 2      ///< Pin level retained
 } gpt_pin_level_t;
+
+/** GPT PWM shortest pin level */
+typedef enum e_gpt_shortest_level
+{
+    /** 1 extra PCLK in ON time. Minimum ON time will be limited to 2 PCLK raw counts. */
+    GPT_SHORTEST_LEVEL_OFF      = 0,
+    /** 1 extra PCLK in OFF time. Minimum ON time will be limited to 1 PCLK raw counts. */
+    GPT_SHORTEST_LEVEL_ON       = 1,
+}gpt_shortest_level_t;
 
 /** Sources can be used to start the timer, stop the timer, count up, or count down. */
 typedef enum e_gpt_trigger
@@ -122,11 +115,31 @@ typedef struct s_gpt_output_pin
     gpt_pin_level_t  stop_level;     ///< Select a stop level from ::gpt_pin_level_t
 } gpt_output_pin_t;
 
+/** Channel control block. DO NOT INITIALIZE.  Initialization occurs when timer_api_t::open is called. */
+typedef struct st_gpt_instance_ctrl
+{
+    /** Callback provided when a timer ISR occurs.  NULL indicates no CPU interrupt. */
+    void (* p_callback)(timer_callback_args_t * p_args);
+
+    /** Placeholder for user data.  Passed to the user callback in ::timer_callback_args_t. */
+    void const            * p_context;
+    void                  * p_reg;                  ///< Base register for this channel
+    uint32_t                open;                   ///< Whether or not channel is open
+    uint8_t                 channel;                ///< Channel number.
+    bool                    one_shot;               ///< Whether or not timer is in one shot mode
+    bool                    gtioca_output_enabled;  ///< Set to true to enable gtioca pin output
+    bool                    gtiocb_output_enabled;  ///< Set to true to enable gtiocb pin output
+    IRQn_Type               irq;                    ///< Counter overflow IRQ number
+    timer_variant_t         variant;                ///< Timer variant
+    gpt_shortest_level_t    shortest_pwm_signal;    ///< Shortest PWM signal level
+} gpt_instance_ctrl_t;
+
 /** GPT extension configures the output pins for GPT. */
 typedef struct st_timer_on_gpt_cfg
 {
     gpt_output_pin_t  gtioca;       ///< Configuration for GPT I/O pin A
     gpt_output_pin_t  gtiocb;       ///< Configuration for GPT I/O pin B
+    gpt_shortest_level_t  shortest_pwm_signal;      ///< Shortest PWM signal level
 } timer_on_gpt_cfg_t;
 
 /**********************************************************************************************************************

@@ -790,10 +790,16 @@ void sci_spi_txi_isr (void)
         /* Disable the transmit buffer empty interrupt. */
         HW_SCI_TxIrqDisable(p_ctrl->p_reg);
 
+        /*Clear IR bit in an ICU.*/
+        R_BSP_IrqStatusClear(p_ctrl->txi_irq);
+
+        /*Clear Pending TXI interrupt request in NVIC if any.*/
+        NVIC_ClearPendingIRQ(p_ctrl->txi_irq);
+
         /* If the current option is transmit only enable the transmit end interrupt. */
         if (SPI_OPERATION_DO_TX == p_ctrl->transfer_mode)
         {
-            HW_SCI_TeIrqEnable(p_ctrl->p_reg);   
+            HW_SCI_TeIrqEnable(p_ctrl->p_reg);
         }
     }
 
@@ -1049,8 +1055,8 @@ static ssp_err_t r_sci_spi_baud_set (R_SCI0_Type * p_sci_reg,
         temp_mbbr = ((uint32_t) p_baudinfo[clock_divisor].div_coefficient * bitrate * 256);
         mddr = (temp_mbbr * (brr+1)) / clock_mhz;
 
-        /* Set MDDR register only for values between 128 and 256, do not set otherwise. */
-        if ((mddr >= 128U) && (mddr <= 256U))
+        /* Set MDDR register only for values between 128 and 255, do not set otherwise. */
+        if ((mddr >= 128U) && (mddr <= 255U))
         {
             HW_SCI_UartBitRateModulationSet(p_sci_reg, (uint8_t)mddr);
         }
@@ -1062,13 +1068,15 @@ static ssp_err_t r_sci_spi_baud_set (R_SCI0_Type * p_sci_reg,
 
 /*****************************************************************************************************************//**
  * @brief Configures SCI SPI related transfer drivers (if enabled).
- * @param[in]     p_cfg                 Pointer to SCI SPI specific configuration structure.
- * @param[in]     p_ssp_feature         SSP feature.
+ * @param[in]     p_cfg                     Pointer to SCI SPI specific configuration structure.
+ * @param[in]     p_ssp_feature             SSP feature.
  *
- * @retval        SSP_SUCCESS           Operation successfully completed.
- * @retval        SSP_ERR_ASSERTION     One of the following invalid parameters passed
- *                                      - Pointer p_cfg is NULL
- *                                      - Interrupt is not enabled
+ * @retval        SSP_SUCCESS               Operation successfully completed.
+ * @retval        SSP_ERR_ASSERTION         One of the following invalid parameters passed
+ *                                          - Pointer p_cfg is NULL
+ *                                          - Interrupt is not enabled
+ * @retval        SSP_ERR_INVALID_ARGUMENT  DTC is used for data transmission but not used for data reception or
+ *                                          vice versa.
  ********************************************************************************************************************/
 static ssp_err_t    r_sci_spi_transfer_open     (spi_cfg_t const * const p_cfg, ssp_feature_t * p_ssp_feature)
 {
@@ -1122,9 +1130,6 @@ static ssp_err_t r_sci_spi_set_valid_interrupts_priority   (sci_spi_instance_ctr
     ssp_feature.channel = p_cfg->channel;
     ssp_feature.unit = 0U;
     ssp_feature.id = SSP_IP_SCI;
-    fmi_feature_info_t info = {0U};
-    err = g_fmi_on_fmi.productFeatureGet(&ssp_feature, &info);
-    SCI_SPI_ERROR_RETURN(SSP_SUCCESS == err, err);
 
     err = r_sci_irq_cfg(&ssp_feature, SSP_SIGNAL_SCI_RXI, p_cfg->rxi_ipl, p_ctrl, &p_ctrl->rxi_irq);
     if (SSP_SUCCESS != err)
@@ -1201,13 +1206,6 @@ static uint8_t r_sci_spi_set_register   (spi_cfg_t const * const p_cfg)
         temp_a |= SCI_SPI_SPMR_SSN_PIN_ENABLE_SET;
     }
 
-    /* Set MFF -- Mode fault error detection. */
-    if (SPI_MODE_FAULT_ERROR_ENABLE == p_cfg->mode_fault)
-    {
-        temp_a |= SCI_SPI_SPMR_MODE_FAULT_ENABLE;
-    }
-
-
     if (SPI_CLK_PHASE_EDGE_EVEN == p_cfg->clk_phase)
     {
         /* According to HM Rev0.70, in order to get  Phase= Data sampling on even edge, CKPH should be 0. */
@@ -1218,7 +1216,7 @@ static uint8_t r_sci_spi_set_register   (spi_cfg_t const * const p_cfg)
         }
     }
 
-    else if (SPI_CLK_PHASE_EDGE_ODD == p_cfg->clk_phase)
+    else
     {
         /* According to HM Rev0.70, in order to get  Phase= Data sampling on odd edge, CKPH should be 1. */
         /* If CKPH =1, to get a high polarity during idle, CKPOL bit should be 1. (See Figure 34.69). */
@@ -1291,7 +1289,7 @@ static void r_sci_spi_set_tx_rx_interrupt   (R_SCI0_Type * p_sci_reg,
     }
 }
 
-/*********************************************************************************************************************
+/*****************************************************************************************************************//**
  * This function resets the TX transfer interface.
  * @param[in]   p_ctrl              Pointer to driver control block
  * @param[in]   tx_rx_mode          Current transmit receive mode
@@ -1348,13 +1346,13 @@ static ssp_err_t r_sci_spi_tx_transfer_reset (sci_spi_instance_ctrl_t * const p_
     return result;
 }
 
-/*********************************************************************************************************************
+/*****************************************************************************************************************//**
  * This function tries RX/TX using transfer interface, if configured, else returns success anyway for CPU to do it.
  * @param[in]   p_ctrl              Pointer to driver control block
  * @param[in ]  tx_rx_mode          Bit width value to set
  * @param[in ]  length              Bit width value to set
  *
- * @retval      SSP_ERR_ASSERTION   Invalid argument for transfer device.
+ * @retval      SSP_ERR_ASSERTION   The Number of units of data to be transferred is more than 0xFFFFU.
  * @retval      SSP_ERR_NOT_OPEN    Invalid transfer device handle.
  * @retval      SSP_ERR_NOT_ENABLED Invalid transaction parameter
  * @retval      SSP_SUCCESS         Transaction successful or Transfer interface not configured

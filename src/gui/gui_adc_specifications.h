@@ -6,7 +6,7 @@
 /*  www.expresslogic.com.                                                      */
 /*                                                                             */
 /*  GUIX Studio Revision 5.4.2.9                                               */
-/*  Date (dd.mm.yyyy): 20. 7.2019   Time (hh:mm): 12:24                        */
+/*  Date (dd.mm.yyyy): 22. 7.2019   Time (hh:mm): 19:03                        */
 /*******************************************************************************/
 
 
@@ -23,6 +23,7 @@ extern   "C" {
 /* Define widget ids                                                           */
 
 #define ID_WINDOW1 1
+#define prompt1 2
 
 
 /* Define animation ids                                                        */
@@ -68,6 +69,14 @@ typedef struct
 
 typedef struct
 {
+    GX_RESOURCE_ID string_id;
+    GX_RESOURCE_ID font_id;
+    GX_RESOURCE_ID normal_text_color_id;
+    GX_RESOURCE_ID selected_text_color_id;
+} GX_PROMPT_PROPERTIES;
+
+typedef struct
+{
     GX_RESOURCE_ID wallpaper_id;
 } GX_WINDOW_PROPERTIES;
 
@@ -77,6 +86,7 @@ typedef struct
 typedef struct WINDOW1_CONTROL_BLOCK_STRUCT
 {
     GX_WINDOW_MEMBERS_DECLARE
+    GX_PROMPT window1_prompt;
 } WINDOW1_CONTROL_BLOCK;
 
 
@@ -168,6 +178,7 @@ typedef struct GX_STUDIO_DISPLAY_INFO_STRUCT
 
 /* Declare Studio-generated functions for creating top-level widgets           */
 
+UINT gx_studio_prompt_create(GX_CONST GX_STUDIO_WIDGET *info, GX_WIDGET *control_block, GX_WIDGET *parent);
 UINT gx_studio_window_create(GX_CONST GX_STUDIO_WIDGET *info, GX_WIDGET *control_block, GX_WIDGET *parent);
 GX_WIDGET *gx_studio_widget_create(GX_BYTE *storage, GX_CONST GX_STUDIO_WIDGET *definition, GX_WIDGET *parent);
 UINT gx_studio_named_widget_create(char *name, GX_WIDGET *parent, GX_WIDGET **new_widget);

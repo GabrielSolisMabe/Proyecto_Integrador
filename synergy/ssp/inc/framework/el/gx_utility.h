@@ -1,6 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*            Copyright (c) 1996-2017 by Express Logic Inc.               */
+/*            Copyright (c) 1996-2018 by Express Logic Inc.               */
 /*                                                                        */
 /*  This software is copyrighted by and is the sole property of Express   */
 /*  Logic, Inc.  All rights, title, ownership, or other interests         */
@@ -38,7 +38,7 @@
 /*  COMPONENT DEFINITION                                   RELEASE        */
 /*                                                                        */
 /*    gx_utility.h                                        PORTABLE C      */
-/*                                                           5.3.3        */
+/*                                                           5.4.1        */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    William E. Lamie, Express Logic, Inc.                               */
@@ -78,6 +78,14 @@
 /*  03-01-2017     William E. Lamie         Modified comment(s), cleaned  */
 /*                                            up function prototypes,     */
 /*                                            resulting in version 5.3.3  */
+/*  11-06-2017     William E. Lamie         Add new pixelmap resize       */
+/*                                            functions, add gradient     */
+/*                                            support functions,          */
+/*                                            resulting in version 5.4    */
+/*  04-15-2018     William E. Lamie         Modified comment(s), and      */
+/*                                            added 1555xrgb format       */
+/*                                            rotate and resize functions,*/
+/*                                            resulting in version 5.4.1  */
 /*                                                                        */
 /**************************************************************************/
 
@@ -86,8 +94,14 @@
 
 
 /* Define utility component function prototypes.  */
-
+UINT    _gx_utility_1bpp_pixelmap_resize(GX_PIXELMAP *src, GX_PIXELMAP *destination, INT width, INT height);
+UINT    _gx_utility_1bpp_pixelmap_rotate(GX_PIXELMAP *src, INT angle, GX_PIXELMAP *destination, INT *rot_cx, INT *rot_cy);
+UINT    _gx_utility_1bpp_pixelmap_simple_rotate(GX_PIXELMAP *src, INT angle, GX_PIXELMAP *destination, INT *rot_cx, INT *rot_cy);
+UINT    _gx_utility_4bpp_pixelmap_resize(GX_PIXELMAP *src, GX_PIXELMAP *destination, INT width, INT height);
+UINT    _gx_utility_4bpp_pixelmap_rotate(GX_PIXELMAP *src, INT angle, GX_PIXELMAP *destination, INT *rot_cx, INT *rot_cy);
+UINT    _gx_utility_4bpp_pixelmap_simple_rotate(GX_PIXELMAP *src, INT angle, GX_PIXELMAP *destination, INT *rot_cx, INT *rot_cy);
 UINT    _gx_utility_8bpp_pixelmap_resize(GX_PIXELMAP *src, GX_PIXELMAP *destination, INT width, INT height);
+UINT    _gx_utility_8bit_alphamap_resize(GX_PIXELMAP *src, GX_PIXELMAP *destination, INT width, INT height);
 UINT    _gx_utility_8bpp_pixelmap_rotate(GX_PIXELMAP *src, INT angle, GX_PIXELMAP *destination, INT *rot_cx, INT *rot_cy);
 UINT    _gx_utility_8bpp_pixelmap_simple_rotate(GX_PIXELMAP *src, INT angle, GX_PIXELMAP *destination, INT *rot_cx, INT *rot_cy);
 UINT    _gx_utility_8bit_alphamap_rotate(GX_PIXELMAP *src, INT angle, GX_PIXELMAP *destination, INT *rot_cx, INT *rot_cy);
@@ -99,6 +113,8 @@ UINT    _gx_utility_332rgb_pixelmap_rotate(GX_PIXELMAP *src, INT angle, GX_PIXEL
 UINT    _gx_utility_332rgb_pixelmap_simple_rotate(GX_PIXELMAP *src, INT angle, GX_PIXELMAP *destination, INT *rot_cx, INT *rot_cy);
 UINT    _gx_utility_565rgb_pixelmap_rotate(GX_PIXELMAP *src, INT angle, GX_PIXELMAP *destination, INT *rot_cx, INT *rot_cy);
 UINT    _gx_utility_565rgb_pixelmap_simple_rotate(GX_PIXELMAP *src, INT angle, GX_PIXELMAP *destination, INT *rot_cx, INT *rot_cy);
+UINT    _gx_utility_1555xrgb_pixelmap_resize(GX_PIXELMAP *src, GX_PIXELMAP *destination, INT width, INT height);
+UINT    _gx_utility_1555xrgb_pixelmap_rotate(GX_PIXELMAP *src, INT angle, GX_PIXELMAP *destination, INT *rot_cx, INT *rot_cy);
 UINT    _gx_utility_4444argb_pixelmap_resize(GX_PIXELMAP *src, GX_PIXELMAP *destination, INT width, INT height);
 UINT    _gx_utility_4444argb_pixelmap_rotate(GX_PIXELMAP *src, INT angle, GX_PIXELMAP *destination, INT *rot_cx, INT *rot_cy);
 UINT    _gx_utility_4444argb_pixelmap_simple_rotate(GX_PIXELMAP *src, INT angle, GX_PIXELMAP *destination, INT *rot_cx, INT *rot_cy);
@@ -107,6 +123,9 @@ UINT    _gx_utility_alphamap_create(INT width, INT height, GX_PIXELMAP *map);
 VOID    _gx_utility_glyph_1bpp_to_alphamap_draw(GX_PIXELMAP *map, INT xpos, INT ypos, GX_CONST GX_GLYPH *glyph);
 VOID    _gx_utility_glyph_4bpp_to_alphamap_draw(GX_PIXELMAP *map, INT xpos, INT ypos, GX_CONST GX_GLYPH *glyph);
 VOID    _gx_utility_glyph_8bpp_to_alphamap_draw(GX_PIXELMAP *map, INT xpos, INT ypos, GX_CONST GX_GLYPH *glyph);
+
+UINT    _gx_utility_gradient_create(GX_GRADIENT *gradient, GX_VALUE width, GX_VALUE height, UCHAR type, GX_UBYTE start_alpha, GX_UBYTE end_alpha);
+UINT    _gx_utility_gradient_delete(GX_GRADIENT *gradient);
 
 VOID    _gx_utility_ltoa(LONG value, GX_CHAR *return_buffer, UINT return_buffer_size);
 INT     _gx_utility_math_acos(INT x);
@@ -131,15 +150,17 @@ VOID    _gx_utility_rectangle_shift(GX_RECTANGLE *rectangle, GX_VALUE x_shift, G
 
 UINT    _gx_utility_string_to_alphamap(GX_CONST GX_CHAR *text, GX_CONST GX_FONT *font, GX_PIXELMAP *textmap);
 VOID    _gx_utility_string_to_alphamap_draw(GX_CONST GX_CHAR *text, GX_CONST GX_FONT *font, GX_PIXELMAP *map);
+
 #ifdef GX_UTF8_SUPPORT
 UINT    _gx_utility_unicode_to_utf8(ULONG unicode, GX_UBYTE *return_utf8_str, UINT *return_utf8_size);
 UINT    _gx_utility_utf8_string_character_count_get(GX_CONST GX_CHAR *utf8_str, UINT byte_count, UINT *character_count);
 UINT    _gx_utility_utf8_string_character_get(GX_CONST GX_CHAR **utf8_str, UINT byte_count, GX_CHAR_CODE *glyph_value, UINT *glyph_len);
 #endif /* GX_UTF8_SUPPORT */
 
-
 /* Define error checking shells for API services.  These are only referenced by the
    application.  */
+UINT    _gxe_utility_gradient_create(GX_GRADIENT *gradient, GX_VALUE width, GX_VALUE height, UCHAR type, GX_UBYTE start_alpha, GX_UBYTE end_alpha);
+UINT    _gxe_utility_gradient_delete(GX_GRADIENT *gradient);
 VOID    _gxe_utility_ltoa(LONG value, GX_CHAR *return_buffer, UINT return_buffer_size);
 INT     _gxe_utility_math_asin(INT x);
 INT     _gxe_utility_math_acos(INT x);

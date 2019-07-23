@@ -1,6 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*            Copyright (c) 1996-2017 by Express Logic Inc.               */
+/*            Copyright (c) 1996-2018 by Express Logic Inc.               */
 /*                                                                        */
 /*  This software is copyrighted by and is the sole property of Express   */
 /*  Logic, Inc.  All rights, title, ownership, or other interests         */
@@ -38,7 +38,7 @@
 /*  COMPONENT DEFINITION                                   RELEASE        */
 /*                                                                        */
 /*    gx_display.h                                        PORTABLE C      */
-/*                                                           5.4          */
+/*                                                           5.4.1        */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    William E. Lamie, Express Logic, Inc.                               */
@@ -82,6 +82,10 @@
 /*                                            resulting in version 5.3.3  */
 /*  11-06-2017     William E. Lamie         Modified comment(s),          */
 /*                                            resulting in version 5.4    */
+/*  04-15-2018     William E. Lamie         Modified comment(s), and      */
+/*                                            added 1555xrgb format driver*/
+/*                                            functions, resulting in     */
+/*                                            version 5.4.1               */
 /*                                                                        */
 /**************************************************************************/
 
@@ -122,28 +126,28 @@ UINT _gxe_display_pixelmap_table_set(GX_DISPLAY *display, GX_PIXELMAP **pixelmap
 UINT _gxe_display_theme_install(GX_DISPLAY *display, GX_CONST GX_THEME *theme_ptr);
 
 #if defined(GX_MOUSE_SUPPORT)
-VOID  _gx_display_driver_generic_mouse_define(GX_DISPLAY *display, GX_CANVAS *canvas, GX_MOUSE_CURSOR_INFO *info);
+VOID _gx_display_driver_generic_mouse_define(GX_DISPLAY *display, GX_CANVAS *canvas, GX_MOUSE_CURSOR_INFO *info);
 
 #if !defined(GX_HARDWARE_MOUSE_SUPPORT)
-VOID  _gx_display_driver_generic_mouse_position_set(GX_DISPLAY *display, GX_POINT *point);
-VOID  _gx_display_driver_generic_mouse_enable(GX_DISPLAY *display, GX_BOOL enable);
-VOID  _gx_display_driver_generic_drawing_complete(GX_DISPLAY *display, GX_CANVAS *canvas);
-VOID  _gx_display_driver_generic_drawing_initiate(GX_DISPLAY *display, GX_CANVAS *canvas);
-VOID  _gx_display_driver_generic_mouse_draw(GX_DISPLAY *display);
-VOID  _gx_display_driver_24xrgb_mouse_capture(GX_DISPLAY *display);
-VOID  _gx_display_driver_24xrgb_mouse_restore(GX_DISPLAY *display);
+VOID _gx_display_driver_generic_mouse_position_set(GX_DISPLAY *display, GX_POINT *point);
+VOID _gx_display_driver_generic_mouse_enable(GX_DISPLAY *display, GX_BOOL enable);
+VOID _gx_display_driver_generic_drawing_complete(GX_DISPLAY *display, GX_CANVAS *canvas);
+VOID _gx_display_driver_generic_drawing_initiate(GX_DISPLAY *display, GX_CANVAS *canvas);
+VOID _gx_display_driver_generic_mouse_draw(GX_DISPLAY *display);
+VOID _gx_display_driver_24xrgb_mouse_capture(GX_DISPLAY *display);
+VOID _gx_display_driver_24xrgb_mouse_restore(GX_DISPLAY *display);
 
 VOID _gx_display_driver_16bpp_mouse_capture(GX_DISPLAY *display);
 VOID _gx_display_driver_16bpp_mouse_restore(GX_DISPLAY *display);
 
-VOID  _gx_display_driver_8bpp_mouse_capture(GX_DISPLAY *display);
-VOID  _gx_display_driver_8bpp_mouse_restore(GX_DISPLAY *display);
+VOID _gx_display_driver_8bpp_mouse_capture(GX_DISPLAY *display);
+VOID _gx_display_driver_8bpp_mouse_restore(GX_DISPLAY *display);
 
-VOID  _gx_display_driver_4bpp_mouse_capture(GX_DISPLAY *display);
-VOID  _gx_display_driver_4bpp_mouse_restore(GX_DISPLAY *display);
+VOID _gx_display_driver_4bpp_mouse_capture(GX_DISPLAY *display);
+VOID _gx_display_driver_4bpp_mouse_restore(GX_DISPLAY *display);
 
-VOID  _gx_display_driver_1bpp_mouse_capture(GX_DISPLAY *display);
-VOID  _gx_display_driver_1bpp_mouse_restore(GX_DISPLAY *display);
+VOID _gx_display_driver_1bpp_mouse_capture(GX_DISPLAY *display);
+VOID _gx_display_driver_1bpp_mouse_restore(GX_DISPLAY *display);
 #endif
 #endif
 
@@ -161,132 +165,143 @@ VOID _gx_display_driver_16bpp_glyph_1bit_draw(GX_DRAW_CONTEXT *context, GX_RECTA
 
 
 /* Define screen driver function prototypes.  */
-VOID      _gx_display_driver_1bpp_canvas_blend(GX_CANVAS *source, GX_CANVAS *dest);
-VOID      _gx_display_driver_1bpp_canvas_copy(GX_CANVAS *source, GX_CANVAS *dest);
-VOID      _gx_display_driver_1bpp_horizontal_line_draw(GX_DRAW_CONTEXT *context, INT xstart, INT xend, INT ypos, INT width, GX_COLOR color);
-VOID      _gx_display_driver_1bpp_horizontal_pattern_line_draw(GX_DRAW_CONTEXT *context, INT xstart, INT xend, INT ypos);
-VOID      _gx_display_driver_1bpp_horizontal_pixelmap_line_draw(GX_DRAW_CONTEXT *context, INT xpos, INT ypos,
-                                                                INT xstart, INT xend, INT y, GX_FILL_PIXELMAP_INFO *info);
-GX_COLOR  _gx_display_driver_1bpp_native_color_get(GX_DISPLAY *, GX_COLOR rawcolor);
-VOID      _gx_display_driver_1bpp_pixel_write(GX_DRAW_CONTEXT *context, INT xcoord, INT ycoord, GX_COLOR color);
-VOID      _gx_display_driver_1bpp_vertical_line_draw(GX_DRAW_CONTEXT *context, INT ystart, INT yend, INT xpos, INT width, GX_COLOR color);
-VOID      _gx_display_driver_1bpp_vertical_pattern_line_draw(GX_DRAW_CONTEXT *context, INT ystart, INT yend, INT xpos);
-VOID      _gx_display_driver_1bpp_pixelmap_draw(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, GX_PIXELMAP *pmp);
-VOID      _gx_display_driver_1bpp_pixelmap_rotate(GX_DRAW_CONTEXT *context, INT xpos, INT ypos, GX_PIXELMAP *pixelmap,
-                                                  INT angle, INT rot_cx, INT rot_cy);
-VOID      _gx_display_driver_1bpp_block_move(GX_DRAW_CONTEXT *context, GX_RECTANGLE *src, INT xshift, INT yshift);
-USHORT    _gx_display_driver_1bpp_row_pitch_get(USHORT width);
-VOID      _gx_display_driver_1bpp_simple_line_draw(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, INT xend, INT yend);
-VOID      _gx_display_driver_1bpp_glyph_1bpp_draw(GX_DRAW_CONTEXT *context, GX_RECTANGLE *draw_area, GX_POINT *map_offset, GX_CONST GX_GLYPH *glyph);
+VOID     _gx_display_driver_1bpp_canvas_blend(GX_CANVAS *source, GX_CANVAS *dest);
+VOID     _gx_display_driver_1bpp_canvas_copy(GX_CANVAS *source, GX_CANVAS *dest);
+VOID     _gx_display_driver_1bpp_horizontal_line_draw(GX_DRAW_CONTEXT *context, INT xstart, INT xend, INT ypos, INT width, GX_COLOR color);
+VOID     _gx_display_driver_1bpp_horizontal_pattern_line_draw(GX_DRAW_CONTEXT *context, INT xstart, INT xend, INT ypos);
+VOID     _gx_display_driver_1bpp_horizontal_pixelmap_line_draw(GX_DRAW_CONTEXT *context, INT xpos, INT ypos,
+                                                               INT xstart, INT xend, INT y, GX_FILL_PIXELMAP_INFO *info);
+GX_COLOR _gx_display_driver_1bpp_native_color_get(GX_DISPLAY *, GX_COLOR rawcolor);
+VOID     _gx_display_driver_1bpp_pixel_write(GX_DRAW_CONTEXT *context, INT xcoord, INT ycoord, GX_COLOR color);
+VOID     _gx_display_driver_1bpp_vertical_line_draw(GX_DRAW_CONTEXT *context, INT ystart, INT yend, INT xpos, INT width, GX_COLOR color);
+VOID     _gx_display_driver_1bpp_vertical_pattern_line_draw(GX_DRAW_CONTEXT *context, INT ystart, INT yend, INT xpos);
+VOID     _gx_display_driver_1bpp_pixelmap_draw(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, GX_PIXELMAP *pmp);
+VOID     _gx_display_driver_1bpp_pixelmap_rotate(GX_DRAW_CONTEXT *context, INT xpos, INT ypos, GX_PIXELMAP *pixelmap,
+                                                 INT angle, INT rot_cx, INT rot_cy);
+VOID     _gx_display_driver_1bpp_block_move(GX_DRAW_CONTEXT *context, GX_RECTANGLE *src, INT xshift, INT yshift);
+USHORT   _gx_display_driver_1bpp_row_pitch_get(USHORT width);
+VOID     _gx_display_driver_1bpp_simple_line_draw(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, INT xend, INT yend);
+VOID     _gx_display_driver_1bpp_glyph_1bpp_draw(GX_DRAW_CONTEXT *context, GX_RECTANGLE *draw_area, GX_POINT *map_offset, GX_CONST GX_GLYPH *glyph);
 
-VOID      _gx_display_driver_332rgb_pixel_blend(GX_DRAW_CONTEXT *context, INT x, INT y, GX_COLOR fcolor, GX_UBYTE alpha);
-VOID      _gx_display_driver_332rgb_pixelmap_draw(GX_DRAW_CONTEXT *context, INT xpos, INT ypos, GX_PIXELMAP *pixelmap);
-GX_COLOR  _gx_display_driver_332rgb_native_color_get(GX_DISPLAY *display, GX_COLOR rawcolor);
-
-VOID      _gx_display_driver_4bpp_block_move(GX_DRAW_CONTEXT *context, GX_RECTANGLE *src, INT xshift, INT yshift);
-VOID      _gx_display_driver_4bpp_canvas_copy(GX_CANVAS *source, GX_CANVAS *dest);
-VOID      _gx_display_driver_4bpp_glyph_1bit_draw(GX_DRAW_CONTEXT *context, GX_RECTANGLE *draw_area, GX_POINT *map_offset, const GX_GLYPH *glyph);
-VOID      _gx_display_driver_4bpp_glyph_4bit_draw(GX_DRAW_CONTEXT *context, GX_RECTANGLE *draw_area, GX_POINT *map_offset, const GX_GLYPH *glyph);
-VOID      _gx_display_driver_4bpp_horizontal_line_draw(GX_DRAW_CONTEXT *context, INT xstart, INT xend, INT ypos, INT width, GX_COLOR color);
-VOID      _gx_display_driver_4bpp_horizontal_pattern_line_draw(GX_DRAW_CONTEXT *context, INT xstart, INT xend, INT ypos);
-VOID      _gx_display_driver_4bpp_horizontal_pixelmap_line_draw(GX_DRAW_CONTEXT *context, INT xpos, INT ypos,
-                                                                INT xstart, INT xend, INT y, GX_FILL_PIXELMAP_INFO *info);
-GX_COLOR  _gx_display_driver_4bpp_native_color_get(GX_DISPLAY *, GX_COLOR rawcolor);
-VOID      _gx_display_driver_4bpp_pixel_write(GX_DRAW_CONTEXT *context, INT xcoord, INT ycoord, GX_COLOR color);
-VOID      _gx_display_driver_4bpp_pixelmap_draw(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, GX_PIXELMAP *pmp);
-VOID      _gx_display_driver_4bpp_pixelmap_rotate(GX_DRAW_CONTEXT *context, INT xpos, INT ypos, GX_PIXELMAP *pixelmap, INT angle, INT rot_cx, INT rot_cy);
-USHORT    _gx_display_driver_4bpp_row_pitch_get(USHORT width);
-VOID      _gx_display_driver_4bpp_simple_line_draw(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, INT xend, INT yend);
-VOID      _gx_display_driver_4bpp_vertical_line_draw(GX_DRAW_CONTEXT *context, INT ystart, INT yend, INT xpos, INT width, GX_COLOR color);
-VOID      _gx_display_driver_4bpp_vertical_pattern_line_draw(GX_DRAW_CONTEXT *context, INT ystart, INT yend, INT xpos);
-
-VOID      _gx_display_driver_8bpp_canvas_copy(GX_CANVAS *source, GX_CANVAS *dest);
-VOID      _gx_display_driver_8bpp_horizontal_line_draw(GX_DRAW_CONTEXT *context, INT xstart, INT xend, INT ypos, INT width, GX_COLOR color);
-VOID      _gx_display_driver_8bpp_horizontal_pattern_line_draw(GX_DRAW_CONTEXT *context, INT xstart, INT xend, INT ypos);
-VOID      _gx_display_driver_8bpp_horizontal_pixelmap_line_draw(GX_DRAW_CONTEXT *context, INT xpos, INT ypos,
-                                                                INT xstart, INT xend, INT y, GX_FILL_PIXELMAP_INFO *info);
-GX_COLOR  _gx_display_driver_8bit_palette_native_color_get(GX_DISPLAY *, GX_COLOR rawcolor);
-VOID      _gx_display_driver_8bit_palette_pixel_blend(GX_DRAW_CONTEXT *context, INT x, INT y, GX_COLOR fcolor, GX_UBYTE alpha);
-VOID      _gx_display_driver_8bpp_pixel_write(GX_DRAW_CONTEXT *context, INT xcoord, INT ycoord, GX_COLOR color);
-VOID      _gx_display_driver_8bpp_vertical_line_draw(GX_DRAW_CONTEXT *context, INT ystart, INT yend, INT xpos, INT width, GX_COLOR color);
-VOID      _gx_display_driver_8bpp_pixelmap_blend(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, GX_PIXELMAP *pmp, GX_UBYTE alpha);
-VOID      _gx_display_driver_8bpp_vertical_pattern_line_draw(GX_DRAW_CONTEXT *context, INT ystart, INT yend, INT xpos);
-VOID      _gx_display_driver_8bpp_pixelmap_draw(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, GX_PIXELMAP *pmp);
-VOID      _gx_display_driver_8bpp_pixelmap_rotate(GX_DRAW_CONTEXT *context, INT xpos, INT ypos, GX_PIXELMAP *pixelmap, INT angle, INT rot_cx, INT rot_cy);
-VOID      _gx_display_driver_8bpp_block_move(GX_DRAW_CONTEXT *context, GX_RECTANGLE *src, INT xshift, INT yshift);
-USHORT    _gx_display_driver_8bpp_row_pitch_get(USHORT width);
-VOID      _gx_display_driver_8bpp_simple_line_draw(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, INT xend, INT yend);
-
-VOID      _gx_display_driver_8bpp_glyph_1bit_draw(GX_DRAW_CONTEXT *context, GX_RECTANGLE *draw_area, GX_POINT *map_offset, GX_CONST GX_GLYPH *glyph);
-VOID      _gx_display_driver_8bpp_glyph_4bit_draw(GX_DRAW_CONTEXT *context, GX_RECTANGLE *draw_area, GX_POINT *map_offset, GX_CONST GX_GLYPH *glyph);
-
-VOID      _gx_display_driver_565rgb_canvas_blend(GX_CANVAS *source, GX_CANVAS *dest);
-VOID      _gx_display_driver_16bpp_canvas_copy(GX_CANVAS *source, GX_CANVAS *dest);
-VOID      _gx_display_driver_16bpp_horizontal_line_draw(GX_DRAW_CONTEXT *context, INT xstart, INT xend, INT ypos, INT width, GX_COLOR color);
-VOID      _gx_display_driver_16bpp_horizontal_pattern_line_draw(GX_DRAW_CONTEXT *context, INT xstart, INT xend, INT ypos);
-VOID      _gx_display_driver_565rgb_horizontal_pixelmap_line_draw(GX_DRAW_CONTEXT *context, INT xpos, INT ypos,
-                                                                  INT xstart, INT xend, INT y, GX_FILL_PIXELMAP_INFO *info);
-VOID      _gx_display_driver_565rgb_pixel_blend(GX_DRAW_CONTEXT *context, INT xcoord, INT ycoord, GX_COLOR fcolor, GX_UBYTE alpha);
-VOID      _gx_display_driver_16bpp_pixel_write(GX_DRAW_CONTEXT *context, INT xcoord, INT ycoord, GX_COLOR color);
-VOID      _gx_display_driver_16bpp_vertical_line_draw(GX_DRAW_CONTEXT *context, INT ystart, INT yend, INT xpos, INT width, GX_COLOR color);
-VOID      _gx_display_driver_16bpp_vertical_pattern_line_draw(GX_DRAW_CONTEXT *context, INT ystart, INT yend, INT xpos);
-VOID      _gx_display_driver_565rgb_pixelmap_blend(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, GX_PIXELMAP *pmp, GX_UBYTE alpha);
-VOID      _gx_display_driver_565rgb_pixelmap_draw(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, GX_PIXELMAP *pmp);
-#if defined(GX_SOFTWARE_DECODER_SUPPORT)
-VOID      _gx_display_driver_565rgb_jpeg_draw(GX_DRAW_CONTEXT *context, INT xpos, INT ypos, GX_PIXELMAP *pixelmap);
-VOID      _gx_display_driver_565rgb_png_draw(GX_DRAW_CONTEXT *context, INT xpos, INT ypos, GX_PIXELMAP *pixelmap);
-#endif
-VOID      _gx_display_driver_16bpp_block_move(GX_DRAW_CONTEXT *context, GX_RECTANGLE *src, INT xshift, INT yshift);
-GX_COLOR  _gx_display_driver_565rgb_native_color_get(GX_DISPLAY *, GX_COLOR rawcolor);
-USHORT    _gx_display_driver_16bpp_row_pitch_get(USHORT width);
-VOID      _gx_display_driver_16bpp_simple_line_draw(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, INT xend, INT yend);
-VOID      _gx_display_driver_16bpp_pixelmap_rotate(GX_DRAW_CONTEXT *context, INT xpos, INT ypos, GX_PIXELMAP *pixelmap,
+VOID     _gx_display_driver_332rgb_pixel_blend(GX_DRAW_CONTEXT *context, INT x, INT y, GX_COLOR fcolor, GX_UBYTE alpha);
+VOID     _gx_display_driver_332rgb_pixelmap_draw(GX_DRAW_CONTEXT *context, INT xpos, INT ypos, GX_PIXELMAP *pixelmap);
+VOID     _gx_display_driver_332rgb_pixelmap_rotate(GX_DRAW_CONTEXT *context, INT xpos, INT ypos, GX_PIXELMAP *pixelmap,
                                                    INT angle, INT rot_cx, INT rot_cy);
+GX_COLOR _gx_display_driver_332rgb_native_color_get(GX_DISPLAY *display, GX_COLOR rawcolor);
 
-VOID      _gx_display_driver_24xrgb_canvas_blend(GX_CANVAS *source, GX_CANVAS *dest);
-VOID      _gx_display_driver_24xrgb_pixel_blend(GX_DRAW_CONTEXT *context, INT xcoord, INT ycoord, GX_COLOR fcolor, GX_UBYTE alpha);
-VOID      _gx_display_driver_24xrgb_pixelmap_blend(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, GX_PIXELMAP *pmp, GX_UBYTE alpha);
-VOID      _gx_display_driver_24xrgb_pixelmap_draw(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, GX_PIXELMAP *pmp);
+VOID     _gx_display_driver_4bpp_block_move(GX_DRAW_CONTEXT *context, GX_RECTANGLE *src, INT xshift, INT yshift);
+VOID     _gx_display_driver_4bpp_canvas_copy(GX_CANVAS *source, GX_CANVAS *dest);
+VOID     _gx_display_driver_4bpp_glyph_1bit_draw(GX_DRAW_CONTEXT *context, GX_RECTANGLE *draw_area, GX_POINT *map_offset, const GX_GLYPH *glyph);
+VOID     _gx_display_driver_4bpp_glyph_4bit_draw(GX_DRAW_CONTEXT *context, GX_RECTANGLE *draw_area, GX_POINT *map_offset, const GX_GLYPH *glyph);
+VOID     _gx_display_driver_4bpp_horizontal_line_draw(GX_DRAW_CONTEXT *context, INT xstart, INT xend, INT ypos, INT width, GX_COLOR color);
+VOID     _gx_display_driver_4bpp_horizontal_pattern_line_draw(GX_DRAW_CONTEXT *context, INT xstart, INT xend, INT ypos);
+VOID     _gx_display_driver_4bpp_horizontal_pixelmap_line_draw(GX_DRAW_CONTEXT *context, INT xpos, INT ypos,
+                                                               INT xstart, INT xend, INT y, GX_FILL_PIXELMAP_INFO *info);
+GX_COLOR _gx_display_driver_4bpp_native_color_get(GX_DISPLAY *, GX_COLOR rawcolor);
+VOID     _gx_display_driver_4bpp_pixel_write(GX_DRAW_CONTEXT *context, INT xcoord, INT ycoord, GX_COLOR color);
+VOID     _gx_display_driver_4bpp_pixelmap_draw(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, GX_PIXELMAP *pmp);
+VOID     _gx_display_driver_4bpp_pixelmap_rotate(GX_DRAW_CONTEXT *context, INT xpos, INT ypos, GX_PIXELMAP *pixelmap, INT angle, INT rot_cx, INT rot_cy);
+USHORT   _gx_display_driver_4bpp_row_pitch_get(USHORT width);
+VOID     _gx_display_driver_4bpp_simple_line_draw(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, INT xend, INT yend);
+VOID     _gx_display_driver_4bpp_vertical_line_draw(GX_DRAW_CONTEXT *context, INT ystart, INT yend, INT xpos, INT width, GX_COLOR color);
+VOID     _gx_display_driver_4bpp_vertical_pattern_line_draw(GX_DRAW_CONTEXT *context, INT ystart, INT yend, INT xpos);
 
-#if defined(GX_SOFTWARE_DECODER_SUPPORT)
-VOID      _gx_display_driver_24xrgb_jpeg_draw(GX_DRAW_CONTEXT *context, INT xpos, INT ypos, GX_PIXELMAP *pixelmap);
-VOID      _gx_display_driver_24xrgb_png_draw(GX_DRAW_CONTEXT *context, INT xpos, INT ypos, GX_PIXELMAP *pixelmap);
-#endif
-GX_COLOR  _gx_display_driver_24xrgb_native_color_get(GX_DISPLAY *, GX_COLOR rawcolor);
+VOID     _gx_display_driver_8bpp_canvas_copy(GX_CANVAS *source, GX_CANVAS *dest);
+VOID     _gx_display_driver_8bpp_horizontal_line_draw(GX_DRAW_CONTEXT *context, INT xstart, INT xend, INT ypos, INT width, GX_COLOR color);
+VOID     _gx_display_driver_8bpp_horizontal_pattern_line_draw(GX_DRAW_CONTEXT *context, INT xstart, INT xend, INT ypos);
+VOID     _gx_display_driver_8bpp_horizontal_pixelmap_line_draw(GX_DRAW_CONTEXT *context, INT xpos, INT ypos,
+                                                               INT xstart, INT xend, INT y, GX_FILL_PIXELMAP_INFO *info);
+GX_COLOR _gx_display_driver_8bit_palette_native_color_get(GX_DISPLAY *, GX_COLOR rawcolor);
+VOID     _gx_display_driver_8bit_palette_pixel_blend(GX_DRAW_CONTEXT *context, INT x, INT y, GX_COLOR fcolor, GX_UBYTE alpha);
+VOID     _gx_display_driver_8bpp_pixel_write(GX_DRAW_CONTEXT *context, INT xcoord, INT ycoord, GX_COLOR color);
+VOID     _gx_display_driver_8bpp_vertical_line_draw(GX_DRAW_CONTEXT *context, INT ystart, INT yend, INT xpos, INT width, GX_COLOR color);
+VOID     _gx_display_driver_8bpp_pixelmap_blend(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, GX_PIXELMAP *pmp, GX_UBYTE alpha);
+VOID     _gx_display_driver_8bpp_vertical_pattern_line_draw(GX_DRAW_CONTEXT *context, INT ystart, INT yend, INT xpos);
+VOID     _gx_display_driver_8bpp_pixelmap_draw(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, GX_PIXELMAP *pmp);
+VOID     _gx_display_driver_8bpp_pixelmap_rotate(GX_DRAW_CONTEXT *context, INT xpos, INT ypos, GX_PIXELMAP *pixelmap, INT angle, INT rot_cx, INT rot_cy);
+VOID     _gx_display_driver_8bpp_block_move(GX_DRAW_CONTEXT *context, GX_RECTANGLE *src, INT xshift, INT yshift);
+USHORT   _gx_display_driver_8bpp_row_pitch_get(USHORT width);
+VOID     _gx_display_driver_8bpp_simple_line_draw(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, INT xend, INT yend);
 
-VOID      _gx_display_driver_32bpp_canvas_copy(GX_CANVAS *source, GX_CANVAS *dest);
-VOID      _gx_display_driver_32bpp_horizontal_line_draw(GX_DRAW_CONTEXT *context, INT xstart, INT xend, INT ypos, INT width, GX_COLOR color);
-VOID      _gx_display_driver_32bpp_horizontal_pattern_line_draw(GX_DRAW_CONTEXT *context, INT xstart, INT xend, INT ypos);
-VOID      _gx_display_driver_32bpp_horizontal_pixelmap_line_draw(GX_DRAW_CONTEXT *context, INT xpos, INT ypos,
+VOID     _gx_display_driver_8bpp_glyph_1bit_draw(GX_DRAW_CONTEXT *context, GX_RECTANGLE *draw_area, GX_POINT *map_offset, GX_CONST GX_GLYPH *glyph);
+VOID     _gx_display_driver_8bpp_glyph_4bit_draw(GX_DRAW_CONTEXT *context, GX_RECTANGLE *draw_area, GX_POINT *map_offset, GX_CONST GX_GLYPH *glyph);
+
+VOID     _gx_display_driver_565rgb_canvas_blend(GX_CANVAS *source, GX_CANVAS *dest);
+VOID     _gx_display_driver_16bpp_canvas_copy(GX_CANVAS *source, GX_CANVAS *dest);
+VOID     _gx_display_driver_16bpp_horizontal_line_draw(GX_DRAW_CONTEXT *context, INT xstart, INT xend, INT ypos, INT width, GX_COLOR color);
+VOID     _gx_display_driver_16bpp_horizontal_pattern_line_draw(GX_DRAW_CONTEXT *context, INT xstart, INT xend, INT ypos);
+VOID     _gx_display_driver_565rgb_horizontal_pixelmap_line_draw(GX_DRAW_CONTEXT *context, INT xpos, INT ypos,
                                                                  INT xstart, INT xend, INT y, GX_FILL_PIXELMAP_INFO *info);
-VOID      _gx_display_driver_32bpp_pixel_write(GX_DRAW_CONTEXT *context, INT xcoord, INT ycoord, GX_COLOR color);
-VOID      _gx_display_driver_32bpp_vertical_line_draw(GX_DRAW_CONTEXT *context, INT ystart, INT yend, INT xpos, INT width, GX_COLOR color);
-VOID      _gx_display_driver_32bpp_vertical_pattern_line_draw(GX_DRAW_CONTEXT *context, INT ystart, INT yend, INT xpos);
-VOID      _gx_display_driver_32bpp_block_move(GX_DRAW_CONTEXT *context, GX_RECTANGLE *src, INT xshift, INT yshift);
-USHORT    _gx_display_driver_32bpp_row_pitch_get(USHORT width);
-VOID      _gx_display_driver_32bpp_simple_line_draw(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, INT xend, INT yend);
+VOID     _gx_display_driver_565rgb_pixel_blend(GX_DRAW_CONTEXT *context, INT xcoord, INT ycoord, GX_COLOR fcolor, GX_UBYTE alpha);
+VOID     _gx_display_driver_16bpp_pixel_write(GX_DRAW_CONTEXT *context, INT xcoord, INT ycoord, GX_COLOR color);
+VOID     _gx_display_driver_16bpp_vertical_line_draw(GX_DRAW_CONTEXT *context, INT ystart, INT yend, INT xpos, INT width, GX_COLOR color);
+VOID     _gx_display_driver_16bpp_vertical_pattern_line_draw(GX_DRAW_CONTEXT *context, INT ystart, INT yend, INT xpos);
+VOID     _gx_display_driver_565rgb_pixelmap_blend(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, GX_PIXELMAP *pmp, GX_UBYTE alpha);
+VOID     _gx_display_driver_565rgb_pixelmap_draw(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, GX_PIXELMAP *pmp);
+#if defined(GX_SOFTWARE_DECODER_SUPPORT)
+VOID     _gx_display_driver_565rgb_jpeg_draw(GX_DRAW_CONTEXT *context, INT xpos, INT ypos, GX_PIXELMAP *pixelmap);
+VOID     _gx_display_driver_565rgb_png_draw(GX_DRAW_CONTEXT *context, INT xpos, INT ypos, GX_PIXELMAP *pixelmap);
+#endif
+VOID     _gx_display_driver_16bpp_block_move(GX_DRAW_CONTEXT *context, GX_RECTANGLE *src, INT xshift, INT yshift);
+GX_COLOR _gx_display_driver_565rgb_native_color_get(GX_DISPLAY *, GX_COLOR rawcolor);
+USHORT   _gx_display_driver_16bpp_row_pitch_get(USHORT width);
+VOID     _gx_display_driver_16bpp_simple_line_draw(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, INT xend, INT yend);
+VOID     _gx_display_driver_16bpp_pixelmap_rotate(GX_DRAW_CONTEXT *context, INT xpos, INT ypos, GX_PIXELMAP *pixelmap,
+                                                  INT angle, INT rot_cx, INT rot_cy);
 
-VOID      _gx_display_driver_32argb_pixel_blend(GX_DRAW_CONTEXT *context, INT xcoord, INT ycoord, GX_COLOR fcolor, GX_UBYTE alpha);
-VOID      _gx_display_driver_32argb_pixelmap_blend(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, GX_PIXELMAP *pmp, GX_UBYTE alpha);
-VOID      _gx_display_driver_32argb_pixelmap_draw(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, GX_PIXELMAP *pmp);
-GX_COLOR  _gx_display_driver_32argb_native_color_get(GX_DISPLAY *, GX_COLOR rawcolor);
-VOID      _gx_display_driver_32bpp_pixelmap_rotate(GX_DRAW_CONTEXT *context, INT xpos, INT ypos, GX_PIXELMAP *pixelmap,
-                                                   INT angle, INT rot_cx, INT rot_cy);
-VOID      _gx_display_driver_4444argb_canvas_blend(GX_CANVAS *canvas, GX_CANVAS *composite);
-VOID      _gx_display_driver_4444argb_pixel_blend(GX_DRAW_CONTEXT *context, INT x, INT y, GX_COLOR fcolor, GX_UBYTE alpha);                                                   
-VOID      _gx_display_driver_4444argb_horizontal_pixelmap_line_draw(GX_DRAW_CONTEXT *context, INT xpos, INT ypos,
-                                                                    INT xstart, INT xend, INT y, GX_FILL_PIXELMAP_INFO *info);
-VOID      _gx_display_driver_4444argb_pixelmap_draw(GX_DRAW_CONTEXT *context,
-                                                    INT xpos, INT ypos, GX_PIXELMAP *pixelmap);
-VOID      _gx_display_driver_4444argb_pixelmap_blend(GX_DRAW_CONTEXT *context,
-                                                     INT xpos, INT ypos, GX_PIXELMAP *pixelmap, GX_UBYTE alpha);
-GX_COLOR  _gx_display_driver_4444argb_native_color_get(GX_DISPLAY *display, GX_COLOR rawcolor);                                               
-                              
+VOID _gx_display_driver_24xrgb_canvas_blend(GX_CANVAS *source, GX_CANVAS *dest);
+VOID _gx_display_driver_24xrgb_pixel_blend(GX_DRAW_CONTEXT *context, INT xcoord, INT ycoord, GX_COLOR fcolor, GX_UBYTE alpha);
+VOID _gx_display_driver_24xrgb_pixelmap_blend(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, GX_PIXELMAP *pmp, GX_UBYTE alpha);
+VOID _gx_display_driver_24xrgb_pixelmap_draw(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, GX_PIXELMAP *pmp);
+
+#if defined(GX_SOFTWARE_DECODER_SUPPORT)
+VOID     _gx_display_driver_24xrgb_jpeg_draw(GX_DRAW_CONTEXT *context, INT xpos, INT ypos, GX_PIXELMAP *pixelmap);
+VOID     _gx_display_driver_24xrgb_png_draw(GX_DRAW_CONTEXT *context, INT xpos, INT ypos, GX_PIXELMAP *pixelmap);
+#endif
+GX_COLOR _gx_display_driver_24xrgb_native_color_get(GX_DISPLAY *, GX_COLOR rawcolor);
+
+VOID     _gx_display_driver_32bpp_canvas_copy(GX_CANVAS *source, GX_CANVAS *dest);
+VOID     _gx_display_driver_32bpp_horizontal_line_draw(GX_DRAW_CONTEXT *context, INT xstart, INT xend, INT ypos, INT width, GX_COLOR color);
+VOID     _gx_display_driver_32bpp_horizontal_pattern_line_draw(GX_DRAW_CONTEXT *context, INT xstart, INT xend, INT ypos);
+VOID     _gx_display_driver_32bpp_horizontal_pixelmap_line_draw(GX_DRAW_CONTEXT *context, INT xpos, INT ypos,
+                                                                INT xstart, INT xend, INT y, GX_FILL_PIXELMAP_INFO *info);
+VOID     _gx_display_driver_32bpp_pixel_write(GX_DRAW_CONTEXT *context, INT xcoord, INT ycoord, GX_COLOR color);
+VOID     _gx_display_driver_32bpp_vertical_line_draw(GX_DRAW_CONTEXT *context, INT ystart, INT yend, INT xpos, INT width, GX_COLOR color);
+VOID     _gx_display_driver_32bpp_vertical_pattern_line_draw(GX_DRAW_CONTEXT *context, INT ystart, INT yend, INT xpos);
+VOID     _gx_display_driver_32bpp_block_move(GX_DRAW_CONTEXT *context, GX_RECTANGLE *src, INT xshift, INT yshift);
+USHORT   _gx_display_driver_32bpp_row_pitch_get(USHORT width);
+VOID     _gx_display_driver_32bpp_simple_line_draw(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, INT xend, INT yend);
+
+VOID     _gx_display_driver_32argb_pixel_blend(GX_DRAW_CONTEXT *context, INT xcoord, INT ycoord, GX_COLOR fcolor, GX_UBYTE alpha);
+VOID     _gx_display_driver_32argb_pixelmap_blend(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, GX_PIXELMAP *pmp, GX_UBYTE alpha);
+VOID     _gx_display_driver_32argb_pixelmap_draw(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, GX_PIXELMAP *pmp);
+GX_COLOR _gx_display_driver_32argb_native_color_get(GX_DISPLAY *, GX_COLOR rawcolor);
+VOID     _gx_display_driver_32bpp_pixelmap_rotate(GX_DRAW_CONTEXT *context, INT xpos, INT ypos, GX_PIXELMAP *pixelmap,
+                                                  INT angle, INT rot_cx, INT rot_cy);
+VOID     _gx_display_driver_4444argb_canvas_blend(GX_CANVAS *canvas, GX_CANVAS *composite);
+VOID     _gx_display_driver_4444argb_pixel_blend(GX_DRAW_CONTEXT *context, INT x, INT y, GX_COLOR fcolor, GX_UBYTE alpha);
+VOID     _gx_display_driver_4444argb_horizontal_pixelmap_line_draw(GX_DRAW_CONTEXT *context, INT xpos, INT ypos,
+                                                                   INT xstart, INT xend, INT y, GX_FILL_PIXELMAP_INFO *info);
+VOID     _gx_display_driver_4444argb_pixelmap_draw(GX_DRAW_CONTEXT *context,
+                                                   INT xpos, INT ypos, GX_PIXELMAP *pixelmap);
+VOID     _gx_display_driver_4444argb_pixelmap_blend(GX_DRAW_CONTEXT *context,
+                                                    INT xpos, INT ypos, GX_PIXELMAP *pixelmap, GX_UBYTE alpha);
+VOID     _gx_display_driver_4444argb_pixelmap_rotate(GX_DRAW_CONTEXT *context, INT xpos, INT ypos, GX_PIXELMAP *pixelmap,
+                                                     INT angle, INT rot_cx, INT rot_cy);
+GX_COLOR _gx_display_driver_4444argb_native_color_get(GX_DISPLAY *display, GX_COLOR rawcolor);
+
+
+VOID     _gx_display_driver_1555xrgb_jpeg_draw(GX_DRAW_CONTEXT *context, INT xpos, INT ypos, GX_PIXELMAP *pixelmap);
+GX_COLOR _gx_display_driver_1555xrgb_native_color_get(GX_DISPLAY *display, GX_COLOR rawcolor);
+VOID     _gx_display_driver_1555xrgb_pixel_blend(GX_DRAW_CONTEXT *context, INT x, INT y, GX_COLOR fcolor, GX_UBYTE alpha);
+VOID     _gx_display_driver_1555xrgb_pixelmap_rotate(GX_DRAW_CONTEXT *context, INT xpos, INT ypos, GX_PIXELMAP *pixelmap,
+                                                     INT angle, INT rot_cx, INT rot_cy);
+VOID     _gx_display_driver_1555xrgb_png_draw(GX_DRAW_CONTEXT *context, INT xpos, INT ypos, GX_PIXELMAP *pixelmap);
 
 #if defined(GX_BRUSH_ALPHA_SUPPORT)
-VOID      _gx_display_driver_horizontal_line_alpha_draw(GX_DRAW_CONTEXT *context, INT xstart, INT xend, INT ypos, INT width, GX_COLOR color, GX_UBYTE alpha);
-VOID      _gx_display_driver_vertical_line_alpha_draw(GX_DRAW_CONTEXT *context, INT ystart, INT yend, INT xpos, INT width, GX_COLOR color, GX_UBYTE alpha);
-VOID      _gx_display_driver_simple_line_alpha_draw(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, INT xend, INT yend, GX_UBYTE alpha);
+VOID     _gx_display_driver_horizontal_line_alpha_draw(GX_DRAW_CONTEXT *context, INT xstart, INT xend, INT ypos, INT width, GX_COLOR color, GX_UBYTE alpha);
+VOID     _gx_display_driver_vertical_line_alpha_draw(GX_DRAW_CONTEXT *context, INT ystart, INT yend, INT xpos, INT width, GX_COLOR color, GX_UBYTE alpha);
+VOID     _gx_display_driver_simple_line_alpha_draw(GX_DRAW_CONTEXT *context, INT xstart, INT ystart, INT xend, INT yend, GX_UBYTE alpha);
 #endif
 
 VOID      _gx_display_driver_generic_alphamap_draw(GX_DRAW_CONTEXT *context, INT xpos, INT ypos, GX_PIXELMAP *pmp);
@@ -301,22 +316,22 @@ VOID      _gx_display_driver_generic_polygon_draw(GX_DRAW_CONTEXT *context, GX_P
 VOID      _gx_display_driver_generic_polygon_fill(GX_DRAW_CONTEXT *context, GX_POINT *vertex, INT num);
 VOID      _gx_display_driver_generic_polygon_convex_fill(GX_DRAW_CONTEXT *context, GX_POINT *vertex, INT num);
 #if defined(GX_ARC_DRAWING_SUPPORT)
-VOID _gx_display_driver_generic_circle_draw(GX_DRAW_CONTEXT *context, INT xcenter, INT ycenter, UINT r);
-VOID _gx_display_driver_generic_wide_circle_draw(GX_DRAW_CONTEXT *context, INT xcenter, INT ycenter, UINT r);
-VOID _gx_display_driver_generic_aliased_circle_draw(GX_DRAW_CONTEXT *context, INT xcenter, INT ycenter, UINT r);
-VOID _gx_display_driver_generic_aliased_wide_circle_draw(GX_DRAW_CONTEXT *context, INT xcenter, INT ycenter, UINT r);
-VOID _gx_display_driver_generic_circle_fill(GX_DRAW_CONTEXT *context, INT xcenter, INT ycenter, UINT r);
-VOID _gx_display_driver_generic_pie_fill(GX_DRAW_CONTEXT *context, INT xcenter, INT ycenter, UINT r, INT start_angle, INT end_angle);
-VOID _gx_display_driver_generic_simple_pie_fill(GX_DRAW_CONTEXT *context, INT xcenter, INT ycenter, UINT r, INT start_angle, INT end_angle, GX_BOOL skip_end);
+VOID      _gx_display_driver_generic_circle_draw(GX_DRAW_CONTEXT *context, INT xcenter, INT ycenter, UINT r);
+VOID      _gx_display_driver_generic_wide_circle_draw(GX_DRAW_CONTEXT *context, INT xcenter, INT ycenter, UINT r);
+VOID      _gx_display_driver_generic_aliased_circle_draw(GX_DRAW_CONTEXT *context, INT xcenter, INT ycenter, UINT r);
+VOID      _gx_display_driver_generic_aliased_wide_circle_draw(GX_DRAW_CONTEXT *context, INT xcenter, INT ycenter, UINT r);
+VOID      _gx_display_driver_generic_circle_fill(GX_DRAW_CONTEXT *context, INT xcenter, INT ycenter, UINT r);
+VOID      _gx_display_driver_generic_pie_fill(GX_DRAW_CONTEXT *context, INT xcenter, INT ycenter, UINT r, INT start_angle, INT end_angle);
+VOID      _gx_display_driver_generic_simple_pie_fill(GX_DRAW_CONTEXT *context, INT xcenter, INT ycenter, UINT r, INT start_angle, INT end_angle, GX_BOOL skip_end);
 
-VOID _gx_display_driver_generic_arc_draw(GX_DRAW_CONTEXT *context, INT xcenter, INT ycenter, UINT r, INT start_angle, INT end_angle);
-VOID _gx_display_driver_generic_wide_arc_draw(GX_DRAW_CONTEXT *context, INT xcenter, INT ycenter, UINT r, INT start_angle, INT end_angle);
-VOID _gx_display_driver_generic_aliased_arc_draw(GX_DRAW_CONTEXT *context, INT xcenter, INT ycenter, UINT r, INT start_angle, INT end_angle);
-VOID _gx_display_driver_generic_aliased_wide_arc_draw(GX_DRAW_CONTEXT *context, INT xcenter, INT ycenter, UINT r, INT start_angle, INT end_angle);
-VOID _gx_display_driver_generic_arc_fill(GX_DRAW_CONTEXT *context, INT xcenter, INT ycenter, UINT r, INT start_angle, INT end_angle);
-VOID _gx_display_driver_arc_clipping_get(INT xcenter, INT ycenter, UINT r, INT start_angle, INT end_angle,
-                                         GX_RECTANGLE *clip_1, GX_RECTANGLE *clip_2, GX_RECTANGLE *clip_3, GX_RECTANGLE *clip_4);
-VOID _gx_display_driver_circle_point_get(INT xcenter, INT ycenter, UINT r, INT angle, GX_POINT *point);
+VOID      _gx_display_driver_generic_arc_draw(GX_DRAW_CONTEXT *context, INT xcenter, INT ycenter, UINT r, INT start_angle, INT end_angle);
+VOID      _gx_display_driver_generic_wide_arc_draw(GX_DRAW_CONTEXT *context, INT xcenter, INT ycenter, UINT r, INT start_angle, INT end_angle);
+VOID      _gx_display_driver_generic_aliased_arc_draw(GX_DRAW_CONTEXT *context, INT xcenter, INT ycenter, UINT r, INT start_angle, INT end_angle);
+VOID      _gx_display_driver_generic_aliased_wide_arc_draw(GX_DRAW_CONTEXT *context, INT xcenter, INT ycenter, UINT r, INT start_angle, INT end_angle);
+VOID      _gx_display_driver_generic_arc_fill(GX_DRAW_CONTEXT *context, INT xcenter, INT ycenter, UINT r, INT start_angle, INT end_angle);
+VOID      _gx_display_driver_arc_clipping_get(INT xcenter, INT ycenter, UINT r, INT start_angle, INT end_angle,
+                                              GX_RECTANGLE *clip_1, GX_RECTANGLE *clip_2, GX_RECTANGLE *clip_3, GX_RECTANGLE *clip_4);
+VOID      _gx_display_driver_circle_point_get(INT xcenter, INT ycenter, UINT r, INT angle, GX_POINT *point);
 #endif
 
 VOID _gx_display_driver_generic_aliased_ellipse_draw(GX_DRAW_CONTEXT *context, INT xcenter, INT ycenter, INT a, INT b);
@@ -337,9 +352,9 @@ VOID _gx_display_driver_4444argb_setup(GX_DISPLAY *display, VOID *aux_data,
                                                                GX_RECTANGLE *dirty_area));
 
 VOID _gx_display_driver_4bpp_grayscale_setup(GX_DISPLAY *display, VOID *aux_data,
-                                             VOID(*toggle_function)(struct GX_CANVAS_STRUCT *canvas,
-                                                                    GX_RECTANGLE *dirty_area));
-                                                            
+                                             VOID (*toggle_function)(struct GX_CANVAS_STRUCT *canvas,
+                                                                     GX_RECTANGLE *dirty_area));
+
 VOID _gx_display_driver_565rgb_setup(GX_DISPLAY *display, VOID *aux_data,
                                      VOID (*toggle_function)(struct GX_CANVAS_STRUCT *canvas,
                                                              GX_RECTANGLE *dirty_area));
@@ -349,12 +364,18 @@ VOID _gx_display_driver_8bit_palette_setup(GX_DISPLAY *display, VOID *aux_data,
                                                                    GX_RECTANGLE *dirty_area));
 
 VOID _gx_display_driver_332rgb_setup(GX_DISPLAY *display, VOID *aux_data,
-                                     VOID(*toggle_function)(struct GX_CANVAS_STRUCT *canvas,
-                                                            GX_RECTANGLE *dirty_area));
+                                     VOID (*toggle_function)(struct GX_CANVAS_STRUCT *canvas,
+                                                             GX_RECTANGLE *dirty_area));
 
 VOID _gx_display_driver_monochrome_setup(GX_DISPLAY *display, VOID *aux_data,
                                          VOID (*toggle_function)(struct GX_CANVAS_STRUCT *canvas,
                                                                  GX_RECTANGLE *dirty_area));
+
+VOID _gx_display_driver_1555xrgb_setup(GX_DISPLAY *display, VOID *aux_data,
+                                       VOID (*toggle_function)(struct GX_CANVAS_STRUCT *canvas,
+                                                               GX_RECTANGLE *dirty_area));
+
+VOID _gx_display_driver_1555xrgb_canvas_blend(GX_CANVAS *canvas, GX_CANVAS *composite);
 
 #ifdef GX_TARGET_WIN32
 VOID *_win32_canvas_memory_prepare(GX_CANVAS *canvas, GX_RECTANGLE *dirty);

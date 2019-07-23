@@ -1,6 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*            Copyright (c) 1996-2017 by Express Logic Inc.               */
+/*            Copyright (c) 1996-2018 by Express Logic Inc.               */
 /*                                                                        */
 /*  This software is copyrighted by and is the sole property of Express   */
 /*  Logic, Inc.  All rights, title, ownership, or other interests         */
@@ -165,7 +165,7 @@ typedef SHORT  GX_VALUE;
 
 #ifdef GX_SYSTEM_INIT
 CHAR _gx_version_id[] =
-    "Copyright (c) 1996-2017 Express Logic Inc. * GUIX Synergy Version G5.4.5.4 SN: 4154-280-5000 *";
+    "Copyright (c) 1996-2018 Express Logic Inc. * GUIX Synergy Version G5.4.1.5.4 SN: 4154-280-5000 *";
 #else
 extern  CHAR _nx_version_id[];
 #endif

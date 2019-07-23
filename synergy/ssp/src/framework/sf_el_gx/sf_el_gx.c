@@ -67,13 +67,11 @@
 /*LDRA_INSPECTED 77 S This macro does not work when surrounded by parentheses. */
 #define SF_EL_GX_SSP_USER_ERROR_CALLBACK(p_ctrl, dev, ssp_err) \
         if((p_ctrl)->p_callback){                              \
-            if(SSP_SUCCESS != (ssp_err)){                      \
-                cb_args.device = (dev);                        \
-                cb_args.event  = SF_EL_GX_EVENT_ERROR;         \
-                cb_args.error  = (ssp_err);                    \
-                (p_ctrl)->p_callback(&cb_args);                \
-            }                                                  \
-        }
+            cb_args.device = (dev);                            \
+            cb_args.event  = SF_EL_GX_EVENT_ERROR;             \
+            cb_args.error  = (ssp_err);                        \
+            (p_ctrl)->p_callback(&cb_args);                    \
+        }                                                      \
 
 /** Mutex timeout count */
 #define SF_EL_GX_MUTEX_WAIT_TIMER (300)
@@ -231,20 +229,20 @@ ssp_err_t SF_EL_GX_Open(sf_el_gx_ctrl_t * const p_api_ctrl, sf_el_gx_cfg_t const
 
     SF_EL_GX_ERROR_RETURN((SF_EL_GX_CLOSED == p_ctrl->state), SSP_ERR_IN_USE);
 
-    if (SF_EL_GX_OPENED != p_ctrl->state)
+    /** Creates global mutex for SF_EL_GX to protect access to the control structure and
+     *  GUIX low level device drivers setup. */
+    status = tx_mutex_create (&g_sf_el_gx_mutex, (CHAR *)"sf_gx_drv_mtx", TX_INHERIT);
+    if ((UINT)TX_SUCCESS != status)
     {
-        /** Creates global mutex for SF_EL_GX */
-        status = tx_mutex_create (&g_sf_el_gx_mutex, (CHAR *)"sf_gx_drv_mtx", TX_INHERIT);
-        if ((UINT)TX_SUCCESS != status)
-        {
-            return SSP_ERR_INTERNAL;
-        }
+        return SSP_ERR_INTERNAL;
     }
 
     /** Locks the SF_EL_GX instance until driver setup is done by SF_EL_GX_Setup(). */
     status = tx_mutex_get (&g_sf_el_gx_mutex, SF_EL_GX_MUTEX_WAIT_TIMER);
     if ((UINT)TX_SUCCESS != status)
     {
+    	/* Return code not checked here as delete cannot fail
+    	 * when called with successfully created RTOS objects. */
         tx_mutex_delete (&g_sf_el_gx_mutex);
         return SSP_ERR_INTERNAL;
     }
@@ -253,6 +251,8 @@ ssp_err_t SF_EL_GX_Open(sf_el_gx_ctrl_t * const p_api_ctrl, sf_el_gx_cfg_t const
     status = tx_semaphore_create((TX_SEMAPHORE *) (&p_ctrl->semaphore), (CHAR *)"sf_gx_drv_sem", 0);
     if ((UINT)TX_SUCCESS != status)
     {
+    	/* Return code not checked here as delete cannot fail
+    	 * when called with successfully created RTOS objects. */
         tx_mutex_delete (&g_sf_el_gx_mutex);
         return SSP_ERR_INTERNAL;
     }
@@ -261,6 +261,7 @@ ssp_err_t SF_EL_GX_Open(sf_el_gx_ctrl_t * const p_api_ctrl, sf_el_gx_cfg_t const
     p_ctrl->p_display_instance    = p_cfg->p_display_instance;
     p_ctrl->p_callback            = p_cfg->p_callback;
     p_ctrl->p_display_runtime_cfg = p_cfg->p_display_runtime_cfg;
+    p_ctrl->inherit_frame_layer   = p_cfg->inherit_frame_layer;
     p_ctrl->p_canvas              = p_cfg->p_canvas;
     p_ctrl->p_framebuffer_read    = p_cfg->p_framebuffer_a;
     p_ctrl->dave2d_buffer_cache_enabled    = p_cfg->dave2d_buffer_cache_enabled;
@@ -293,81 +294,50 @@ ssp_err_t SF_EL_GX_Open(sf_el_gx_ctrl_t * const p_api_ctrl, sf_el_gx_cfg_t const
 /*******************************************************************************************************************//**
  * @brief  GUIX adaptation framework for Synergy, Close function.
  * This function calls following functions:
- * - tx_mutex_get()                Gets the mutex to lock the driver while device access.
- * - tx_mutex_put()                Puts the mutex to unlock the driver while device access.
- * - tx_mutex_delete()             Deletes the mutex if kernel service calls failed in the process.
+ * - tx_mutex_delete()             Deletes the mutex for driver
  * - tx_semaphore_delete()         Deletes the semaphore for rendering and displaying synchronization.
  * - sf_el_gx_d2_close()           Finalizes 2D Drawing Engine hardware.
  * - sf_el_gx_display_close()      Finalizes display hardware.
  * @retval  SSP_SUCCESS               Closed the module successfully.
  * @retval  SSP_ERR_ASSERTION         NULL pointer error happens.
  * @retval  SSP_ERR_NOT_OPEN          SF_EL_GX is not opened.
- * @retval  SSP_ERR_INTERNAL          Error happened in kernel service calls.
- * @retval  SSP_ERR_TIMEOUT           Error occurred in display driver.
- * @retval  SSP_ERR_D2D_ERROR_DEINIT  Error occurred in D/AVE 2D driver.
  * @note    This function is re-entrant.
  **********************************************************************************************************************/
 ssp_err_t SF_EL_GX_Close(sf_el_gx_ctrl_t * const p_api_ctrl)
 {
     sf_el_gx_instance_ctrl_t * p_ctrl = (sf_el_gx_instance_ctrl_t *) p_api_ctrl;
-    UINT      status;
-    ssp_err_t error;
-
+ 
 #if (SF_EL_GX_CFG_PARAM_CHECKING_ENABLE)
     SSP_ASSERT(p_ctrl);
 #endif
     SF_EL_GX_ERROR_RETURN((SF_EL_GX_CLOSED != p_ctrl->state), SSP_ERR_NOT_OPEN);
 
-    /** Locks the driver to update the context. */
-    status = tx_mutex_get (&g_sf_el_gx_mutex, SF_EL_GX_MUTEX_WAIT_TIMER);
-    if((UINT)TX_SUCCESS != status)
-    {
-        return SSP_ERR_INTERNAL;
-    }
-
     if (SF_EL_GX_CONFIGURED == p_ctrl->state)
     {
 #if GX_USE_SYNERGY_DRW
         /** Finalizes 2D Drawing Engine hardware */
-        error = sf_el_gx_d2_close(p_ctrl);
-        if (SSP_SUCCESS != error)
-        {
-            tx_mutex_put (&g_sf_el_gx_mutex);
-            return error;
-        }
+        /* In SSP close functions, an error is only returned if the module is not open or 
+         * a parameter is invalid.So No return check here */
+        sf_el_gx_d2_close(p_ctrl);
 #endif
         /** Finalizes display hardware */
-        error = sf_el_gx_display_close(p_ctrl);
-        if (SSP_SUCCESS != error)
-        {
-            tx_mutex_put (&g_sf_el_gx_mutex);
-            return error;
-        }
+        /* In SSP close functions, an error is only returned if the module is not open or 
+         * a parameter is invalid.So No return check here */
+        sf_el_gx_display_close(p_ctrl);
     }
 
     /** Changes the driver state */
     p_ctrl->state = SF_EL_GX_CLOSED;
 
     /** Deletes a semaphore for frame buffer flip */
-    status = tx_semaphore_delete(&p_ctrl->semaphore);
-    if((UINT)TX_SUCCESS != status)
-    {
-        return SSP_ERR_INTERNAL;
-    }
-
-    /** Unlocks the SF_EL_GX instance */
-    status = tx_mutex_put (&g_sf_el_gx_mutex);
-    if((UINT)TX_SUCCESS != status)
-    {
-        return SSP_ERR_INTERNAL;
-    }
+    /* The return codes not checked here as semaphore delete call cannot fail when called
+     * with created RTOS objects. This object was successfully created in open function. */
+    tx_semaphore_delete(&p_ctrl->semaphore);
 
     /** Deletes driver global mutex */
-    status = tx_mutex_delete (&g_sf_el_gx_mutex);
-    if((UINT)TX_SUCCESS != status)
-    {
-        return SSP_ERR_INTERNAL;
-    }
+    /* The return codes not checked here as mutex delete call cannot fail when called
+     * with created RTOS objects. This object was successfully created in open function. */
+    tx_mutex_delete (&g_sf_el_gx_mutex);
 
     /** Clears the temporary storage for the pointer to a control block.
      *  This procedure has done in SF_EL_GX_Setup() in the expected function call sequence,
@@ -520,11 +490,10 @@ ssp_err_t SF_EL_GX_CanvasInit (sf_el_gx_ctrl_t * const p_api_ctrl, GX_WINDOW_ROO
     }
 
     /** Unlocks the driver. */
-    status = tx_mutex_put (&g_sf_el_gx_mutex);
-    if((UINT)TX_SUCCESS != status)
-    {
-        return SSP_ERR_INTERNAL;
-    }
+    /* Return code not checked here as tx_mutex_put cannot fail when called with a mutex owned by the
+     * current thread. mutex is owned by the current thread because this call follows a successful
+     * call to tx_mutex_get. */
+    tx_mutex_put (&g_sf_el_gx_mutex);
 
     return SSP_SUCCESS;
 }  /* End of function SF_EL_GX_CanvasInit() */
@@ -541,8 +510,8 @@ ssp_err_t SF_EL_GX_CanvasInit (sf_el_gx_ctrl_t * const p_api_ctrl, GX_WINDOW_ROO
  * @param[in]     p_cfg      Pointer to SF_EL_GX configuration data
  * @retval  SSP_SUCCESS                 All the configuration parameters are valid.
  * @retval  SSP_ERR_ASSERTION           NULL is given to either of p_ctrl, p_cfg or members of configuration structure.
- *                                      Neither of 0, 90, 180, 270 is specified to the rotation angle.
  * @retval  SSP_ERR_INVALID_ARGUMENT    Invalid configuration parameter is given.
+ *                                      Neither of 0, 90, 180, 270 is specified to the rotation angle.
  **********************************************************************************************************************/
 static ssp_err_t sf_el_gx_open_param_check (sf_el_gx_instance_ctrl_t * const p_ctrl, sf_el_gx_cfg_t const * const p_cfg)
 {
@@ -557,7 +526,7 @@ static ssp_err_t sf_el_gx_open_param_check (sf_el_gx_instance_ctrl_t * const p_c
 
     /** Check screen rotation setting. */
     error = sf_el_gx_open_param_check_rotation_angle(p_cfg);
-    if (SSP_SUCCESS != error)
+    if (SSP_SUCCESS == error)
     {
         /** Check canvas setting. */
         error = sf_el_gx_open_param_check_canvas_setting(p_cfg);
@@ -603,30 +572,23 @@ static ssp_err_t sf_el_gx_open_param_check_rotation_angle (sf_el_gx_cfg_t const 
  **********************************************************************************************************************/
 static ssp_err_t sf_el_gx_open_param_check_canvas_setting (sf_el_gx_cfg_t const * const p_cfg)
 {
-    ssp_err_t error = SSP_SUCCESS;
-
-    do
+    /** Check if the pointer to a canvas is valid if the screen rotation performed. */
+    if ((NULL == p_cfg->p_canvas) && (0 != (uint32_t)p_cfg->rotation_angle))
     {
-        /** Check if the pointer to a canvas is valid if the screen rotation performed. */
-        if ((NULL == p_cfg->p_canvas) && (0 != (uint32_t)p_cfg->rotation_angle))
-        {
-            error = SSP_ERR_INVALID_ARGUMENT;
-            break;
-        }
+        return SSP_ERR_INVALID_ARGUMENT;
+    }
 
-        /** Check if the pointer to a canvas is not same with the pointer to frame buffers. */
-        if (p_cfg->p_canvas == p_cfg->p_framebuffer_a)
-        {
-            error = SSP_ERR_INVALID_ARGUMENT;
-            break;
-        }
-        if ((NULL != p_cfg->p_framebuffer_b) && (p_cfg->p_canvas == p_cfg->p_framebuffer_b))
-        {
-            error = SSP_ERR_INVALID_ARGUMENT;
-        }
-    } while (0);
+    /** Check if the pointer to a canvas is not same with the pointer to frame buffers. */
+    if (p_cfg->p_canvas == p_cfg->p_framebuffer_a)
+    {
+        return SSP_ERR_INVALID_ARGUMENT;
+    }
+    if ((NULL != p_cfg->p_framebuffer_b) && (p_cfg->p_canvas == p_cfg->p_framebuffer_b))
+    {
+        return SSP_ERR_INVALID_ARGUMENT;
+    }
 
-    return error;
+    return SSP_SUCCESS;
 }
 #endif
 
@@ -634,6 +596,13 @@ static ssp_err_t sf_el_gx_open_param_check_canvas_setting (sf_el_gx_cfg_t const 
  * @brief  SF_EL_GX_Setup sub-routine to return a GUIX display color format corresponding to the SSP display color
  * format. This function is called by SF_EL_GX_Setup().
  * @param   format          SSP display color format
+ * @retval  GX_COLOR_FORMAT_565RGB        Color format is set as RGB565.
+ * @retval  GX_COLOR_FORMAT_24XRGB        Color format is set as RGB888.
+ * @retval  GX_COLOR_FORMAT_32ARGB        Color format is set as ARGB8888.
+ * @retval  GX_COLOR_FORMAT_4444ARGB      Color format is set as ARGB4444.
+ * @retval  GX_COLOR_FORMAT_8BIT_PALETTE  Color format is set as 8 bit palette.
+ * @retval  GX_COLOR_FORMAT_INVALID       Invalid color format is set.
+ * @note    GX_VALUE is typedef as SHORT in gx_port.h.
  **********************************************************************************************************************/
 static GX_VALUE sf_el_gx_setup_display_color_format_set (display_in_format_t format)
 {
@@ -732,8 +701,7 @@ void sf_el_gx_frame_toggle(ULONG display_handle, GX_BYTE ** pp_visible_frame)
     /** Requests display driver to toggle frame buffer */
     while (SSP_SUCCESS != p_ctrl->p_display_instance->p_api->layerChange(
                           p_ctrl->p_display_instance->p_ctrl,
-                          p_ctrl->p_display_runtime_cfg,
-                          DISPLAY_FRAME_LAYER_1))
+                          p_ctrl->p_display_runtime_cfg,p_ctrl->inherit_frame_layer))
     {
         tx_thread_sleep(1UL);
     }
@@ -742,6 +710,8 @@ void sf_el_gx_frame_toggle(ULONG display_handle, GX_BYTE ** pp_visible_frame)
     p_ctrl->rendering_enable = true;
 
     /** Waits until the set of semaphore which is set when the display device going into blanking period */
+    /* The return code is not checked here because tx_semaphore_get cannot fail when called with valid 
+     * input arguments. Also, the timeout error is not possible since wait option is TX_WAIT_FOREVER */
     tx_semaphore_get(&p_ctrl->semaphore, TX_WAIT_FOREVER);
 
 }  /* End of function sf_el_gx_frame_toggle() */
@@ -911,9 +881,7 @@ static void sf_el_gx_canvas_clear (GX_DISPLAY * p_display, sf_el_gx_instance_ctr
         divisor = 1;
         break;
 
-    case GX_COLOR_FORMAT_8BIT_PALETTE:
-        /* No break intentionally */
-    default:    /* Apply this divisor value for any undefined color formats. */
+    default:    /* Apply this divisor value for 8-bit Palette. */
         divisor = 4;
         break;
     }
@@ -969,9 +937,7 @@ static d2_s32 sf_el_gx_d2_open_format_set (GX_DISPLAY * p_display)
         format = d2_mode_argb8888;
         break;
 
-    case GX_COLOR_FORMAT_8BIT_PALETTE:
-        /* No break intentionally */
-    default:    /* Apply 8-bit CLUT format for any undefined color formats. */
+    default:    /* Apply 8-bit CLUT format for 8-bit Palette. */
         format = d2_mode_clut;
         break;
     }
@@ -1171,7 +1137,8 @@ void   sf_el_gx_display_8bit_palette_assign(ULONG display_handle)
     clut_cfg.start  = (uint16_t)0;
     clut_cfg.size   = (uint16_t)p_ctrl->p_display->gx_display_palette_size;
 
-    p_ctrl->p_display_instance->p_api->clut(p_ctrl->p_display_instance->p_ctrl, &clut_cfg, DISPLAY_FRAME_LAYER_1);
+    p_ctrl->p_display_instance->p_api->clut(p_ctrl->p_display_instance->p_ctrl, &clut_cfg,
+    		                                            p_ctrl->inherit_frame_layer);
 
 }  /* End of function sf_el_gx_display_8bit_palette_assign() */
 
@@ -1192,6 +1159,8 @@ static void sf_el_gx_callback (display_callback_args_t * p_args)
         if (p_ctrl->rendering_enable)
         {
             /** Let GUIX know the display been in blanking period */
+            /* Return code not checked here as this RTOS object is called inside callback
+             * function and there is no return from it */
             tx_semaphore_ceiling_put((TX_SEMAPHORE *)&p_ctrl->semaphore, 1UL);
             p_ctrl->rendering_enable = false;
         }

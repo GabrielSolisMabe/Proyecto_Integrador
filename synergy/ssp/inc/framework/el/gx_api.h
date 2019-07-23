@@ -1,6 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*            Copyright (c) 1996-2017 by Express Logic Inc.               */
+/*            Copyright (c) 1996-2018 by Express Logic Inc.               */
 /*                                                                        */
 /*  This software is copyrighted by and is the sole property of Express   */
 /*  Logic, Inc.  All rights, title, ownership, or other interests         */
@@ -36,7 +36,7 @@
 /*  APPLICATION INTERFACE DEFINITION                       RELEASE        */
 /*                                                                        */
 /*    gx_api.h                                            PORTABLE C      */
-/*                                                           5.4          */
+/*                                                           5.4.1        */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    William E. Lamie, Express Logic, Inc.                               */
@@ -101,6 +101,11 @@
 /*                                            widget types, add mouse     */
 /*                                            support, add animation pool */
 /*                                            resulting in version 5.4    */
+/*  04-15-2018     William E. Lamie         Update GUIX version number,   */
+/*                                            increase default event queue*/
+/*                                            size, fix prototypes for    */
+/*                                            several API functions       */
+/*                                            resulting in version 5.4.1  */
 /*                                                                        */
 /**************************************************************************/
 
@@ -233,7 +238,7 @@ typedef signed long GX_FIXED_VAL;
 
 /* define size of the GUIX event queue */
 #ifndef GX_MAX_QUEUE_EVENTS
-#define GX_MAX_QUEUE_EVENTS                 32
+#define GX_MAX_QUEUE_EVENTS                 48
 #endif
 
 #ifndef GX_MAX_DIRTY_AREAS
@@ -2460,7 +2465,7 @@ typedef struct GX_IMAGE_READER_STRUCT
 {
     UINT              (*gx_image_reader_pixel_write)(struct GX_IMAGE_READER_STRUCT *image_reader, GX_PIXEL *pixel);
     UINT              (*gx_image_reader_pixel_read)(struct GX_IMAGE_READER_STRUCT *image_reader, INT index, GX_PIXEL *pixel);
-    GX_CONST GX_UBYTE     *gx_image_reader_source_data;
+    GX_CONST GX_UBYTE  *gx_image_reader_source_data;
     UINT                gx_image_reader_source_data_size;
     GX_UBYTE           *gx_image_reader_getdata;
     GX_UBYTE           *gx_image_reader_getauxdata;
@@ -2468,9 +2473,12 @@ typedef struct GX_IMAGE_READER_STRUCT
     GX_UBYTE           *gx_image_reader_putauxdata;
     GX_UBYTE            gx_image_reader_color_format;
     GX_UBYTE            gx_image_reader_mode;
+    GX_UBYTE            gx_image_reader_image_type;
+    GX_UBYTE            gx_image_reader_putdata_mask;
+    GX_UBYTE            gx_image_reader_putauxdata_mask;
+    GX_UBYTE            gx_image_reader_mono_shreshold;
     GX_COLOR           *gx_image_reader_palette;
     UINT                gx_image_reader_palette_size;
-    GX_UBYTE            gx_image_reader_image_type;
     UINT                gx_image_reader_input_stride;
     GX_BOOL             gx_image_reader_size_testing;
     GX_COLOR           *gx_image_reader_png_trans;
@@ -2589,8 +2597,8 @@ typedef struct GX_FIXED_POINT_STRUCT
 
 #define gx_animation_canvas_define                               _gx_animation_canvas_define
 #define gx_animation_create                                      _gx_animation_create
-#define gx_animation_slide_disable                               _gx_animation_slide_disable
-#define gx_animation_slide_enable                                _gx_animation_slide_enable
+#define gx_animation_drag_disable                                _gx_animation_drag_disable
+#define gx_animation_drag_enable                                 _gx_animation_drag_enable
 #define gx_animation_start                                       _gx_animation_start
 #define gx_animation_stop                                        _gx_animation_stop
 
@@ -2827,7 +2835,7 @@ typedef struct GX_FIXED_POINT_STRUCT
 #define gx_scroll_wheel_gradient_alpha_set(a, b, c)              _gx_scroll_wheel_gradient_alpha_set((GX_SCROLL_WHEEL *) a, b, c)
 #define gx_scroll_wheel_row_height_set(a, b)                     _gx_scroll_wheel_row_height_set((GX_SCROLL_WHEEL *) a, b)
 #define gx_scroll_wheel_selected_background_set(a, b)            _gx_scroll_wheel_selected_background_set((GX_SCROLL_WHEEL *) a, b)
-#define gx_scroll_wheel_selected_get(a)                          _gx_scroll_wheel_selected_get((GX_SCROLL_WHEEL *) a)
+#define gx_scroll_wheel_selected_get(a, b)                       _gx_scroll_wheel_selected_get((GX_SCROLL_WHEEL *) a, b)
 #define gx_scroll_wheel_selected_set(a, b)                       _gx_scroll_wheel_selected_set((GX_SCROLL_WHEEL *) a, b)
 #define gx_scroll_wheel_speed_set(a, b, c, d, e)                 _gx_scroll_wheel_speed_set((GX_SCROLL_WHEEL *) a, b, c, d, e)
 #define gx_scroll_wheel_total_rows_set(a, b)                     _gx_scroll_wheel_total_rows_set((GX_SCROLL_WHEEL *) a, b)
@@ -3062,10 +3070,10 @@ UINT _gx_button_create(GX_BUTTON *button,
                        GX_WIDGET *parent,
                        ULONG style, USHORT Id,
                        GX_CONST GX_RECTANGLE *size);
-UINT _gx_button_deselect(GX_WIDGET *button);
+UINT _gx_button_deselect(GX_BUTTON *button);
 VOID _gx_button_draw(GX_BUTTON *button);
 UINT _gx_button_event_process(GX_BUTTON *button, GX_EVENT *event_ptr);
-UINT _gx_button_select(GX_WIDGET *button);
+UINT _gx_button_select(GX_BUTTON *button);
 
 UINT _gx_canvas_alpha_set(GX_CANVAS *canvas, GX_UBYTE alpha);
 UINT _gx_canvas_arc_draw(INT xcenter, INT ycenter, UINT r, INT start_angle, INT end_angle);
@@ -3239,7 +3247,7 @@ VOID _gx_multi_line_text_button_draw(GX_MULTI_LINE_TEXT_BUTTON *button);
 UINT _gx_multi_line_text_button_event_process(GX_MULTI_LINE_TEXT_BUTTON *button, GX_EVENT *event_ptr);
 VOID _gx_multi_line_text_button_text_draw(GX_MULTI_LINE_TEXT_BUTTON *button);
 UINT _gx_multi_line_text_button_text_id_set(GX_MULTI_LINE_TEXT_BUTTON *button, GX_RESOURCE_ID string_id);
-UINT _gx_multi_line_text_button_text_set(GX_MULTI_LINE_TEXT_BUTTON *button, GX_CHAR *text);
+UINT _gx_multi_line_text_button_text_set(GX_MULTI_LINE_TEXT_BUTTON *button, GX_CONST GX_CHAR *text);
 
 UINT _gx_multi_line_text_input_buffer_clear(GX_MULTI_LINE_TEXT_INPUT *text_input_ptr);
 UINT _gx_multi_line_text_input_buffer_get(GX_MULTI_LINE_TEXT_INPUT *text_input_ptr, GX_CHAR **buffer_address,
@@ -3568,7 +3576,7 @@ UINT _gx_widget_created_test(GX_WIDGET *widget, GX_BOOL *return_test);
 UINT _gx_widget_delete(GX_WIDGET *widget);
 UINT _gx_widget_detach(GX_WIDGET *widget);
 VOID _gx_widget_draw(GX_WIDGET *widget);
-VOID _gx_widget_draw_set(GX_WIDGET *widget, VOID (*draw_func)(GX_WIDGET *));
+UINT _gx_widget_draw_set(GX_WIDGET *widget, VOID (*draw_func)(GX_WIDGET *));
 UINT _gx_widget_event_generate(GX_WIDGET *widget, USHORT event_type, LONG value);
 UINT _gx_widget_event_process(GX_WIDGET *widget, GX_EVENT *event_ptr);
 UINT _gx_widget_event_process_set(GX_WIDGET *widget, UINT (*event_processing_function)(GX_WIDGET *, GX_EVENT *));
@@ -3876,7 +3884,7 @@ UINT _gx_window_wallpaper_set(GX_WINDOW *window, GX_RESOURCE_ID wallpaper_id, GX
 #define gx_scroll_wheel_gradient_alpha_set(a, b, c)              _gxe_scroll_wheel_gradient_alpha_set((GX_SCROLL_WHEEL *) a, b, c)
 #define gx_scroll_wheel_row_height_set(a, b)                     _gxe_scroll_wheel_row_height_set((GX_SCROLL_WHEEL *) a, b)
 #define gx_scroll_wheel_selected_background_set(a, b)            _gxe_scroll_wheel_selected_background_set((GX_SCROLL_WHEEL *) a, b)
-#define gx_scroll_wheel_selected_get(a)                          _gxe_scroll_wheel_selected_get((GX_SCROLL_WHEEL *) a)
+#define gx_scroll_wheel_selected_get(a, b)                       _gxe_scroll_wheel_selected_get((GX_SCROLL_WHEEL *) a, b)
 #define gx_scroll_wheel_selected_set(a, b)                       _gxe_scroll_wheel_selected_set((GX_SCROLL_WHEEL *) a, b)
 #define gx_scroll_wheel_speed_set(a, b, c, d, e)                 _gxe_scroll_wheel_speed_set((GX_SCROLL_WHEEL *) a, b, c, d, e)
 #define gx_scroll_wheel_total_rows_set(a, b)                     _gxe_scroll_wheel_total_rows_set((GX_SCROLL_WHEEL *) a, b)
@@ -4161,7 +4169,7 @@ UINT _gxe_checkbox_select(GX_CHECKBOX *checkbox);
 
 UINT _gxe_circular_gauge_angle_get(GX_CIRCULAR_GAUGE *circular_gauge, INT *angle);
 UINT _gxe_circular_gauge_angle_set(GX_CIRCULAR_GAUGE *circular_gauge, INT angle);
-UINT _gxe_circular_gauge_animation_set(GX_CIRCULAR_GAUGE *circular_gauge, INT animation_steps);
+UINT _gxe_circular_gauge_animation_set(GX_CIRCULAR_GAUGE *circular_gauge, INT animation_steps, INT delay);
 VOID _gx_circular_gauge_background_draw(GX_CIRCULAR_GAUGE *gauge);
 UINT _gxe_circular_gauge_create(GX_CIRCULAR_GAUGE *circular_gauge,
                                 GX_CONST GX_CHAR *name,
@@ -4277,7 +4285,7 @@ VOID _gx_multi_line_text_button_draw(GX_MULTI_LINE_TEXT_BUTTON *button);
 UINT _gxe_multi_line_text_button_event_process(GX_MULTI_LINE_TEXT_BUTTON *button, GX_EVENT *event_ptr);
 VOID _gx_multi_line_text_button_text_draw(GX_MULTI_LINE_TEXT_BUTTON *button);
 UINT _gxe_multi_line_text_button_text_id_set(GX_MULTI_LINE_TEXT_BUTTON *button, GX_RESOURCE_ID string_id);
-UINT _gxe_multi_line_text_button_text_set(GX_MULTI_LINE_TEXT_BUTTON *button, GX_CHAR *text);
+UINT _gxe_multi_line_text_button_text_set(GX_MULTI_LINE_TEXT_BUTTON *button, GX_CONST GX_CHAR *text);
 
 UINT _gxe_multi_line_text_input_buffer_clear(GX_MULTI_LINE_TEXT_INPUT *text_input_ptr);
 UINT _gxe_multi_line_text_input_buffer_get(GX_MULTI_LINE_TEXT_INPUT *text_input_ptr, GX_CHAR **buffer_address,

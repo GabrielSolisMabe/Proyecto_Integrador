@@ -55,7 +55,7 @@ Macro definitions
 ***********************************************************************************************************************/
 /** Version of code that implements the API defined in this file */
 #define ADC_CODE_VERSION_MAJOR  (1U)
-#define ADC_CODE_VERSION_MINOR  (5U)
+#define ADC_CODE_VERSION_MINOR  (9U)
 
 /** Typical values that can be used to modify the sample states.
  * The minimum sample state count value is either 6 or 7 depending on the clock ratios.

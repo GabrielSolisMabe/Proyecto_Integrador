@@ -330,8 +330,10 @@ static const sf_el_gx_cfg_t g_sf_el_gx_cfg =
   /* Display Driver Frame Buffer A Configuration */
 #if (1 == 1) /* Inherit Frame Buffer Name from Graphics Screen 1 */
   .p_framebuffer_a = &g_display_fb_background[0], /* Always array[0] is used */
+  .inherit_frame_layer = DISPLAY_FRAME_LAYER_1,
 #else /* Inherit Frame Buffer Name from Graphics Screen 2 */
   .p_framebuffer_a = &g_display_fb_foreground[0], /* Always array[0] is used */
+  .inherit_frame_layer = DISPLAY_FRAME_LAYER_2,
 #endif
 
   /* Display Driver Frame Buffer B Configuration */

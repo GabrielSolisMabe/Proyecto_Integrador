@@ -29,7 +29,7 @@
  * Macro definitions
  **********************************************************************************************************************/
 #define GLCD_CODE_VERSION_MAJOR (1U)
-#define GLCD_CODE_VERSION_MINOR (5U)
+#define GLCD_CODE_VERSION_MINOR (7U)
 
 /* Color look up table entry size */
 #define GLCD_CLUT_ENTRY_SIZE (256U)

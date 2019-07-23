@@ -48,7 +48,7 @@ SSP_HEADER
 
 /** Version of code that implements the API defined in this file */
 #define SF_JPEG_DECODE_CODE_VERSION_MAJOR (1U)
-#define SF_JPEG_DECODE_CODE_VERSION_MINOR (5U)
+#define SF_JPEG_DECODE_CODE_VERSION_MINOR (9U)
 
 /***********************************************************************************************************************
  * Typedef definitions

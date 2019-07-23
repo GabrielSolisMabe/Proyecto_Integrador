@@ -6,7 +6,7 @@
 /*  www.expresslogic.com.                                                      */
 /*                                                                             */
 /*  GUIX Studio Revision 5.4.2.9                                               */
-/*  Date (dd.mm.yyyy): 20. 7.2019   Time (hh:mm): 12:24                        */
+/*  Date (dd.mm.yyyy): 22. 7.2019   Time (hh:mm): 19:03                        */
 /*******************************************************************************/
 
 
@@ -20,6 +20,20 @@ WINDOW1_CONTROL_BLOCK window1;
 GX_DISPLAY display_1_control_block;
 GX_WINDOW_ROOT display_1_root_window;
 GX_CANVAS  display_1_canvas_control_block;
+
+UINT gx_studio_prompt_create(GX_CONST GX_STUDIO_WIDGET *info, GX_WIDGET *control_block, GX_WIDGET *parent)
+{
+    UINT status;
+    GX_PROMPT *prompt = (GX_PROMPT *) control_block;
+    GX_PROMPT_PROPERTIES *props = (GX_PROMPT_PROPERTIES *) info->properties;
+    status = gx_prompt_create(prompt, info->widget_name, parent, props->string_id, info->style, info->widget_id, &info->size);
+    if (status == GX_SUCCESS)
+    {
+        gx_prompt_font_set(prompt, props->font_id);
+        gx_prompt_text_color_set(prompt, props->normal_text_color_id, props->selected_text_color_id);
+    }
+    return status;
+}
 
 UINT gx_studio_window_create(GX_CONST GX_STUDIO_WIDGET *info, GX_WIDGET *control_block, GX_WIDGET *parent)
 {
@@ -40,6 +54,36 @@ GX_WINDOW_PROPERTIES window1_properties =
 {
     0                                        /* wallpaper pixelmap id          */
 };
+GX_PROMPT_PROPERTIES window1_prompt_properties =
+{
+    GX_STRING_ID_STRING_1,                   /* string id                      */
+    GX_FONT_ID_PROMPT,                       /* font id                        */
+    GX_COLOR_ID_TEXT,                        /* normal text color              */
+    GX_COLOR_ID_SELECTED_TEXT                /* selected text color            */
+};
+
+GX_CONST GX_STUDIO_WIDGET window1_prompt_define =
+{
+    "prompt",
+    GX_TYPE_PROMPT,                          /* widget type                    */
+    prompt1,                                 /* widget id                      */
+    #if defined(GX_WIDGET_USER_DATA)
+    prompt_data,                             /* user data                      */
+    #endif
+    GX_STYLE_BORDER_THIN|GX_STYLE_TRANSPARENT|GX_STYLE_ENABLED|GX_STYLE_TEXT_CENTER,   /* style flags */
+    0,                                       /* status flags                   */
+    sizeof(GX_PROMPT),                       /* control block size             */
+    GX_COLOR_ID_SELECTED_TEXT,               /* normal color id                */
+    GX_COLOR_ID_TEXT,                        /* selected color id              */
+    gx_studio_prompt_create,                 /* create function                */
+    GX_NULL,                                 /* drawing function override      */
+    GX_NULL,                                 /* event function override        */
+    {105, 112, 154, 141},                    /* widget size                    */
+    GX_NULL,                                 /* no next widget                 */
+    GX_NULL,                                 /* no child widgets               */ 
+    offsetof(WINDOW1_CONTROL_BLOCK, window1_prompt), /* control block          */
+    (void *) &window1_prompt_properties      /* extended properties            */
+};
 
 GX_CONST GX_STUDIO_WIDGET window1_define =
 {
@@ -59,7 +103,7 @@ GX_CONST GX_STUDIO_WIDGET window1_define =
     GX_NULL,                                 /* event function override        */
     {-1, -1, 254, 318},                      /* widget size                    */
     GX_NULL,                                 /* next widget                    */
-    GX_NULL,                                 /* child widget                   */
+    &window1_prompt_define,                  /* child widget                   */
     0,                                       /* control block                  */
     (void *) &window1_properties             /* extended properties            */
 };
