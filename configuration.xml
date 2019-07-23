@@ -596,6 +596,23 @@
       <property id="module.driver.timer.p_callback" value="NULL"/>
       <property id="module.driver.timer.irq_ipl" value="board.icu.common.irq.disabled"/>
     </module>
+    <module id="module.driver.timer_on_gpt.817549569">
+      <property id="module.driver.timer.name" value="g_timer1"/>
+      <property id="module.driver.timer.channel" value="1"/>
+      <property id="module.driver.timer.mode" value="module.driver.timer.mode.mode_periodic"/>
+      <property id="module.driver.timer.shortest_pwm_signal" value="module.driver.timer.mode.shortest_pwm_signal_disabled"/>
+      <property id="module.driver.timer.period" value="100"/>
+      <property id="module.driver.timer.unit" value="module.driver.timer.unit.unit_period_msec"/>
+      <property id="module.driver.timer.duty_cycle" value="50"/>
+      <property id="module.driver.timer.duty_cycle_unit" value="module.driver.timer.unit.unit_percent"/>
+      <property id="module.driver.timer.autostart" value="module.driver.timer.autostart.true"/>
+      <property id="module.driver.timer.gtioca_output_enabled" value="module.driver.timer.gtioca_output_enabled.false"/>
+      <property id="module.driver.timer.gtioca_stop_level" value="module.driver.timer.gtioca_stop_level.pin_level_low"/>
+      <property id="module.driver.timer.gtiocb_output_enabled" value="module.driver.timer.gtiocb_output_enabled.false"/>
+      <property id="module.driver.timer.gtiocb_stop_level" value="module.driver.timer.gtiocb_stop_level.pin_level_low"/>
+      <property id="module.driver.timer.p_callback" value="timer1_callback"/>
+      <property id="module.driver.timer.irq_ipl" value="board.icu.common.irq.priority7"/>
+    </module>
     <context id="_hal.0">
       <stack module="module.driver.elc_on_elc.0"/>
       <stack module="module.driver.ioport_on_ioport.0"/>
@@ -643,6 +660,7 @@
       <stack module="module.driver.timer_on_gpt.1315959702"/>
       <stack module="module.driver.external_irq_on_icu.1322368026"/>
       <stack module="module.driver.timer_on_gpt.140911849"/>
+      <stack module="module.driver.timer_on_gpt.817549569"/>
       <object id="rtos.threadx.object.queue.56958902">
         <property id="rtos.threadx.object.queue.name" value="MessageQueue"/>
         <property id="rtos.threadx.object.queue.symbol" value="Message_Queue"/>

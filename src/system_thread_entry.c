@@ -13,15 +13,23 @@ ioport_level_t Pin=0;
 void system_thread_entry(void)
 {
 
+    /******   CONFIGURING THE ADC    ******/
     g_adc0.p_api->open(g_adc0.p_ctrl, g_adc0.p_cfg);
     g_adc0.p_api->scanCfg(g_adc0.p_ctrl, g_adc0.p_channel_cfg);
     g_adc0.p_api->scanStart(g_adc0.p_ctrl);
 
-    g_timer2.p_api->open(g_timer2.p_ctrl, g_timer2.p_cfg); //Timer 2 to generate the PWM at 10 KHz
-    g_timer2.p_api->periodSet(g_timer2.p_ctrl, Frec, TIMER_UNIT_FREQUENCY_HZ); //used to change the frec manually
-    g_timer2.p_api->start(g_timer2.p_ctrl);
 
-    //__enable_irq ();
+    /******   CONFIGURING TIMERS AND IRQ    ******/
+    g_timer0.p_api->open(g_timer0.p_ctrl, g_timer0.p_cfg); //Timer 0 to measure the period of the sensor
+    g_timer1.p_api->open(g_timer1.p_ctrl, g_timer1.p_cfg); //Timer 1 to count pulses per every 100 ms
+    g_timer2.p_api->open(g_timer2.p_ctrl, g_timer2.p_cfg); //Timer 2 to generate the PWM at 10 KHz
+    g_external_irq5.p_api->open(g_external_irq5.p_ctrl, g_external_irq5.p_cfg); //Int 1 to read the counts of timer 1
+
+    g_timer2.p_api->periodSet(g_timer2.p_ctrl, Frec, TIMER_UNIT_FREQUENCY_HZ); //used to change the frec manually
+
+    g_timer0.p_api->start(g_timer0.p_ctrl);
+    g_timer1.p_api->start(g_timer1.p_ctrl);
+    g_timer2.p_api->start(g_timer2.p_ctrl);
 
     while(1){
      g_adc0.p_api->read(g_adc0.p_ctrl, ADC_REG_CHANNEL_0, &u16ADC_Data);
@@ -48,7 +56,7 @@ void external_irq5_callback(external_irq_callback_args_t *p_args)
 
 }
 
-/*
+
 void timer1_callback(timer_callback_args_t * p_args)
 {
 
@@ -61,4 +69,5 @@ void timer1_callback(timer_callback_args_t * p_args)
         Pulses = 0; // Pulses every 100 ms
     }
 }
-*/
+
+
