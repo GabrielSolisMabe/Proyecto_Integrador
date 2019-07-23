@@ -61,7 +61,7 @@ SSP_HEADER
  * Macro definitions
  **********************************************************************************************************************/
 #define INPUT_CAPTURE_API_VERSION_MAJOR (1U)
-#define INPUT_CAPTURE_API_VERSION_MINOR (4U)
+#define INPUT_CAPTURE_API_VERSION_MINOR (6U)
 
 /** Mapping of deprecated info_capture_info_t. */
 #define info_capture_info_t input_capture_info_t
@@ -74,6 +74,7 @@ typedef enum e_input_capture_mode
 {
     INPUT_CAPTURE_MODE_PULSE_WIDTH,     ///< Measure a signal pulse width.
     INPUT_CAPTURE_MODE_PERIOD,          ///< Measure a signal Cycle period.
+    INPUT_CAPTURE_MODE_PULSE_COUNT,     ///< Measure a signal event count.
 } input_capture_mode_t;
 
 /** Input capture signal edge trigger */

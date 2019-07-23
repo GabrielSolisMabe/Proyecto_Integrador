@@ -69,6 +69,7 @@
  ***********************************************************************************************************************/
 #ifndef GX_DISABLE_ERROR_CHECKING
 #define LOG_DAVE_ERRORS
+/* Max number of error values we will keep */
 #define DAVE_ERROR_LIST_SIZE    (4)
 #endif
 
@@ -118,6 +119,27 @@ typedef struct st_d2_rotation_param
     GX_RECTANGLE    copy_clip;
     INT       angle;
 } d2_rotation_param_t;
+
+/** DAVE 2D rendering parameters */
+typedef struct st_d2_render_param
+{
+    GX_BYTE      error_list_index;
+    GX_BYTE      error_count;
+    GX_UCHAR     alpha;
+    GX_BOOL      display_list_flushed;
+    GX_RECTANGLE clip_rect;
+    GX_COLOR     color0;
+    GX_COLOR     color1;
+    INT          line_width;
+    INT          font_bits;
+    d2_u32       src_blend_mode;
+    d2_u32       dst_blend_mode;
+    d2_u32       render_mode;
+    d2_u32       fill_mode;
+    d2_u32       line_join;
+    d2_s32       aa_mode;
+} d2_render_param_t;
+
 #endif
 
 #if (GX_USE_SYNERGY_JPEG == 1)
@@ -153,13 +175,12 @@ static GX_UBYTE   * visible_frame = NULL;
 static GX_UBYTE   * working_frame = NULL;
 
 #if (GX_USE_SYNERGY_DRW == 1)
-/* max number of error values we will keep */
-static GX_BYTE      g_last_font_bits         = 0;
-static GX_BYTE      g_dave_error_list_index  = 0;
-static GX_BYTE      g_dave_error_count       = 0;
-static GX_BOOL      g_display_list_flushed   = GX_FALSE;
+static GX_BOOL gx_dave2d_first_draw = GX_TRUE;
 /*LDRA_INSPECTED 27 D This function pointer is defined as static variable. */
 static d2_color     (* gx_d2_color)(GX_COLOR color) = NULL;
+
+/* Variable to hold last state of common rendering params and flags */
+static d2_render_param_t g_dave2d = { 0 };
 
 /** Partial palettes used for drawing 1bpp and 4bpp fonts */
 static const d2_color  g_mono_palette[2] = {
@@ -278,7 +299,17 @@ INT             gx_get_dave_error(INT get_index);
 #endif
 VOID            gx_display_list_flush(GX_DISPLAY *display);
 VOID            gx_display_list_open(GX_DISPLAY *display);
-d2_device     * gx_dave2d_set_clip(GX_DRAW_CONTEXT * context);
+VOID            gx_dave2d_cliprect_set(d2_device *p_dave, GX_RECTANGLE *clip);
+d2_device       * gx_dave2d_context_clip_set(GX_DRAW_CONTEXT *context);
+VOID            gx_dave2d_outline_width_set(d2_device *dave, INT width);
+VOID            gx_dave2d_line_join_set(d2_device *dave, d2_u32 mode);
+VOID            gx_dave2d_color0_set(d2_device *dave, GX_COLOR color);
+VOID            gx_dave2d_color1_set(d2_device *dave, GX_COLOR color);
+VOID            gx_dave2d_alpha_set(d2_device *dave, GX_UCHAR alpha);
+VOID            gx_dave2d_fill_mode_set(d2_device *dave, d2_u32 mode);
+VOID            gx_dave2d_blend_mode_set(d2_device *dave, d2_u32 srcmode, d2_u32 dstmode);
+VOID            gx_dave2d_render_mode_set(d2_device *dave, d2_u32 mode);
+VOID            gx_dave2d_anti_aliasing_set(d2_device *dave, d2_s32 mode);
 VOID            gx_dave2d_rotate_canvas_to_working_param_set (d2_rotation_param_t * p_param, GX_DISPLAY *p_display,
                                                                                             GX_CANVAS * p_canvas);
 #endif
@@ -298,6 +329,10 @@ extern void   * sf_el_gx_jpeg_instance_get(ULONG display_handle);
  **********************************************************************************************************************/
 /*LDRA_INSPECTED 219 S GUIX defined functions start with underscore. */
 VOID _gx_synergy_buffer_toggle(GX_CANVAS * canvas, GX_RECTANGLE * dirty);
+#if (GX_USE_SYNERGY_JPEG == 1)
+/*LDRA_INSPECTED 219 S GUIX defined functions start with underscore. */
+VOID _gx_synergy_jpeg_draw (GX_DRAW_CONTEXT *p_context, INT x, INT y, GX_PIXELMAP *p_pixelmap);
+#endif
 
 #if (GX_USE_SYNERGY_DRW == 1)
 /*LDRA_INSPECTED 219 S GUIX defined functions start with underscore. */
@@ -397,8 +432,6 @@ VOID _gx_dave2d_ellipse_draw(GX_DRAW_CONTEXT * context, INT xcenter, INT ycenter
 /*LDRA_INSPECTED 219 S GUIX defined functions start with underscore. */
 VOID _gx_dave2d_ellipse_fill(GX_DRAW_CONTEXT * context, INT xcenter, INT ycenter, INT a, INT b);
 /*LDRA_INSPECTED 219 S GUIX defined functions start with underscore. */
-VOID _gx_synergy_jpeg_draw (GX_DRAW_CONTEXT *p_context, INT x, INT y, GX_PIXELMAP *p_pixelmap);
-/*LDRA_INSPECTED 219 S GUIX defined functions start with underscore. */
 VOID _gx_dave2d_buffer_toggle(GX_CANVAS * canvas, GX_RECTANGLE * dirty);
 #endif
 
@@ -413,6 +446,136 @@ VOID _gx_dave2d_buffer_toggle(GX_CANVAS * canvas, GX_RECTANGLE * dirty);
  **********************************************************************************************************************/
 
 /*******************************************************************************************************************//**
+ * @brief  Subroutine to define the width of geometry outlines.
+ * @param  dave[in]            Pointer to dave device structure
+ * @param  width[in]           Outline width in pixels
+ **********************************************************************************************************************/
+VOID gx_dave2d_outline_width_set(d2_device *dave, INT width)
+{
+    if (g_dave2d.line_width != width)
+    {
+        CHECK_DAVE_STATUS(d2_outlinewidth(dave, (d2_width)( D2_FIX4((UINT) width))))
+        g_dave2d.line_width = width;
+    }
+}
+
+/*******************************************************************************************************************//**
+ * @brief  Subroutine to specify polyline connection style. This is used while drawing the polygons.
+ * @param  dave[in]            Pointer to dave device structure
+ * @param  mode[in]            Linejoin mode
+ **********************************************************************************************************************/
+VOID gx_dave2d_line_join_set(d2_device *dave, d2_u32 mode)
+{
+    if (g_dave2d.line_join != mode)
+    {
+        CHECK_DAVE_STATUS(d2_setlinejoin(dave, mode))
+        g_dave2d.line_join = mode;
+    }
+}
+
+/*******************************************************************************************************************//**
+ * @brief  Subroutine to set color registers. It set the color register with index 0. This is called when only one color
+ * is used(when blending is not used).
+ * @param  dave[in]            Pointer to dave device structure
+ * @param  color[in]           24bit rgb color value
+ **********************************************************************************************************************/
+VOID gx_dave2d_color0_set(d2_device *dave, GX_COLOR color)
+{
+    if (g_dave2d.color0 != color)
+    {
+        CHECK_DAVE_STATUS(d2_setcolor(dave, 0, gx_d2_color(color)))
+        g_dave2d.color0 = color;
+    }
+}
+
+/*******************************************************************************************************************//**
+ * @brief  Subroutine to set color registers. It set the color register with index 1.
+ * @param  dave[in]            Pointer to dave device structure
+ * @param  color[in]           24bit rgb color value
+ **********************************************************************************************************************/
+VOID gx_dave2d_color1_set(d2_device *dave, GX_COLOR color)
+{
+    if (g_dave2d.color1 != color)
+    {
+        CHECK_DAVE_STATUS(d2_setcolor(dave, 1, gx_d2_color(color)))
+        g_dave2d.color1 = color;
+    }
+}
+
+/*******************************************************************************************************************//**
+ * @brief  Subroutine to set constant alpha value.
+ * @param  dave[in]            Pointer to dave device structure
+ * @param  alpha[in]           Alpha value (0 for transparent, 255 for opaque)
+ **********************************************************************************************************************/
+VOID gx_dave2d_alpha_set(d2_device *dave, GX_UCHAR alpha)
+{
+    if (g_dave2d.alpha != alpha)
+    {
+        CHECK_DAVE_STATUS(d2_setalpha(dave, alpha))
+        g_dave2d.alpha = alpha;
+    }
+}
+
+/*******************************************************************************************************************//**
+ * @brief  Subroutine to set fill mode.
+ * @param  dave[in]            Pointer to dave device structure
+ * @param  mode[in]            fill mode(solid,patter,texture etc)
+ **********************************************************************************************************************/
+VOID gx_dave2d_fill_mode_set(d2_device *dave, d2_u32 mode)
+{
+    if (g_dave2d.fill_mode != mode)
+    {
+        CHECK_DAVE_STATUS(d2_setfillmode(dave, mode))
+        g_dave2d.fill_mode = mode;
+    }
+}
+
+/*******************************************************************************************************************//**
+ * @brief  Subroutine to set a rendering mode.
+ * @param  dave[in]            Pointer to dave device structure
+ * @param  mode[in]            rendering mode
+ **********************************************************************************************************************/
+VOID gx_dave2d_render_mode_set(d2_device *dave, d2_u32 mode)
+{
+    if (g_dave2d.render_mode != mode)
+    {
+        CHECK_DAVE_STATUS(d2_selectrendermode(dave, mode))
+        g_dave2d.render_mode = mode;
+    }
+}
+
+/*******************************************************************************************************************//**
+ * @brief  Subroutine to set a blending for the RGB channel. It defines how the RGB channels of new pixels (source) are
+ * combined with already existing data in the framebuffer (destination).
+ * @param  dave[in]            Pointer to dave device structure
+ * @param  srcmode[in]         source blend factor
+ * @param  dstmode[in]         destination blend factor
+ **********************************************************************************************************************/
+VOID gx_dave2d_blend_mode_set(d2_device *dave, d2_u32 srcmode, d2_u32 dstmode)
+{
+    if ((g_dave2d.src_blend_mode != srcmode) || (g_dave2d.dst_blend_mode != dstmode))
+    {
+        CHECK_DAVE_STATUS(d2_setblendmode(dave, srcmode, dstmode))
+        g_dave2d.src_blend_mode = srcmode;
+        g_dave2d.dst_blend_mode = dstmode;
+    }
+}
+
+/*******************************************************************************************************************//**
+ * @brief  Subroutine to globally enable or disable the anti aliasing.
+ * @param  dave[in]            Pointer to dave device structure
+ * @param  mode[in]            boolean value(0 = disable, 1 = enable)
+ **********************************************************************************************************************/
+VOID gx_dave2d_anti_aliasing_set(d2_device *dave, d2_s32 mode)
+{
+    if (g_dave2d.aa_mode != mode)
+    {
+        CHECK_DAVE_STATUS(d2_setantialiasing(dave, mode))
+        g_dave2d.aa_mode = mode;
+    }
+}
+
+/*******************************************************************************************************************//**
  * @brief  GUIX display driver for Synergy, close previous frame and set new canvas drawing address.
  * This function is called by GUIX to initiate canvas drawing.
  * @param   display[in]         Pointer to a GUIX display context
@@ -422,6 +585,34 @@ VOID _gx_dave2d_buffer_toggle(GX_CANVAS * canvas, GX_RECTANGLE * dirty);
 VOID _gx_dave2d_drawing_initiate(GX_DISPLAY *display, GX_CANVAS * canvas)
 {
     d2_u32 mode = d2_mode_rgb565;
+
+    if (GX_TRUE == gx_dave2d_first_draw)
+    {
+        d2_device  *dave = display -> gx_display_accelerator;
+
+        /* Initialize dave2d rendering parameters. */
+        memset(&g_dave2d, 0, sizeof(d2_render_param_t));
+        g_dave2d.clip_rect.gx_rectangle_left = -1;
+        g_dave2d.clip_rect.gx_rectangle_top = -1;
+        g_dave2d.clip_rect.gx_rectangle_right = -1;
+        g_dave2d.clip_rect.gx_rectangle_bottom = -1;
+        g_dave2d.src_blend_mode = d2_bm_alpha;
+        g_dave2d.dst_blend_mode = d2_bm_one_minus_alpha;
+
+        /* Set default mode */
+        CHECK_DAVE_STATUS(d2_setalphablendmode(dave, d2_bm_one, d2_bm_one_minus_alpha))
+        CHECK_DAVE_STATUS(d2_setblendmode(dave, g_dave2d.src_blend_mode, g_dave2d.dst_blend_mode))
+        CHECK_DAVE_STATUS(d2_outlinewidth(dave,  (d2_width)(D2_FIX4((UINT) g_dave2d.line_width))))
+        CHECK_DAVE_STATUS(d2_setlinejoin(dave, g_dave2d.line_join))
+        CHECK_DAVE_STATUS(d2_setcolor(dave, 0, g_dave2d.color0))
+        CHECK_DAVE_STATUS(d2_setcolor(dave, 1, g_dave2d.color1))
+        CHECK_DAVE_STATUS(d2_setalpha(dave, g_dave2d.alpha))
+        CHECK_DAVE_STATUS(d2_setfillmode(dave, g_dave2d.fill_mode))
+        CHECK_DAVE_STATUS(d2_selectrendermode(dave, g_dave2d.render_mode))
+        CHECK_DAVE_STATUS(d2_setantialiasing(dave, g_dave2d.aa_mode))
+
+        gx_dave2d_first_draw = GX_FALSE;
+    }
 
     switch(display->gx_display_color_format)
     {
@@ -449,9 +640,6 @@ VOID _gx_dave2d_drawing_initiate(GX_DISPLAY *display, GX_CANVAS * canvas)
     CHECK_DAVE_STATUS(d2_framebuffer(display -> gx_display_accelerator, canvas -> gx_canvas_memory,
                              (d2_s32)(canvas -> gx_canvas_x_resolution), (d2_u32)(canvas -> gx_canvas_x_resolution),
                              (d2_u32)(canvas -> gx_canvas_y_resolution), (d2_s32)mode))
-
-    /* Set the blend mode to perform alpha blending. */
-    d2_setalphablendmode(display->gx_display_accelerator, d2_bm_one, d2_bm_one_minus_alpha);
 }
 
 /*******************************************************************************************************************//**
@@ -464,7 +652,7 @@ VOID _gx_dave2d_drawing_initiate(GX_DISPLAY *display, GX_CANVAS * canvas)
 VOID _gx_dave2d_drawing_complete(GX_DISPLAY *display, GX_CANVAS * canvas)
 {
     /*LDRA_INSPECTED 57 Statement with no side effect. */
-    GX_PARAMETER_NOT_USED(display);  
+    GX_PARAMETER_NOT_USED(display);
     /*LDRA_INSPECTED 57 Statement with no side effect. */
     GX_PARAMETER_NOT_USED(canvas);
 }
@@ -482,11 +670,7 @@ VOID _gx_dave2d_canvas_copy(GX_CANVAS * canvas, GX_CANVAS *composite)
     GX_DISPLAY *display = canvas->gx_canvas_display;
     d2_device * dave = display -> gx_display_accelerator;
 
-    CHECK_DAVE_STATUS(d2_cliprect(dave,
-                                  composite->gx_canvas_dirty_area.gx_rectangle_left,
-                                  composite->gx_canvas_dirty_area.gx_rectangle_top,
-                                  composite->gx_canvas_dirty_area.gx_rectangle_right,
-                                  composite->gx_canvas_dirty_area.gx_rectangle_bottom));
+    gx_dave2d_cliprect_set(dave, &composite->gx_canvas_dirty_area);
 
     switch (display->gx_display_color_format)
     {
@@ -506,6 +690,9 @@ VOID _gx_dave2d_canvas_copy(GX_CANVAS * canvas, GX_CANVAS *composite)
     default:
         return;
     }
+
+    /** Set the alpha blend value to opaque. */
+    gx_dave2d_alpha_set(dave, (GX_UCHAR) GX_ALPHA_VALUE_OPAQUE);
 
     CHECK_DAVE_STATUS(d2_setblitsrc(dave, (void *) canvas->gx_canvas_memory,
                            canvas->gx_canvas_x_resolution,
@@ -537,11 +724,7 @@ VOID _gx_dave2d_canvas_blend(GX_CANVAS * canvas, GX_CANVAS *composite)
     GX_DISPLAY *display = canvas->gx_canvas_display;
     d2_device * dave = display -> gx_display_accelerator;
 
-    CHECK_DAVE_STATUS(d2_cliprect(dave,
-                                  composite->gx_canvas_dirty_area.gx_rectangle_left,
-                                  composite->gx_canvas_dirty_area.gx_rectangle_top,
-                                  composite->gx_canvas_dirty_area.gx_rectangle_right,
-                                  composite->gx_canvas_dirty_area.gx_rectangle_bottom));
+    gx_dave2d_cliprect_set(dave, &composite->gx_canvas_dirty_area);
 
     switch (display->gx_display_color_format)
     {
@@ -568,7 +751,7 @@ VOID _gx_dave2d_canvas_blend(GX_CANVAS * canvas, GX_CANVAS *composite)
                            canvas->gx_canvas_y_resolution, mode))
 
     /** Set the alpha blend value as specified. */
-    CHECK_DAVE_STATUS(d2_setalpha(dave, canvas->gx_canvas_alpha))
+    gx_dave2d_alpha_set(dave, canvas->gx_canvas_alpha);
 
     CHECK_DAVE_STATUS(d2_blitcopy(dave,
                 canvas->gx_canvas_x_resolution,
@@ -580,9 +763,6 @@ VOID _gx_dave2d_canvas_blend(GX_CANVAS * canvas, GX_CANVAS *composite)
                 (d2_point)(D2_FIX4((USHORT)canvas->gx_canvas_display_offset_y)),
                 /*LDRA_INSPECTED 96 S D/AVE 2D have use of mixed mode arithmetic for the macro below. */
                 d2_bf_no_blitctxbackup))
-
-    /** Set the alpha blend value to opaque. */
-    CHECK_DAVE_STATUS(d2_setalpha(dave, 0xff))
 }
 
 /*******************************************************************************************************************//**
@@ -598,7 +778,7 @@ VOID _gx_dave2d_canvas_blend(GX_CANVAS * canvas, GX_CANVAS *composite)
 /*LDRA_INSPECTED 219 S GUIX defined functions start with underscore. */
 VOID _gx_dave2d_horizontal_line(GX_DRAW_CONTEXT * context, INT xstart, INT xend, INT ypos, INT width, GX_COLOR color)
 {
-    d2_device * dave = gx_dave2d_set_clip(context);
+    d2_device *dave = gx_dave2d_context_clip_set(context);
 
 #if defined(GX_BRUSH_ALPHA_SUPPORT)
     GX_UBYTE brush_alpha = context->gx_draw_context_brush.gx_brush_alpha;
@@ -607,12 +787,15 @@ VOID _gx_dave2d_horizontal_line(GX_DRAW_CONTEXT * context, INT xstart, INT xend,
         return;
     }
 
-    CHECK_DAVE_STATUS(d2_setalpha(dave, brush_alpha))
+    gx_dave2d_alpha_set(dave, brush_alpha);
+#else
+    gx_dave2d_alpha_set(dave, (GX_UCHAR) GX_ALPHA_VALUE_OPAQUE);
 #endif
 
-    CHECK_DAVE_STATUS(d2_setfillmode(dave, d2_fm_color))
-    CHECK_DAVE_STATUS(d2_setcolor(dave, 0, gx_d2_color(color)))
-    CHECK_DAVE_STATUS(d2_selectrendermode(dave, d2_rm_solid))
+    gx_dave2d_fill_mode_set(dave, d2_fm_color);
+    gx_dave2d_color0_set(dave, color);
+    gx_dave2d_render_mode_set(dave, d2_rm_solid);
+
     CHECK_DAVE_STATUS(d2_renderbox(dave, (d2_point)(D2_FIX4((USHORT)xstart)),
                                          (d2_point)(D2_FIX4((USHORT)ypos)),
                                          (d2_point)(D2_FIX4((USHORT)((xend - xstart) + 1))),
@@ -632,7 +815,7 @@ VOID _gx_dave2d_horizontal_line(GX_DRAW_CONTEXT * context, INT xstart, INT xend,
 /*LDRA_INSPECTED 219 S GUIX defined functions start with underscore. */
 VOID _gx_dave2d_vertical_line(GX_DRAW_CONTEXT * context, INT ystart, INT yend, INT xpos, INT width, GX_COLOR color)
 {
-    d2_device * dave = gx_dave2d_set_clip(context);
+    d2_device *dave = gx_dave2d_context_clip_set(context);
 
 #if defined(GX_BRUSH_ALPHA_SUPPORT)
     GX_UBYTE brush_alpha = context->gx_draw_context_brush.gx_brush_alpha;
@@ -640,13 +823,15 @@ VOID _gx_dave2d_vertical_line(GX_DRAW_CONTEXT * context, INT ystart, INT yend, I
     {
         return;
     }
-
-    CHECK_DAVE_STATUS(d2_setalpha(dave, brush_alpha))
+    gx_dave2d_alpha_set(dave, brush_alpha);
+#else
+    gx_dave2d_alpha_set(dave, (GX_UCHAR) GX_ALPHA_VALUE_OPAQUE);
 #endif
 
-    CHECK_DAVE_STATUS(d2_setfillmode(dave, d2_fm_color))
-    CHECK_DAVE_STATUS(d2_setcolor(dave, 0, gx_d2_color(color)))
-    CHECK_DAVE_STATUS(d2_selectrendermode(dave, d2_rm_solid))
+    gx_dave2d_fill_mode_set(dave, d2_fm_color);
+    gx_dave2d_color0_set(dave, color);
+    gx_dave2d_render_mode_set(dave, d2_rm_solid);
+
     CHECK_DAVE_STATUS(d2_renderbox(dave, (d2_point)(D2_FIX4((USHORT)xpos)),
                                          (d2_point)(D2_FIX4((USHORT)ystart)),
                                          (d2_point)(D2_FIX4((USHORT)width)),
@@ -665,7 +850,7 @@ VOID _gx_dave2d_vertical_line(GX_DRAW_CONTEXT * context, INT ystart, INT yend, I
 /*LDRA_INSPECTED 219 S GUIX defined functions start with underscore. */
 VOID _gx_dave2d_simple_line_draw(GX_DRAW_CONTEXT * context, INT xstart, INT ystart, INT xend, INT yend)
 {
-    d2_device * dave = gx_dave2d_set_clip(context);
+    d2_device *dave = gx_dave2d_context_clip_set(context);
 
 #if defined(GX_BRUSH_ALPHA_SUPPORT)
     GX_UBYTE brush_alpha = context->gx_draw_context_brush.gx_brush_alpha;
@@ -674,11 +859,14 @@ VOID _gx_dave2d_simple_line_draw(GX_DRAW_CONTEXT * context, INT xstart, INT ysta
         return;
     }
 
-    CHECK_DAVE_STATUS(d2_setalpha(dave, brush_alpha))
+    gx_dave2d_alpha_set(dave, brush_alpha);
+#else
+    gx_dave2d_alpha_set(dave, (GX_UCHAR) GX_ALPHA_VALUE_OPAQUE);
 #endif
 
-    CHECK_DAVE_STATUS(d2_setantialiasing(dave, 0))
-    CHECK_DAVE_STATUS(d2_setcolor(dave, 0, gx_d2_color(context->gx_draw_context_brush.gx_brush_line_color)))
+    gx_dave2d_anti_aliasing_set(dave, 0);
+    gx_dave2d_color0_set(dave, context->gx_draw_context_brush.gx_brush_line_color);
+
     CHECK_DAVE_STATUS(d2_renderline(dave, (d2_point)(D2_FIX4((USHORT)xstart)),
                                           (d2_point)(D2_FIX4((USHORT)ystart)),
                                           (d2_point)(D2_FIX4((USHORT)xend)),
@@ -699,7 +887,7 @@ VOID _gx_dave2d_simple_line_draw(GX_DRAW_CONTEXT * context, INT xstart, INT ysta
 /*LDRA_INSPECTED 219 S GUIX defined functions start with underscore. */
 VOID _gx_dave2d_simple_wide_line(GX_DRAW_CONTEXT * context, INT xstart, INT ystart, INT xend, INT yend)
 {
-    d2_device * dave = gx_dave2d_set_clip(context);
+    d2_device *dave = gx_dave2d_context_clip_set(context);
 
 #if defined(GX_BRUSH_ALPHA_SUPPORT)
     GX_UBYTE brush_alpha = context->gx_draw_context_brush.gx_brush_alpha;
@@ -708,11 +896,14 @@ VOID _gx_dave2d_simple_wide_line(GX_DRAW_CONTEXT * context, INT xstart, INT ysta
         return;
     }
 
-    CHECK_DAVE_STATUS(d2_setalpha(dave, brush_alpha))
+    gx_dave2d_alpha_set(dave, brush_alpha);
+#else
+    gx_dave2d_alpha_set(dave, (GX_UCHAR) GX_ALPHA_VALUE_OPAQUE);
 #endif
 
-    CHECK_DAVE_STATUS(d2_setantialiasing(dave, 0))
-    CHECK_DAVE_STATUS(d2_setcolor(dave, 0, gx_d2_color(context -> gx_draw_context_brush.gx_brush_line_color)))
+    gx_dave2d_anti_aliasing_set(dave, 0);
+    gx_dave2d_color0_set(dave, context -> gx_draw_context_brush.gx_brush_line_color);
+
     CHECK_DAVE_STATUS(d2_renderline(dave, (d2_point)(D2_FIX4((USHORT)xstart)),
                                           (d2_point)(D2_FIX4((USHORT)ystart)),
                                           (d2_point)(D2_FIX4((USHORT)xend)),
@@ -733,7 +924,7 @@ VOID _gx_dave2d_simple_wide_line(GX_DRAW_CONTEXT * context, INT xstart, INT ysta
 /*LDRA_INSPECTED 219 S GUIX defined functions start with underscore. */
 VOID _gx_dave2d_aliased_line(GX_DRAW_CONTEXT * context, INT xstart, INT ystart, INT xend, INT yend)
 {
-    d2_device * dave = gx_dave2d_set_clip(context);
+    d2_device * dave = gx_dave2d_context_clip_set(context);
 
 #if defined(GX_BRUSH_ALPHA_SUPPORT)
     GX_UBYTE brush_alpha = context->gx_draw_context_brush.gx_brush_alpha;
@@ -742,11 +933,14 @@ VOID _gx_dave2d_aliased_line(GX_DRAW_CONTEXT * context, INT xstart, INT ystart, 
         return;
     }
 
-    CHECK_DAVE_STATUS(d2_setalpha(dave, brush_alpha))
+    gx_dave2d_alpha_set(dave, brush_alpha);
+#else
+    gx_dave2d_alpha_set(dave, (GX_UCHAR) GX_ALPHA_VALUE_OPAQUE);
 #endif
 
-    CHECK_DAVE_STATUS(d2_setantialiasing(dave, 1))
-    CHECK_DAVE_STATUS(d2_setcolor(dave, 0, gx_d2_color(context -> gx_draw_context_brush.gx_brush_line_color)))
+    gx_dave2d_anti_aliasing_set(dave, 1);
+    gx_dave2d_color0_set(dave, context -> gx_draw_context_brush.gx_brush_line_color);
+
     CHECK_DAVE_STATUS(d2_renderline(dave, (d2_point)(D2_FIX4((USHORT)xstart)),
                                           (d2_point)(D2_FIX4((USHORT)ystart)),
                                           (d2_point)(D2_FIX4((USHORT)xend)),
@@ -850,7 +1044,7 @@ VOID _gx_dave2d_vertical_pattern_line_draw_888(GX_DRAW_CONTEXT * context, INT ys
 /*LDRA_INSPECTED 219 S GUIX defined functions start with underscore. */
 VOID _gx_dave2d_aliased_wide_line(GX_DRAW_CONTEXT * context, INT xstart, INT ystart, INT xend, INT yend)
 {
-    d2_device * dave = gx_dave2d_set_clip(context);
+    d2_device * dave = gx_dave2d_context_clip_set(context);
 
 #if defined(GX_BRUSH_ALPHA_SUPPORT)
     GX_UBYTE brush_alpha = context->gx_draw_context_brush.gx_brush_alpha;
@@ -859,11 +1053,14 @@ VOID _gx_dave2d_aliased_wide_line(GX_DRAW_CONTEXT * context, INT xstart, INT yst
         return;
     }
 
-    CHECK_DAVE_STATUS(d2_setalpha(dave, brush_alpha))
+    gx_dave2d_alpha_set(dave, brush_alpha);
+#else
+    gx_dave2d_alpha_set(dave, (GX_UCHAR) GX_ALPHA_VALUE_OPAQUE);
 #endif
 
-    CHECK_DAVE_STATUS(d2_setantialiasing(dave, 1))
-    CHECK_DAVE_STATUS(d2_setcolor(dave, 0, gx_d2_color(context -> gx_draw_context_brush.gx_brush_line_color)))
+    gx_dave2d_anti_aliasing_set(dave, 1);
+    gx_dave2d_color0_set(dave, context -> gx_draw_context_brush.gx_brush_line_color);
+
     CHECK_DAVE_STATUS(d2_renderline(dave, (d2_point)(D2_FIX4((USHORT)xstart)),
                                           (d2_point)(D2_FIX4((USHORT)ystart)),
                                           (d2_point)(D2_FIX4((USHORT)xend)),
@@ -953,6 +1150,9 @@ VOID _gx_dave2d_pixelmap_rotate_16bpp(GX_DRAW_CONTEXT *context, INT xpos, INT yp
 VOID _gx_dave2d_pixelmap_draw(GX_DRAW_CONTEXT * context, INT xpos, INT ypos, GX_PIXELMAP * pixelmap)
 {
     d2_u32  mode;
+    d2_device *dave;
+
+#if defined(GX_BRUSH_ALPHA_SUPPORT)
     GX_UBYTE brush_alpha = context->gx_draw_context_brush.gx_brush_alpha;
 
     if(brush_alpha == 0U)
@@ -960,11 +1160,20 @@ VOID _gx_dave2d_pixelmap_draw(GX_DRAW_CONTEXT * context, INT xpos, INT ypos, GX_
         return;
     }
 
-    if(brush_alpha != 0xffU)
+    if((GX_UBYTE) GX_ALPHA_VALUE_OPAQUE != brush_alpha)
     {
         _gx_dave2d_pixelmap_blend(context, xpos, ypos, pixelmap, brush_alpha);
         return;
     }
+    else
+    {
+        dave = gx_dave2d_context_clip_set(context);
+        gx_dave2d_alpha_set(dave, (GX_UCHAR) GX_ALPHA_VALUE_OPAQUE);
+    }
+#else
+    dave = gx_dave2d_context_clip_set(context);
+    gx_dave2d_alpha_set(dave, (GX_UCHAR) GX_ALPHA_VALUE_OPAQUE);
+#endif
 
     mode = gx_dave2d_format_set(pixelmap);
 
@@ -972,8 +1181,6 @@ VOID _gx_dave2d_pixelmap_draw(GX_DRAW_CONTEXT * context, INT xpos, INT ypos, GX_
     {
         mode |= d2_mode_rle;
     }
-
-    d2_device * dave = gx_dave2d_set_clip(context);
 
     if ((mode & d2_mode_clut) == d2_mode_clut)
     {
@@ -989,6 +1196,7 @@ VOID _gx_dave2d_pixelmap_draw(GX_DRAW_CONTEXT * context, INT xpos, INT ypos, GX_
 
     if (pixelmap -> gx_pixelmap_flags & GX_PIXELMAP_ALPHA)
     {
+        gx_dave2d_blend_mode_set(dave, d2_bm_alpha, d2_bm_one_minus_alpha);
         /*LDRA_INSPECTED 96 S D/AVE 2D have use of mixed mode arithmetic for the macro d2_bf_usealpha. */
         mode |= (d2_u32)d2_bf_usealpha;
     }
@@ -1023,6 +1231,10 @@ VOID _gx_dave2d_pixelmap_draw(GX_DRAW_CONTEXT * context, INT xpos, INT ypos, GX_
 VOID _gx_dave2d_pixelmap_blend(GX_DRAW_CONTEXT * context, INT xpos, INT ypos,
                                       GX_PIXELMAP * pixelmap, GX_UBYTE alpha)
 {
+    if (0U == alpha)
+    {
+        return;
+    }
     d2_u32  mode = gx_dave2d_format_set(pixelmap);
 
     if (pixelmap -> gx_pixelmap_flags & GX_PIXELMAP_COMPRESSED)
@@ -1030,7 +1242,7 @@ VOID _gx_dave2d_pixelmap_blend(GX_DRAW_CONTEXT * context, INT xpos, INT ypos,
         mode |= (d2_u32)d2_mode_rle;
     }
 
-    d2_device * dave = gx_dave2d_set_clip(context);
+    d2_device * dave = gx_dave2d_context_clip_set(context);
 
     if ((mode & (d2_u32)d2_mode_clut) == (d2_u32)d2_mode_clut)
     {
@@ -1051,7 +1263,7 @@ VOID _gx_dave2d_pixelmap_blend(GX_DRAW_CONTEXT * context, INT xpos, INT ypos,
     }
 
     /** Set the alpha blend value as specified. */
-    CHECK_DAVE_STATUS(d2_setalpha(dave, alpha))
+    gx_dave2d_alpha_set(dave, alpha);
 
     /** Do the bitmap drawing. */
     CHECK_DAVE_STATUS(d2_blitcopy(dave,
@@ -1065,7 +1277,7 @@ VOID _gx_dave2d_pixelmap_blend(GX_DRAW_CONTEXT * context, INT xpos, INT ypos,
                          mode))
 
     /** Reset the alpha value. */
-    CHECK_DAVE_STATUS(d2_setalpha(dave, 0xff))
+    gx_dave2d_alpha_set(dave, (GX_UCHAR) GX_ALPHA_VALUE_OPAQUE);
 }
 
 /*******************************************************************************************************************//**
@@ -1131,7 +1343,7 @@ VOID _gx_dave2d_polygon_draw(GX_DRAW_CONTEXT * context, GX_POINT * vertex, INT n
         data[index++] = (d2_point)(D2_FIX4((USHORT)val));
     }
 
-    d2_device * dave = gx_dave2d_set_clip(context);
+    d2_device * dave = gx_dave2d_context_clip_set(context);
 
 #if defined(GX_BRUSH_ALPHA_SUPPORT)
     if(brush_alpha == 0U)
@@ -1139,21 +1351,23 @@ VOID _gx_dave2d_polygon_draw(GX_DRAW_CONTEXT * context, GX_POINT * vertex, INT n
         return;
     }
 
-    CHECK_DAVE_STATUS(d2_setalpha(dave, brush_alpha))
+    gx_dave2d_alpha_set(dave, brush_alpha);
+#else
+    gx_dave2d_alpha_set(dave, (GX_UCHAR) GX_ALPHA_VALUE_OPAQUE);
 #endif
-    CHECK_DAVE_STATUS(d2_selectrendermode(dave, d2_rm_outline))
-    CHECK_DAVE_STATUS(d2_outlinewidth(dave, (d2_width)(D2_FIX4((USHORT)brush->gx_brush_width))))
-    CHECK_DAVE_STATUS(d2_setfillmode(dave, d2_fm_color))
+    gx_dave2d_render_mode_set(dave, d2_rm_outline);
+    gx_dave2d_outline_width_set(dave, brush->gx_brush_width);
+    gx_dave2d_fill_mode_set(dave, d2_fm_color);
 
     if (brush->gx_brush_style & GX_BRUSH_ROUND)
     {
-        CHECK_DAVE_STATUS(d2_setlinejoin(dave, (d2_u32)d2_lj_round))
+        gx_dave2d_line_join_set(dave, d2_lj_round);
     }
     else
     {
-        CHECK_DAVE_STATUS(d2_setlinejoin(dave, (d2_u32)d2_lj_miter))
+        gx_dave2d_line_join_set(dave, d2_lj_miter);
     }
-    CHECK_DAVE_STATUS(d2_setcolor(dave, (d2_s32)0, gx_d2_color(brush->gx_brush_line_color)))
+    gx_dave2d_color0_set(dave, brush->gx_brush_line_color);
     CHECK_DAVE_STATUS(d2_renderpolygon(dave, (d2_point *)data, (d2_u32)num, 0))
 
 }
@@ -1174,10 +1388,18 @@ VOID _gx_dave2d_polygon_fill(GX_DRAW_CONTEXT * context, GX_POINT * vertex, INT n
     GX_BRUSH  * brush = &context->gx_draw_context_brush;
     GX_UBYTE    brush_alpha = brush->gx_brush_alpha;
 
-    if(brush_alpha == 0U)
+    d2_device *dave = gx_dave2d_context_clip_set(context);
+
+#if defined(GX_BRUSH_ALPHA_SUPPORT)
+    if(0U == brush_alpha)
     {
         return;
     }
+
+    gx_dave2d_alpha_set(dave, brush_alpha);
+#else
+    gx_dave2d_alpha_set(dave, (GX_UCHAR) GX_ALPHA_VALUE_OPAQUE);
+#endif
 
     /** Convert incoming point data to d2_point type. */
     for (INT loop = 0; loop < num; loop++)
@@ -1188,22 +1410,11 @@ VOID _gx_dave2d_polygon_fill(GX_DRAW_CONTEXT * context, GX_POINT * vertex, INT n
         data[index++] = (d2_point)(D2_FIX4((USHORT)val));
     }
 
-    d2_device * dave = gx_dave2d_set_clip(context);
-
-#if defined(GX_BRUSH_ALPHA_SUPPORT)
-    if(brush_alpha == 0U)
-    {
-        return;
-    }
-
-    CHECK_DAVE_STATUS(d2_setalpha(dave, brush_alpha))
-#endif
-
-    CHECK_DAVE_STATUS(d2_selectrendermode(dave, d2_rm_solid))
+     gx_dave2d_render_mode_set(dave, d2_rm_solid);
 
     if (brush->gx_brush_style & GX_BRUSH_PIXELMAP_FILL)
     {
-        CHECK_DAVE_STATUS(d2_setfillmode(dave, d2_fm_texture))
+        gx_dave2d_fill_mode_set(dave, d2_fm_texture);
         gx_dave2d_set_texture(context,
                                dave,
                 context->gx_draw_context_clip->gx_rectangle_left,
@@ -1213,8 +1424,8 @@ VOID _gx_dave2d_polygon_fill(GX_DRAW_CONTEXT * context, GX_POINT * vertex, INT n
     }
     else
     {
-        CHECK_DAVE_STATUS(d2_setfillmode(dave, (d2_u32)d2_fm_color))
-        CHECK_DAVE_STATUS(d2_setcolor(dave, 0, gx_d2_color(brush->gx_brush_fill_color)))
+        gx_dave2d_fill_mode_set(dave, (d2_u32)d2_fm_color);
+        gx_dave2d_color0_set(dave, brush->gx_brush_fill_color);
     }
     d2_renderpolygon(dave, (d2_point *)data, (d2_u32)num, 0);
 }
@@ -1324,7 +1535,7 @@ VOID _gx_dave2d_pixel_blend_888(GX_DRAW_CONTEXT * context, INT x, INT y, GX_COLO
 /*LDRA_INSPECTED 219 S GUIX defined functions start with underscore. */
 VOID _gx_dave2d_block_move(GX_DRAW_CONTEXT * context, GX_RECTANGLE *block, INT xshift, INT yshift)
 {
-    d2_device * dave = gx_dave2d_set_clip(context);
+    d2_device * dave = gx_dave2d_context_clip_set(context);
 
     INT width  = (block->gx_rectangle_right - block->gx_rectangle_left) + 1;
     INT height = (block->gx_rectangle_bottom - block->gx_rectangle_top) + 1;
@@ -1358,7 +1569,7 @@ VOID _gx_dave2d_alphamap_draw(GX_DRAW_CONTEXT * context, INT xpos, INT ypos, GX_
         mode |= d2_mode_rle;
     }
 
-    d2_device * dave = gx_dave2d_set_clip(context);
+    d2_device * dave = gx_dave2d_context_clip_set(context);
 
 #if defined(GX_BRUSH_ALPHA_SUPPORT)
     GX_UBYTE brush_alpha = context->gx_draw_context_brush.gx_brush_alpha;
@@ -1367,7 +1578,9 @@ VOID _gx_dave2d_alphamap_draw(GX_DRAW_CONTEXT * context, INT xpos, INT ypos, GX_
         return;
     }
 
-    CHECK_DAVE_STATUS(d2_setalpha(dave, brush_alpha))
+    gx_dave2d_alpha_set(dave, brush_alpha);
+#else
+    gx_dave2d_alpha_set(dave, (GX_UCHAR) GX_ALPHA_VALUE_OPAQUE);
 #endif
 
     CHECK_DAVE_STATUS(d2_setblitsrc(dave, (void *)pixelmap -> gx_pixelmap_data,
@@ -1377,7 +1590,8 @@ VOID _gx_dave2d_alphamap_draw(GX_DRAW_CONTEXT * context, INT xpos, INT ypos, GX_
     /*LDRA_INSPECTED 96 S D/AVE 2D have use of mixed mode arithmetic for the macro d2_bf_no_blitctxbackup. */
     mode = d2_bf_no_blitctxbackup;
 
-    CHECK_DAVE_STATUS(d2_setcolor(dave, 0, gx_d2_color(context->gx_draw_context_brush.gx_brush_fill_color)))
+    gx_dave2d_color0_set(dave, context->gx_draw_context_brush.gx_brush_fill_color);
+    
     CHECK_DAVE_STATUS(d2_blitcopy(dave,
                          pixelmap -> gx_pixelmap_width,
                          pixelmap -> gx_pixelmap_height,
@@ -1537,16 +1751,7 @@ VOID _gx_dave2d_aliased_circle_draw(GX_DRAW_CONTEXT * context, INT xcenter, INT 
         r = (UINT)(r - (UINT)((brush->gx_brush_width + 1) / 2));
     }
 
-    context->gx_draw_context_clip->gx_rectangle_top =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_top - brush->gx_brush_width);
-    context->gx_draw_context_clip->gx_rectangle_left =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_left - brush->gx_brush_width);
-    context->gx_draw_context_clip->gx_rectangle_right =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_right + brush->gx_brush_width);
-    context->gx_draw_context_clip->gx_rectangle_bottom =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_bottom + brush->gx_brush_width);
-
-    d2_device * dave = gx_dave2d_set_clip(context);
+    d2_device * dave = gx_dave2d_context_clip_set(context);
 
 #if defined(GX_BRUSH_ALPHA_SUPPORT)
     GX_UBYTE brush_alpha = context->gx_draw_context_brush.gx_brush_alpha;
@@ -1555,13 +1760,17 @@ VOID _gx_dave2d_aliased_circle_draw(GX_DRAW_CONTEXT * context, INT xcenter, INT 
         return;
     }
 
-    CHECK_DAVE_STATUS(d2_setalpha(dave, brush_alpha))
+    gx_dave2d_alpha_set(dave, brush_alpha);
+#else
+    gx_dave2d_alpha_set(dave, (GX_UCHAR) GX_ALPHA_VALUE_OPAQUE);
 #endif
-    CHECK_DAVE_STATUS(d2_setantialiasing(dave, 1))
-    CHECK_DAVE_STATUS(d2_selectrendermode(dave, d2_rm_outline))
-    CHECK_DAVE_STATUS(d2_outlinewidth(dave, (d2_width)(D2_FIX4((USHORT)brush->gx_brush_width))))
-    CHECK_DAVE_STATUS(d2_setcolor(dave, 0, gx_d2_color(brush->gx_brush_line_color)))
-    CHECK_DAVE_STATUS(d2_setfillmode(dave, d2_fm_color))
+
+    gx_dave2d_anti_aliasing_set(dave, 1);
+    gx_dave2d_render_mode_set(dave, d2_rm_outline);
+    gx_dave2d_outline_width_set(dave, brush->gx_brush_width);
+    gx_dave2d_color0_set(dave, brush->gx_brush_line_color);
+    gx_dave2d_fill_mode_set(dave, d2_fm_color);
+
     CHECK_DAVE_STATUS(d2_rendercircle(dave, (d2_point)(D2_FIX4((USHORT)xcenter)),
                                             (d2_point)(D2_FIX4((USHORT)ycenter)),
                                             (d2_width)(D2_FIX4((USHORT)r)),
@@ -1580,7 +1789,7 @@ VOID _gx_dave2d_aliased_circle_draw(GX_DRAW_CONTEXT * context, INT xcenter, INT 
 VOID _gx_dave2d_circle_draw(GX_DRAW_CONTEXT * context, INT xcenter, INT ycenter, UINT r)
 {
     GX_BRUSH *brush = &context->gx_draw_context_brush;
-    
+
     /** Return to caller if brush width is 0. */
     if(brush->gx_brush_width < 1)
     {
@@ -1596,16 +1805,7 @@ VOID _gx_dave2d_circle_draw(GX_DRAW_CONTEXT * context, INT xcenter, INT ycenter,
         r = (UINT)(r - (UINT)((brush->gx_brush_width + 1) / 2));
     }
 
-    context->gx_draw_context_clip->gx_rectangle_top =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_top - brush->gx_brush_width);
-    context->gx_draw_context_clip->gx_rectangle_left =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_left - brush->gx_brush_width);
-    context->gx_draw_context_clip->gx_rectangle_right =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_right + brush->gx_brush_width);
-    context->gx_draw_context_clip->gx_rectangle_bottom =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_bottom + brush->gx_brush_width);
-
-    d2_device * dave = gx_dave2d_set_clip(context);
+    d2_device * dave = gx_dave2d_context_clip_set(context);
 
 #if defined(GX_BRUSH_ALPHA_SUPPORT)
     GX_UBYTE brush_alpha = context->gx_draw_context_brush.gx_brush_alpha;
@@ -1614,13 +1814,17 @@ VOID _gx_dave2d_circle_draw(GX_DRAW_CONTEXT * context, INT xcenter, INT ycenter,
         return;
     }
 
-    CHECK_DAVE_STATUS(d2_setalpha(dave, brush_alpha))
+    gx_dave2d_alpha_set(dave, brush_alpha);
+#else
+    gx_dave2d_alpha_set(dave, (GX_UCHAR) GX_ALPHA_VALUE_OPAQUE);
 #endif
-    CHECK_DAVE_STATUS(d2_setantialiasing(dave, 0))
-    CHECK_DAVE_STATUS(d2_selectrendermode(dave, d2_rm_outline))
-    CHECK_DAVE_STATUS(d2_outlinewidth(dave, (d2_width)(D2_FIX4((USHORT)brush->gx_brush_width))))
-    CHECK_DAVE_STATUS(d2_setcolor(dave, 0, gx_d2_color(brush->gx_brush_line_color)))
-    CHECK_DAVE_STATUS(d2_setfillmode(dave, d2_fm_color))
+
+    gx_dave2d_anti_aliasing_set(dave, 0);
+    gx_dave2d_render_mode_set(dave, d2_rm_outline);
+    gx_dave2d_outline_width_set(dave, brush->gx_brush_width);
+    gx_dave2d_color0_set(dave, brush->gx_brush_line_color);
+    gx_dave2d_fill_mode_set(dave, d2_fm_color);
+
     CHECK_DAVE_STATUS(d2_rendercircle(dave, (d2_point)(D2_FIX4((USHORT)xcenter)),
                                             (d2_point)(D2_FIX4((USHORT)ycenter)),
                                             (d2_width)(D2_FIX4((USHORT)r)),
@@ -1641,7 +1845,7 @@ VOID _gx_dave2d_circle_fill(GX_DRAW_CONTEXT * context, INT xcenter, INT ycenter,
     GX_BRUSH *brush = &context->gx_draw_context_brush;
     GX_COLOR brush_color = brush->gx_brush_fill_color;
 
-    d2_device * dave = gx_dave2d_set_clip(context);
+    d2_device * dave = gx_dave2d_context_clip_set(context);
 
 #if defined(GX_BRUSH_ALPHA_SUPPORT)
     GX_UBYTE brush_alpha = context->gx_draw_context_brush.gx_brush_alpha;
@@ -1650,34 +1854,27 @@ VOID _gx_dave2d_circle_fill(GX_DRAW_CONTEXT * context, INT xcenter, INT ycenter,
         return;
     }
 
-    CHECK_DAVE_STATUS(d2_setalpha(dave, brush_alpha))
+    gx_dave2d_alpha_set(dave, brush_alpha);
+#else
+    gx_dave2d_alpha_set(dave, (GX_UCHAR) GX_ALPHA_VALUE_OPAQUE);
 #endif
 
-    context->gx_draw_context_clip->gx_rectangle_top =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_top - brush->gx_brush_width);
-    context->gx_draw_context_clip->gx_rectangle_left =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_left - brush->gx_brush_width);
-    context->gx_draw_context_clip->gx_rectangle_right =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_right + brush->gx_brush_width);
-    context->gx_draw_context_clip->gx_rectangle_bottom =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_bottom + brush->gx_brush_width);
-
-    CHECK_DAVE_STATUS(d2_setantialiasing(dave, 1))
-    CHECK_DAVE_STATUS(d2_selectrendermode(dave, d2_rm_solid))
+    gx_dave2d_anti_aliasing_set(dave, 1);
+    gx_dave2d_render_mode_set(dave, d2_rm_solid);
 
     if (brush->gx_brush_style & GX_BRUSH_PIXELMAP_FILL)
     {
-        CHECK_DAVE_STATUS(d2_setfillmode(dave, d2_fm_texture))
+        gx_dave2d_fill_mode_set(dave, d2_fm_texture);
         gx_dave2d_set_texture(context,
-                               dave,
-                context->gx_draw_context_clip->gx_rectangle_left,
-                context->gx_draw_context_clip->gx_rectangle_top,
-                brush->gx_brush_pixelmap);
+                              dave,
+                              context->gx_draw_context_clip->gx_rectangle_left,
+                              context->gx_draw_context_clip->gx_rectangle_top,
+                              brush->gx_brush_pixelmap);
     }
     else
     {
-        CHECK_DAVE_STATUS(d2_setfillmode(dave, d2_fm_color))
-        CHECK_DAVE_STATUS(d2_setcolor(dave, 0, gx_d2_color(brush_color)))
+        gx_dave2d_fill_mode_set(dave, d2_fm_color);
+        gx_dave2d_color0_set(dave, brush_color);
     }
     CHECK_DAVE_STATUS(d2_rendercircle(dave, (d2_point)(D2_FIX4((USHORT)xcenter)),
                                             (d2_point)(D2_FIX4((USHORT)ycenter)),
@@ -1704,7 +1901,7 @@ VOID _gx_dave2d_pie_fill(GX_DRAW_CONTEXT * context, INT xcenter, INT ycenter, UI
     INT sin2;
     INT cos2;
     d2_u32 flags;
-    d2_device * dave = gx_dave2d_set_clip(context);
+    d2_device * dave = gx_dave2d_context_clip_set(context);
 
 #if defined(GX_BRUSH_ALPHA_SUPPORT)
     GX_UBYTE brush_alpha = context->gx_draw_context_brush.gx_brush_alpha;
@@ -1713,17 +1910,10 @@ VOID _gx_dave2d_pie_fill(GX_DRAW_CONTEXT * context, INT xcenter, INT ycenter, UI
         return;
     }
 
-    CHECK_DAVE_STATUS(d2_setalpha(dave, brush_alpha))
+    gx_dave2d_alpha_set(dave, brush_alpha);
+#else
+    gx_dave2d_alpha_set(dave, (GX_UCHAR) GX_ALPHA_VALUE_OPAQUE);
 #endif
-
-    context->gx_draw_context_clip->gx_rectangle_top =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_top - brush->gx_brush_width);
-    context->gx_draw_context_clip->gx_rectangle_left =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_left - brush->gx_brush_width);
-    context->gx_draw_context_clip->gx_rectangle_right =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_right + brush->gx_brush_width);
-    context->gx_draw_context_clip->gx_rectangle_bottom =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_bottom + brush->gx_brush_width);
 
     INT s_angle =  - start_angle;
     INT e_angle =  - end_angle;
@@ -1745,22 +1935,22 @@ VOID _gx_dave2d_pie_fill(GX_DRAW_CONTEXT * context, INT xcenter, INT ycenter, UI
         flags = 0;
     }
 
-    CHECK_DAVE_STATUS(d2_setantialiasing(dave, 1))
-    CHECK_DAVE_STATUS(d2_selectrendermode(dave, d2_rm_solid))
+    gx_dave2d_anti_aliasing_set(dave, 1);
+    gx_dave2d_render_mode_set(dave, d2_rm_solid);
 
     if (brush->gx_brush_style & GX_BRUSH_PIXELMAP_FILL)
     {
-        CHECK_DAVE_STATUS(d2_setfillmode(dave, d2_fm_texture))
+        gx_dave2d_fill_mode_set(dave, d2_fm_texture);
         gx_dave2d_set_texture(context,
-                               dave,
-                context->gx_draw_context_clip->gx_rectangle_left,
-                context->gx_draw_context_clip->gx_rectangle_top,
-                brush->gx_brush_pixelmap);
+                              dave,
+                              context->gx_draw_context_clip->gx_rectangle_left,
+                              context->gx_draw_context_clip->gx_rectangle_top,
+                              brush->gx_brush_pixelmap);
     }
     else
     {
-        CHECK_DAVE_STATUS(d2_setfillmode(dave, d2_fm_color))
-        CHECK_DAVE_STATUS(d2_setcolor(dave, 0, gx_d2_color(brush->gx_brush_fill_color)))
+        gx_dave2d_fill_mode_set(dave, d2_fm_color);
+        gx_dave2d_color0_set(dave, brush->gx_brush_fill_color);
     }
     CHECK_DAVE_STATUS(d2_renderwedge(dave, (d2_point)(D2_FIX4((USHORT)xcenter)),
                                            (d2_point)(D2_FIX4((USHORT)ycenter)),
@@ -1787,18 +1977,22 @@ VOID _gx_dave2d_pie_fill(GX_DRAW_CONTEXT * context, INT xcenter, INT ycenter, UI
 VOID _gx_dave2d_aliased_arc_draw(GX_DRAW_CONTEXT * context, INT xcenter, INT ycenter, UINT r, INT start_angle,
                                                                                                         INT end_angle)
 {
-    GX_BRUSH  * brush = &context->gx_draw_context_brush;
+    GX_BRUSH  * brush;
     INT         sin1;
     INT         cos1;
     INT         sin2;
     INT         cos2;
     d2_u32      flags;
-    d2_device * dave = gx_dave2d_set_clip(context);
+    d2_device  *dave;
+
+    brush = &context->gx_draw_context_brush;
 
     if(brush->gx_brush_width < 1)
     {
         return;
     }
+
+    dave = gx_dave2d_context_clip_set(context);
 
 #if defined(GX_BRUSH_ALPHA_SUPPORT)
     GX_UBYTE brush_alpha = 0U;
@@ -1809,17 +2003,10 @@ VOID _gx_dave2d_aliased_arc_draw(GX_DRAW_CONTEXT * context, INT xcenter, INT yce
         return;
     }
 
-    CHECK_DAVE_STATUS(d2_setalpha(dave, brush_alpha))
+    gx_dave2d_alpha_set(dave, brush_alpha);
+#else
+    gx_dave2d_alpha_set(dave, (GX_UCHAR) GX_ALPHA_VALUE_OPAQUE);
 #endif
-
-    context->gx_draw_context_clip->gx_rectangle_top =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_top - brush->gx_brush_width);
-    context->gx_draw_context_clip->gx_rectangle_left =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_left - brush->gx_brush_width);
-    context->gx_draw_context_clip->gx_rectangle_right =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_right + brush->gx_brush_width);
-    context->gx_draw_context_clip->gx_rectangle_bottom =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_bottom + brush->gx_brush_width);
 
     INT s_angle =  - start_angle;
     INT e_angle =  - end_angle;
@@ -1843,11 +2030,12 @@ VOID _gx_dave2d_aliased_arc_draw(GX_DRAW_CONTEXT * context, INT xcenter, INT yce
 
     USHORT brush_width = (USHORT)((brush->gx_brush_width + 1) >> 1);
 
-    CHECK_DAVE_STATUS(d2_setantialiasing(dave, 1))
-    CHECK_DAVE_STATUS(d2_selectrendermode(dave, d2_rm_outline))
-    CHECK_DAVE_STATUS(d2_outlinewidth(dave, (d2_width)(D2_FIX4(brush_width))))
-    CHECK_DAVE_STATUS(d2_setcolor(dave, 0, gx_d2_color(brush->gx_brush_line_color)))
-    CHECK_DAVE_STATUS(d2_setfillmode(dave, d2_fm_color))
+    gx_dave2d_anti_aliasing_set(dave, 1);
+    gx_dave2d_render_mode_set(dave, d2_rm_outline);
+    gx_dave2d_outline_width_set(dave, (INT) brush_width);
+    gx_dave2d_color0_set(dave, brush->gx_brush_line_color);
+    gx_dave2d_fill_mode_set(dave, d2_fm_color);
+
     CHECK_DAVE_STATUS(d2_renderwedge(dave, (d2_point)(D2_FIX4((USHORT)xcenter)),
                                            (d2_point)(D2_FIX4((USHORT)ycenter)),
                                            (d2_width)(D2_FIX4((USHORT)r)),
@@ -1878,12 +2066,14 @@ VOID _gx_dave2d_arc_draw(GX_DRAW_CONTEXT * context, INT xcenter, INT ycenter, UI
     INT         sin2;
     INT         cos2;
     d2_u32      flags;
-    d2_device * dave = gx_dave2d_set_clip(context);
+    d2_device * dave;
 
     if(brush->gx_brush_width < 1)
     {
         return;
     }
+
+    dave = gx_dave2d_context_clip_set(context);
 
 #if defined(GX_BRUSH_ALPHA_SUPPORT)
     GX_UBYTE brush_alpha = 0U;
@@ -1894,17 +2084,10 @@ VOID _gx_dave2d_arc_draw(GX_DRAW_CONTEXT * context, INT xcenter, INT ycenter, UI
         return;
     }
 
-    CHECK_DAVE_STATUS(d2_setalpha(dave, brush_alpha))
+    gx_dave2d_alpha_set(dave, brush_alpha);
+#else
+    gx_dave2d_alpha_set(dave, (GX_UCHAR) GX_ALPHA_VALUE_OPAQUE);
 #endif
-
-    context->gx_draw_context_clip->gx_rectangle_top =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_top - brush->gx_brush_width);
-    context->gx_draw_context_clip->gx_rectangle_left =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_left - brush->gx_brush_width);
-    context->gx_draw_context_clip->gx_rectangle_right =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_right + brush->gx_brush_width);
-    context->gx_draw_context_clip->gx_rectangle_bottom =
-                                (GX_VALUE)(context->gx_draw_context_clip->gx_rectangle_bottom + brush->gx_brush_width);
 
     INT s_angle =  - start_angle;
     INT e_angle =  - end_angle;
@@ -1928,11 +2111,12 @@ VOID _gx_dave2d_arc_draw(GX_DRAW_CONTEXT * context, INT xcenter, INT ycenter, UI
 
     USHORT brush_width = (USHORT)((brush->gx_brush_width + 1) >> 1);
 
-    CHECK_DAVE_STATUS(d2_setantialiasing(dave, 0))
-    CHECK_DAVE_STATUS(d2_selectrendermode(dave, d2_rm_outline))
-    CHECK_DAVE_STATUS(d2_outlinewidth(dave, (d2_width)(D2_FIX4(brush_width))))
-    CHECK_DAVE_STATUS(d2_setcolor(dave, 0, gx_d2_color(brush->gx_brush_line_color)))
-    CHECK_DAVE_STATUS(d2_setfillmode(dave, d2_fm_color))
+    gx_dave2d_anti_aliasing_set(dave, 0);
+    gx_dave2d_render_mode_set(dave, d2_rm_outline);
+    gx_dave2d_outline_width_set(dave, (INT) brush_width);
+    gx_dave2d_color0_set(dave, brush->gx_brush_line_color);
+    gx_dave2d_fill_mode_set(dave, d2_fm_color);
+
     CHECK_DAVE_STATUS(d2_renderwedge(dave, (d2_point)(D2_FIX4((USHORT)xcenter)),
                                            (d2_point)(D2_FIX4((USHORT)ycenter)),
                                            (d2_width)(D2_FIX4((USHORT)r)),
@@ -2046,6 +2230,15 @@ VOID _gx_dave2d_buffer_toggle(GX_CANVAS * canvas, GX_RECTANGLE * dirty)
     GX_RECTANGLE Copy;
     GX_DISPLAY *display;
     INT rotation_angle;
+    R_G2D_Type * p_reg;
+
+    ssp_feature_t ssp_feature = {{(ssp_ip_t) 0U}};
+    ssp_feature.channel = 0U;
+    ssp_feature.unit = 0U;
+    ssp_feature.id = SSP_IP_DRW;
+    fmi_feature_info_t info = {0U};
+    g_fmi_on_fmi.productFeatureGet(&ssp_feature, &info);
+    p_reg = (R_G2D_Type *) info.ptr;
 
     display = canvas->gx_canvas_display;
 
@@ -2068,7 +2261,7 @@ VOID _gx_dave2d_buffer_toggle(GX_CANVAS * canvas, GX_RECTANGLE * dirty)
     gx_display_list_open(display);
 
     /* Wait till framebuffer writeback is busy. */
-    while (1U == R_G2D->STATUS_b.BUSYWRITE)
+    while ((1U == p_reg->STATUS_b.BUSYWRITE) || (1U == p_reg->STATUS_b.CACHEDIRTY))
     {
         ;
     }
@@ -2300,15 +2493,15 @@ VOID gx_log_dave_error(d2_s32 status)
 {
     if (status)
     {
-        dave_error_list[g_dave_error_list_index] = status;
-        if (g_dave_error_count < DAVE_ERROR_LIST_SIZE)
+        dave_error_list[g_dave2d.error_list_index] = status;
+        if (g_dave2d.error_count < DAVE_ERROR_LIST_SIZE)
         {
-            g_dave_error_count++;
+            g_dave2d.error_count++;
         }
-        g_dave_error_list_index++;
-        if (g_dave_error_list_index >= DAVE_ERROR_LIST_SIZE)
+        g_dave2d.error_list_index++;
+        if (g_dave2d.error_list_index >= DAVE_ERROR_LIST_SIZE)
         {
-            g_dave_error_list_index = 0;
+            g_dave2d.error_list_index = 0;
         }
     }
 }
@@ -2321,12 +2514,12 @@ VOID gx_log_dave_error(d2_s32 status)
  **********************************************************************************************************************/
 INT gx_get_dave_error(INT get_index)
 {
-    if (get_index > g_dave_error_count)
+    if (get_index > g_dave2d.error_count)
     {
         return 0;
     }
 
-    INT list_index = g_dave_error_list_index;
+    INT list_index = g_dave2d.error_list_index;
     while(get_index > 0)
     {
         list_index--;
@@ -2347,11 +2540,27 @@ INT gx_get_dave_error(INT get_index)
  **********************************************************************************************************************/
 VOID gx_display_list_flush(GX_DISPLAY *display)
 {
-    if ((GX_FALSE == g_display_list_flushed) && (d2_commandspending(display->gx_display_accelerator)))
+    R_G2D_Type * p_reg;
+
+    ssp_feature_t ssp_feature = {{(ssp_ip_t) 0U}};
+    ssp_feature.channel = 0U;
+    ssp_feature.unit = 0U;
+    ssp_feature.id = SSP_IP_DRW;
+    fmi_feature_info_t info = {0U};
+    g_fmi_on_fmi.productFeatureGet(&ssp_feature, &info);
+    p_reg = (R_G2D_Type *) info.ptr;
+
+    if ((GX_FALSE == g_dave2d.display_list_flushed) && (GX_TRUE == d2_commandspending(display->gx_display_accelerator)))
     {
         CHECK_DAVE_STATUS(d2_endframe(display -> gx_display_accelerator))
-        CHECK_DAVE_STATUS(d2_flushframe(display -> gx_display_accelerator))
-        g_display_list_flushed = GX_TRUE;
+        CHECK_DAVE_STATUS(d2_startframe(display->gx_display_accelerator))
+
+        /* Wait till framebuffer writeback is busy. */
+        while ((1U == p_reg->STATUS_b.BUSYWRITE) || (1U == p_reg->STATUS_b.CACHEDIRTY))
+        {
+            ;
+        }
+        g_dave2d.display_list_flushed = GX_TRUE;
     }
 }
 
@@ -2362,11 +2571,28 @@ VOID gx_display_list_flush(GX_DISPLAY *display)
  **********************************************************************************************************************/
 VOID gx_display_list_open(GX_DISPLAY *display)
 {
-    if (GX_TRUE == g_display_list_flushed)
+    /*LDRA_INSPECTED 57 Statement with no side effect. */
+    GX_PARAMETER_NOT_USED(display);
+
+    if (g_dave2d.display_list_flushed)
     {
-        CHECK_DAVE_STATUS(d2_startframe(display -> gx_display_accelerator))
-        g_display_list_flushed = GX_FALSE;
+        g_dave2d.display_list_flushed = GX_FALSE;
     }
+}
+
+/*******************************************************************************************************************//**
+ * @brief  GUIX display driver for Synergy, assign clipping rectangle based on GUIX drawing clipping rectangle
+ * information.
+ * This is a common function for GUIX D/AVE 2D draw routines.
+ * @param   clip[in]         Pointer to a GUIX clipping drawing rectangle
+ **********************************************************************************************************************/
+VOID gx_dave2d_cliprect_set(d2_device *dave, GX_RECTANGLE *clip)
+{
+    CHECK_DAVE_STATUS(d2_cliprect(dave,
+                        clip -> gx_rectangle_left,
+                        clip -> gx_rectangle_top,
+                        clip -> gx_rectangle_right,
+                        clip -> gx_rectangle_bottom))
 }
 
 /*******************************************************************************************************************//**
@@ -2375,7 +2601,7 @@ VOID gx_display_list_open(GX_DISPLAY *display)
  * @param   context[in]         Pointer to a GUIX drawing context
  * @retval  Address             Pointer to a D/AVE 2D device structure
  **********************************************************************************************************************/
-d2_device * gx_dave2d_set_clip(GX_DRAW_CONTEXT * context)
+d2_device * gx_dave2d_context_clip_set(GX_DRAW_CONTEXT * context)
 {
     d2_device * dave = context -> gx_draw_context_display -> gx_display_accelerator;
 
@@ -2532,12 +2758,14 @@ static VOID gx_dave2d_glyph_8bit_draw(GX_DRAW_CONTEXT * context, GX_RECTANGLE * 
     {
         return;
     }
-    CHECK_DAVE_STATUS(d2_setalpha(dave, alpha))
+    gx_dave2d_alpha_set(dave, alpha);
+#else
+    gx_dave2d_alpha_set(dave, (GX_UCHAR) GX_ALPHA_VALUE_OPAQUE);
 #endif
-    CHECK_DAVE_STATUS(d2_cliprect(dave, draw_area -> gx_rectangle_left, draw_area -> gx_rectangle_top,
-                draw_area -> gx_rectangle_right, draw_area -> gx_rectangle_bottom))
 
-    CHECK_DAVE_STATUS(d2_setcolor(dave, 1, gx_d2_color(text_color)))
+    gx_dave2d_cliprect_set(dave, draw_area);
+    gx_dave2d_color0_set(dave, text_color);
+    gx_dave2d_blend_mode_set(dave, d2_bm_one, d2_bm_one_minus_alpha);
 
     CHECK_DAVE_STATUS(d2_setblitsrc(dave, (void *)glyph -> gx_glyph_map,
                            glyph -> gx_glyph_width, glyph -> gx_glyph_width,
@@ -2555,13 +2783,10 @@ static VOID gx_dave2d_glyph_8bit_draw(GX_DRAW_CONTEXT * context, GX_RECTANGLE * 
                          (d2_point)(D2_FIX4((USHORT)(draw_area -> gx_rectangle_top))),
                          /*LDRA_INSPECTED 96 S D/AVE 2D uses mixed mode arithmetic for the macro d2_bf_colorize2. */
                          /*LDRA_INSPECTED 96 S D/AVE 2D uses mixed mode arithmetic for the macro d2_bf_usealpha. */
-                         (d2_u32)d2_bf_colorize2 | (d2_u32)d2_bf_usealpha | (d2_u32)d2_bf_filter))
+                         (d2_u32) d2_bf_usealpha | (d2_u32) d2_bf_colorize))
 
     /* Return back alpha blend mode. */
-    CHECK_DAVE_STATUS(d2_setalphablendmode(dave, d2_bm_one, d2_bm_zero))
-
-    /* Reset alpha value to default 0xff. */
-    CHECK_DAVE_STATUS(d2_setalpha(dave, 0xff))
+    gx_dave2d_blend_mode_set(dave, d2_bm_alpha, d2_bm_one_minus_alpha);
 }
 
 /*******************************************************************************************************************//**
@@ -2590,18 +2815,23 @@ static VOID gx_dave2d_glyph_4bit_draw(GX_DRAW_CONTEXT * context, GX_RECTANGLE * 
     {
         return;
     }
-    CHECK_DAVE_STATUS(d2_setalpha(dave, alpha))
+
+    gx_dave2d_alpha_set(dave, alpha);
+#else
+    gx_dave2d_alpha_set(dave, (GX_UCHAR) GX_ALPHA_VALUE_OPAQUE);
 #endif
 
-    CHECK_DAVE_STATUS(d2_cliprect(dave, (d2_border)(draw_area -> gx_rectangle_left),
-                                 (d2_border)(draw_area -> gx_rectangle_top),
-                                 draw_area -> gx_rectangle_right, draw_area -> gx_rectangle_bottom))
-    CHECK_DAVE_STATUS(d2_setcolor(dave, 1, gx_d2_color(text_color)))
+    gx_dave2d_cliprect_set(dave, draw_area);
 
-    if (g_last_font_bits != 4)
+#if 1
+    gx_dave2d_color1_set(dave, text_color);
+    gx_dave2d_blend_mode_set(dave, d2_bm_alpha, d2_bm_one_minus_alpha);
+
+    if (g_dave2d.font_bits != 4)
     {
+        /* setup a 16 entry alpha palette for drawing glyph */
         CHECK_DAVE_STATUS(d2_settexclut_part(dave, (d2_color *) g_gray_palette, 0, 16))
-        g_last_font_bits = 4;
+        g_dave2d.font_bits = 4;
     }
 
     CHECK_DAVE_STATUS(d2_setblitsrc(dave, (void *)glyph -> gx_glyph_map,
@@ -2610,6 +2840,21 @@ static VOID gx_dave2d_glyph_4bit_draw(GX_DRAW_CONTEXT * context, GX_RECTANGLE * 
                            (d2_s32)glyph -> gx_glyph_height,
                            (mode | d2_mode_i4 | d2_mode_clut)))
 
+#else
+    /* This version uses d2_mode_alpha4 instead of setting up a 16-entry palette,
+     * however currently this blitsrc mode is not supported by D/AVE2D. Keep this code here in case this supported is
+     * added in future versions.
+     */
+
+    gx_dave2d_color0_set(dave, text_color);
+    gx_dave2d_blend_mode_set(dave, d2_bm_one, d2_bm_one_minus_alpha);
+
+    CHECK_DAVE_STATUS(d2_setblitsrc(dave, (void *)glyph -> gx_glyph_map,
+                           (d2_s32)(((USHORT)glyph -> gx_glyph_width + 1U) & 0xfffeU),
+                           glyph -> gx_glyph_width,
+                           glyph -> gx_glyph_height,
+                           mode|d2_mode_alpha4))
+#endif
     CHECK_DAVE_STATUS(d2_blitcopy(dave,
                          glyph -> gx_glyph_width,
                          glyph -> gx_glyph_height,
@@ -2621,10 +2866,7 @@ static VOID gx_dave2d_glyph_4bit_draw(GX_DRAW_CONTEXT * context, GX_RECTANGLE * 
                          (d2_point)(D2_FIX4((USHORT)draw_area -> gx_rectangle_top  - (USHORT)map_offset -> gx_point_y)),
                          /*LDRA_INSPECTED 96 S D/AVE 2D uses mixed mode arithmetic for the macro d2_bf_colorize2. */
                          /*LDRA_INSPECTED 96 S D/AVE 2D uses mixed mode arithmetic for the macro d2_bf_usealpha. */
-                         (d2_u32)d2_bf_colorize2 | (d2_u32)d2_bf_usealpha))
-
-    /* Reset alpha value to default 0xff */
-    CHECK_DAVE_STATUS(d2_setalpha(dave, 0xff))
+                         (d2_u32)d2_bf_colorize2 | (d2_u32) d2_bf_usealpha))
 }
 
 /*******************************************************************************************************************//**
@@ -2655,26 +2897,42 @@ static VOID gx_dave2d_glyph_1bit_draw(GX_DRAW_CONTEXT * context, GX_RECTANGLE * 
     {
         return;
     }
-    CHECK_DAVE_STATUS(d2_setalpha(dave, alpha))
+
+    gx_dave2d_alpha_set(dave, alpha);
+#else
+    gx_dave2d_alpha_set(dave, (GX_UCHAR) GX_ALPHA_VALUE_OPAQUE);
 #endif
 
-    CHECK_DAVE_STATUS(d2_setcolor(dave, 1, gx_d2_color(text_color)))
+    gx_dave2d_cliprect_set(dave, draw_area);
 
-    CHECK_DAVE_STATUS(d2_cliprect(dave, (d2_border)(draw_area -> gx_rectangle_left),
-                                 (d2_border)(draw_area -> gx_rectangle_top),
-                                 draw_area -> gx_rectangle_right, draw_area -> gx_rectangle_bottom))
-
-    if (g_last_font_bits != 1)
+#if 1
+    if (g_dave2d.font_bits != 1)
     {
+        /* set up a 2-entry alpha palette for drawing glyph */
         CHECK_DAVE_STATUS(d2_settexclut_part(dave, (d2_color *) g_mono_palette, 0, 2))
-        g_last_font_bits = 1;
+        g_dave2d.font_bits = 1;
     }
+
+    gx_dave2d_color0_set(dave, text_color);
+    gx_dave2d_blend_mode_set(dave, d2_bm_alpha, d2_bm_one_minus_alpha);
 
     CHECK_DAVE_STATUS(d2_setblitsrc(dave, (void *)glyph -> gx_glyph_map,
                           (d2_s32)(((USHORT)glyph -> gx_glyph_width + 7U) & 0xfff8U),
                           (d2_s32)glyph -> gx_glyph_width,
                           (d2_s32)glyph -> gx_glyph_height,
                           (mode | d2_mode_i1 | d2_mode_clut)))
+#else
+    /* This version uses d2_mode_alpha1 instead of setting up a 16-entry palette,
+     * however currently this blitsrc mode is not supported by D/AVE2D. Keep this code here in case this supported is
+     * added in future versions.
+     */
+
+    gx_dave2d_color1_set(dave, text_color);
+    CHECK_DAVE_STATUS(d2_setblitsrc(dave, (void *)glyph -> gx_glyph_map,
+                           glyph -> gx_glyph_width, glyph -> gx_glyph_width,
+                           glyph -> gx_glyph_height,
+                           mode|d2_mode_alpha1))
+#endif
 
     CHECK_DAVE_STATUS(d2_blitcopy(dave,
                          glyph -> gx_glyph_width,
@@ -2687,10 +2945,7 @@ static VOID gx_dave2d_glyph_1bit_draw(GX_DRAW_CONTEXT * context, GX_RECTANGLE * 
                          (d2_point)(D2_FIX4((USHORT)draw_area -> gx_rectangle_top - (USHORT)map_offset->gx_point_y)),
                          /*LDRA_INSPECTED 96 S D/AVE 2D uses mixed mode arithmetic for the macro d2_bf_colorize2. */
                          /*LDRA_INSPECTED 96 S D/AVE 2D uses mixed mode arithmetic for the macro d2_bf_usealpha. */
-                         (d2_u32)d2_bf_colorize2 | (d2_u32)d2_bf_usealpha))
-
-    /* Reset alpha value to default 0xff */
-    CHECK_DAVE_STATUS(d2_setalpha(dave, 0xff));
+                         (d2_u32) d2_bf_usealpha | (d2_u32) d2_bf_colorize))
 }
 
 /*******************************************************************************************************************//**
@@ -2755,11 +3010,8 @@ static VOID gx_dave2d_copy_visible_to_working(GX_CANVAS * canvas, GX_RECTANGLE *
                                      (d2_u32)(canvas -> gx_canvas_y_resolution),
                                      (d2_s32)mode))
 
-    CHECK_DAVE_STATUS(d2_cliprect(dave,
-                copy_clip.gx_rectangle_left,
-                copy_clip.gx_rectangle_top,
-                copy_clip.gx_rectangle_right,
-                copy_clip.gx_rectangle_bottom))
+    gx_dave2d_cliprect_set(dave, &copy_clip);
+    gx_dave2d_alpha_set(dave, (GX_UCHAR) GX_ALPHA_VALUE_OPAQUE);
 
     CHECK_DAVE_STATUS(d2_setblitsrc(dave, (void *) pGetRow,
                   canvas->gx_canvas_x_resolution,
@@ -2969,6 +3221,7 @@ static VOID gx_dave2d_rotate_canvas_to_working_image_draw(d2_device * p_dave, d2
 {
     USHORT        * pGetRow16 = NULL;
     UINT          * pGetRow32 = NULL;
+    GX_RECTANGLE  clip = { 0 };
 
     CHECK_DAVE_STATUS(d2_framebuffer(p_dave,
                                      (uint16_t *) working_frame,
@@ -2976,8 +3229,15 @@ static VOID gx_dave2d_rotate_canvas_to_working_image_draw(d2_device * p_dave, d2
                                      (d2_u32)p_param->x_resolution,
                                      (d2_u32)p_param->y_resolution,
                                      (d2_s32)mode));
-    CHECK_DAVE_STATUS(d2_cliprect(p_dave, p_param->xmin, p_param->ymin, p_param->xmax, p_param->ymax));
-    CHECK_DAVE_STATUS(d2_setfillmode(p_dave, d2_fm_texture));
+
+    gx_utility_rectangle_define(&clip,
+                               (GX_VALUE) p_param->xmin,
+                               (GX_VALUE) p_param->ymin,
+                               (GX_VALUE) p_param->xmax,
+                               (GX_VALUE) p_param->ymax);
+
+    gx_dave2d_cliprect_set(p_dave, &clip);
+    gx_dave2d_fill_mode_set(p_dave, d2_fm_texture);
 
     if (mode == d2_mode_rgb565)
     {
@@ -3114,8 +3374,7 @@ static VOID gx_dave2d_rotate_canvas_to_working(GX_CANVAS * canvas, GX_RECTANGLE 
 
     /** Perform D/AVE 2D texture mapping and render box operation. */
     gx_dave2d_rotate_canvas_to_working_image_draw(dave, &param, mode, display, canvas);
-
-    CHECK_DAVE_STATUS(d2_setfillmode(dave, fillmode_bkup));
+    gx_dave2d_fill_mode_set(dave, fillmode_bkup);
 }
 
 

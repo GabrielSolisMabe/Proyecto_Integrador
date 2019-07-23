@@ -49,7 +49,7 @@ SSP_HEADER
  * Macro definitions
  **********************************************************************************************************************/
 #define FMI_CODE_VERSION_MAJOR (1U)
-#define FMI_CODE_VERSION_MINOR (4U)
+#define FMI_CODE_VERSION_MINOR (6U)
 
 /***********************************************************************************************************************
  * Typedef definitions

@@ -19,7 +19,7 @@ Synergy Configuration
          IWDT Window End Position:  0% (no window end position)
          IWDT Window Start Position: 100% (no window start position)
          IWDT Reset Interrupt Request Select: Reset is enabled
-         IWDT Stop Control: Stop counting when in Sleep, Snooze mode, Software Standby, or Deep Software Standby mode
+         IWDT Stop Control: Stop counting when in Sleep, Snooze mode, or Software Standby
          WDT Start Mode Select: Stop WDT after a reset (register-start mode)
          WDT Timeout Period: 16384 cycles
          WDT Clock Frequency Division Ratio: 128
@@ -37,6 +37,7 @@ Synergy Configuration
     Process stack size (bytes): 0
     Heap size (bytes) - A minimum of 4K (0x1000) is required if standard library functions are to be used.: 0x1000
     MCU Vcc (mV): 3300
+    MCU Analog Power Supply AVCC0 (mV): 3300
     Parameter checking: Enabled
     Assert Failures: Return SSP_ERR_ASSERTION
     Error Log: No Error Log
@@ -242,9 +243,8 @@ Synergy Configuration
       
   Module "CGC Driver on r_cgc"
     Parameter Checking: Default (BSP)
-    Main Oscillator Wait Time: 8163 cycles
+    Main Oscillator Wait Time: 31139 us (8163 cycles)
     Main Oscillator Clock Source: Crystal or Resonator
-    Oscillator Stop Detect: Enabled
     Subclock Drive: Standard (12.5pf)
     Configure Subclock Drive On Reset: Enabled
     Low Voltage Mode: Disable
@@ -269,8 +269,8 @@ Synergy Configuration
     Linker section to keep DTC vector table: .ssp_dtc_vector_table
     
   Module "GUIX on gx"
-    Enable Synergy 2D Drawing Engine Support: Yes
-    Enable Synergy JPEG Support: Yes
+    Enable Synergy 2D Drawing Engine Support: Yes(default)
+    Enable Synergy JPEG Support: Yes(default)
     
   Module "GUIX Port on sf_el_gx"
     Parameter Checking: Default (BSP)
@@ -294,6 +294,9 @@ Synergy Configuration
     Parameter Checking: Enabled
     
   Module "Timer Driver on r_gpt"
+    Parameter Checking: Default (BSP)
+    
+  Module "External IRQ Driver on r_icu"
     Parameter Checking: Default (BSP)
     
   HAL
@@ -333,7 +336,7 @@ Synergy Configuration
       Transmit End Interrupt Priority: Priority 2
       Error Interrupt Priority: Priority 2
       
-      Instance "g_transfer0 Transfer Driver on r_dtc Event SCI0 TXI"
+      Instance "g_transfer0 Transfer Driver on r_dtc SCI0 TXI"
         Name: g_transfer0
         Mode: Normal
         Transfer Size: 1 Byte
@@ -345,12 +348,12 @@ Synergy Configuration
         Source Pointer: NULL
         Number of Transfers: 0
         Number of Blocks (Valid only in Block Mode): 0
-        Activation Source (Must enable IRQ): Event SCI0 TXI
+        Activation Source (Must enable IRQ): SCI0 TXI
         Auto Enable: False
         Callback (Only valid with Software start): NULL
         ELC Software Event Interrupt Priority: Priority 4
         
-      Instance "g_transfer1 Transfer Driver on r_dtc Event SCI0 RXI"
+      Instance "g_transfer1 Transfer Driver on r_dtc SCI0 RXI"
         Name: g_transfer1
         Mode: Normal
         Transfer Size: 1 Byte
@@ -362,7 +365,7 @@ Synergy Configuration
         Source Pointer: NULL
         Number of Transfers: 0
         Number of Blocks (Valid only in Block Mode): 0
-        Activation Source (Must enable IRQ): Event SCI0 RXI
+        Activation Source (Must enable IRQ): SCI0 RXI
         Auto Enable: False
         Callback (Only valid with Software start): NULL
         ELC Software Event Interrupt Priority: Priority 5
@@ -598,7 +601,7 @@ Synergy Configuration
     Instance "g_adc0 ADC Driver on r_adc"
       Name: g_adc0
       Unit: 0
-      Resolution (resolution varies by MCU): 8-Bit
+      Resolution: 10-Bit
       Alignment: Right
       Clear after read: On
       Mode: Continuous Scan
@@ -669,7 +672,7 @@ Synergy Configuration
           Channel 27: Disabled
           Temperature Sensor: Disabled
           Voltage Sensor: Disabled
-      Sample and Hold Mask: Select channels for which individual sample and hold circuit is to be enabled
+      Sample and Hold Mask (Available only on selected MCUs): Select channels for which individual sample and hold circuit is to be enabled
           Channel 0: Enabled
           Channel 1: Disabled
           Channel 2: Disabled
@@ -682,6 +685,7 @@ Synergy Configuration
       Name: g_timer2
       Channel: 2
       Mode: PWM
+      Duty Cycle Range (only applicable in PWM mode): Shortest: 2 PCLK, Longest: (Period - 1) PCLK
       Period Value: 1000
       Period Unit: Hertz
       Duty Cycle Value: 50
@@ -693,6 +697,50 @@ Synergy Configuration
       GTIOCB Stop Level: Pin Level Low
       Callback: NULL
       Overflow Interrupt Priority: Disabled
+      
+    Instance "g_timer0 Timer Driver on r_gpt"
+      Name: g_timer0
+      Channel: 0
+      Mode: Periodic
+      Duty Cycle Range (only applicable in PWM mode): Shortest: 2 PCLK, Longest: (Period - 1) PCLK
+      Period Value: 1
+      Period Unit: Seconds
+      Duty Cycle Value: 50
+      Duty Cycle Unit: Unit Percent
+      Auto Start: True
+      GTIOCA Output Enabled: False
+      GTIOCA Stop Level: Pin Level Low
+      GTIOCB Output Enabled: False
+      GTIOCB Stop Level: Pin Level Low
+      Callback: NULL
+      Overflow Interrupt Priority: Disabled
+      
+    Instance "g_external_irq5 External IRQ Driver on r_icu"
+      Name: g_external_irq5
+      Channel: 5
+      Trigger: Rising
+      Digital Filtering: Disabled
+      Digital Filtering Sample Clock (Only valid when Digital Filtering is Enabled): PCLK / 64
+      Interrupt enabled after initialization: True
+      Callback: external_irq5_callback
+      Pin Interrupt Priority: Priority 6
+      
+    Instance "g_timer1 Timer Driver on r_gpt"
+      Name: g_timer1
+      Channel: 1
+      Mode: Periodic
+      Duty Cycle Range (only applicable in PWM mode): Shortest: 2 PCLK, Longest: (Period - 1) PCLK
+      Period Value: 100
+      Period Unit: Milliseconds
+      Duty Cycle Value: 50
+      Duty Cycle Unit: Unit Percent
+      Auto Start: True
+      GTIOCA Output Enabled: False
+      GTIOCA Stop Level: Pin Level Low
+      GTIOCB Output Enabled: False
+      GTIOCB Stop Level: Pin Level Low
+      Callback: timer1_callback
+      Overflow Interrupt Priority: Priority 7
       
     Object "Message_Queue Queue"
       Name: MessageQueue

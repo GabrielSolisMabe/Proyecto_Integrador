@@ -59,15 +59,6 @@ typedef enum e_gpt_int
     GPT_INT_AD_START_B
 } gpt_int_t;
 
-/** Interrupt triggers */
-typedef enum e_gpt_int_trig
-{
-    GPT_INT_TYPE_NONE      = 0,  ///< Interrupts are disabled
-    GPT_INT_TYPE_OVERFLOW  = 1,  ///< Interrupts occur at counter overflow
-    GPT_INT_TYPE_UNDERFLOW = 2,  ///< Interrupts occur at counter underflow
-    GPT_INT_TYPE_ALL       = 3   ///< Interrupts occur at both overflow and underflow
-} gpt_int_trig_t;
-
 /** Timer modes */
 typedef enum e_gpt_mode
 {

@@ -56,6 +56,7 @@ typedef struct st_sf_el_gx_instance_ctrl
     GX_DISPLAY            * p_display;             ///< Pointer to the GUIX display context
     display_instance_t    * p_display_instance;    ///< Pointer to a display instance
     display_runtime_cfg_t * p_display_runtime_cfg; ///< Pointer to a runtime display configuration
+    display_frame_layer_t   inherit_frame_layer;   ///< Configured Inherit Screen Layer
     void                  * p_canvas;              ///< Pointer to a canvas(reserved)
     void                  * p_framebuffer_read;    ///< Pointer to a frame buffer (for displaying)
     void                  * p_framebuffer_write;   ///< Pointer to a frame buffer (for rendering)

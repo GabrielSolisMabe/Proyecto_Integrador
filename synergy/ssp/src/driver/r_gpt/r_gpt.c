@@ -74,7 +74,8 @@ static ssp_err_t gpt_period_to_pclk (gpt_instance_ctrl_t * const p_ctrl,
                                      timer_size_t        * const p_period_pclk,
                                      gpt_pclk_div_t      * const p_divisor);
 
-static ssp_err_t gpt_duty_cycle_to_pclk (timer_size_t     const duty_cycle,
+static ssp_err_t gpt_duty_cycle_to_pclk (gpt_shortest_level_t  shortest_pwm_signal,
+                                         timer_size_t     const duty_cycle,
                                          timer_pwm_unit_t const unit,
                                          timer_size_t     const period,
                                          timer_size_t   * const p_duty_cycle_pclk);
@@ -215,11 +216,18 @@ ssp_err_t R_GPT_TimerOpen  (timer_ctrl_t * const      p_api_ctrl,
     ssp_err_t err = gpt_common_open(p_ctrl, p_cfg, &ssp_feature, &pclk_divisor, &pclk_counts, &variant);
     GPT_ERROR_RETURN((SSP_SUCCESS == err), err);
 
+    /** Save the configuration  */
+    timer_on_gpt_cfg_t * p_ext = (timer_on_gpt_cfg_t *) p_cfg->p_extend;
+    p_ctrl->gtioca_output_enabled = p_ext->gtioca.output_enabled;
+    p_ctrl->gtiocb_output_enabled = p_ext->gtiocb.output_enabled;
+    p_ctrl->shortest_pwm_signal = p_ext->shortest_pwm_signal;
+
     /** Calculate duty cycle */
     timer_size_t duty_cycle = 0;
     if (TIMER_MODE_PWM == p_cfg->mode)
     {
-        err = gpt_duty_cycle_to_pclk(p_cfg->duty_cycle, p_cfg->duty_cycle_unit, pclk_counts, &duty_cycle);
+        err = gpt_duty_cycle_to_pclk(p_ctrl->shortest_pwm_signal, p_cfg->duty_cycle, p_cfg->duty_cycle_unit,
+                                         pclk_counts, &duty_cycle);
         GPT_ERROR_RETURN((SSP_SUCCESS == err), err);
     }
 
@@ -254,10 +262,10 @@ ssp_err_t R_GPT_Stop (timer_ctrl_t * const p_api_ctrl)
 #if GPT_CFG_PARAM_CHECKING_ENABLE
     /** Make sure handle is valid. */
     SSP_ASSERT(NULL != p_ctrl);
-    GPT_ERROR_RETURN(GPT_OPEN == p_ctrl->open, SSP_ERR_NOT_OPEN);
     SSP_ASSERT(NULL != p_ctrl->p_reg);
 #endif
 
+    GPT_ERROR_RETURN(GPT_OPEN == p_ctrl->open, SSP_ERR_NOT_OPEN);
     /** Stop timer */
     GPT_BASE_PTR p_gpt_reg = (GPT_BASE_PTR) p_ctrl->p_reg;
     HW_GPT_CounterStartStop(p_gpt_reg, GPT_STOP);
@@ -277,10 +285,10 @@ ssp_err_t R_GPT_Start (timer_ctrl_t * const p_api_ctrl)
 #if GPT_CFG_PARAM_CHECKING_ENABLE
     /** Make sure handle is valid. */
     SSP_ASSERT(NULL != p_ctrl);
-    GPT_ERROR_RETURN(GPT_OPEN == p_ctrl->open, SSP_ERR_NOT_OPEN);
     SSP_ASSERT(NULL != p_ctrl->p_reg);
 #endif
 
+    GPT_ERROR_RETURN(GPT_OPEN == p_ctrl->open, SSP_ERR_NOT_OPEN);
     /** Start timer */
     GPT_BASE_PTR p_gpt_reg = (GPT_BASE_PTR) p_ctrl->p_reg;
     HW_GPT_CounterStartStop(p_gpt_reg, GPT_START);
@@ -302,10 +310,10 @@ ssp_err_t R_GPT_CounterGet (timer_ctrl_t * const p_api_ctrl,
     /** Make sure parameters are valid */
     SSP_ASSERT(NULL != p_ctrl);
     SSP_ASSERT(NULL != p_value);
-    GPT_ERROR_RETURN(GPT_OPEN == p_ctrl->open, SSP_ERR_NOT_OPEN);
     SSP_ASSERT(NULL != p_ctrl->p_reg);
 #endif
 
+    GPT_ERROR_RETURN(GPT_OPEN == p_ctrl->open, SSP_ERR_NOT_OPEN);
     /** Read counter value */
     GPT_BASE_PTR p_gpt_reg = (GPT_BASE_PTR) p_ctrl->p_reg;
     *p_value = HW_GPT_CounterGet(p_gpt_reg);
@@ -325,10 +333,10 @@ ssp_err_t R_GPT_Reset (timer_ctrl_t * const p_api_ctrl)
 #if GPT_CFG_PARAM_CHECKING_ENABLE
     /** Make sure handle is valid. */
     SSP_ASSERT(NULL != p_ctrl);
-    GPT_ERROR_RETURN(GPT_OPEN == p_ctrl->open, SSP_ERR_NOT_OPEN);
     SSP_ASSERT(NULL != p_ctrl->p_reg);
 #endif
 
+    GPT_ERROR_RETURN(GPT_OPEN == p_ctrl->open, SSP_ERR_NOT_OPEN);
     /** Write the counter value */
     SSP_CRITICAL_SECTION_DEFINE;
     SSP_CRITICAL_SECTION_ENTER;
@@ -363,11 +371,11 @@ ssp_err_t R_GPT_PeriodSet (timer_ctrl_t * const p_api_ctrl,
 #if GPT_CFG_PARAM_CHECKING_ENABLE
     /** Make sure handle is valid. */
     SSP_ASSERT(NULL != p_ctrl);
-    GPT_ERROR_RETURN(GPT_OPEN == p_ctrl->open, SSP_ERR_NOT_OPEN);
     SSP_ASSERT(NULL != p_ctrl->p_reg);
     GPT_ERROR_RETURN((0 != period), SSP_ERR_INVALID_ARGUMENT);
 #endif
 
+    GPT_ERROR_RETURN(GPT_OPEN == p_ctrl->open, SSP_ERR_NOT_OPEN);
     /** Delay must be converted to PCLK counts before it can be set in registers */
     ssp_err_t     err          = SSP_SUCCESS;
     timer_size_t      pclk_counts  = 0;
@@ -394,9 +402,10 @@ ssp_err_t R_GPT_PeriodSet (timer_ctrl_t * const p_api_ctrl,
 /*******************************************************************************************************************//**
  * @brief  Sets status in provided p_status pointer. Implements pwm_api_t::dutyCycleSet.
  *
- * @retval SSP_SUCCESS           Counter value written successfully.
- * @retval SSP_ERR_ASSERTION     The p_ctrl parameter was null.
- * @retval SSP_ERR_NOT_OPEN      The channel is not opened.
+ * @retval SSP_SUCCESS                Counter value written successfully.
+ * @retval SSP_ERR_ASSERTION          The p_ctrl parameter was null.
+ * @retval SSP_ERR_NOT_OPEN           The channel is not opened.
+ * @retval SSP_ERR_INVALID_ARGUMENT   The pin value is out of range; Should be either 0 (for GTIOCA) or 1 (for GTIOCB).
  **********************************************************************************************************************/
 ssp_err_t R_GPT_DutyCycleSet (timer_ctrl_t   * const p_api_ctrl,
                               timer_size_t     const duty_cycle,
@@ -407,14 +416,16 @@ ssp_err_t R_GPT_DutyCycleSet (timer_ctrl_t   * const p_api_ctrl,
 #if GPT_CFG_PARAM_CHECKING_ENABLE
     /** Make sure handle is valid. */
     SSP_ASSERT(NULL != p_ctrl);
-    GPT_ERROR_RETURN(GPT_OPEN == p_ctrl->open, SSP_ERR_NOT_OPEN);
     SSP_ASSERT(NULL != p_ctrl->p_reg);
+    GPT_ERROR_RETURN(((pin == GPT_GTIOCA) || (pin == GPT_GTIOCB)), SSP_ERR_INVALID_ARGUMENT);
 #endif
 
+    GPT_ERROR_RETURN(GPT_OPEN == p_ctrl->open, SSP_ERR_NOT_OPEN);
     /** Converted duty cycle to PCLK counts before it can be set in registers */
     timer_size_t duty_cycle_counts = 0;
     GPT_BASE_PTR p_gpt_reg = (GPT_BASE_PTR) p_ctrl->p_reg;
-    ssp_err_t err = gpt_duty_cycle_to_pclk(duty_cycle, unit, HW_GPT_TimerCycleGet(p_gpt_reg) + 1, &duty_cycle_counts);
+    ssp_err_t err = gpt_duty_cycle_to_pclk(p_ctrl->shortest_pwm_signal, duty_cycle, unit,
+                                               HW_GPT_TimerCycleGet(p_gpt_reg) + 1, &duty_cycle_counts);
     GPT_ERROR_RETURN((SSP_SUCCESS == err), err);
 
     /** Set duty cycle. */
@@ -438,10 +449,10 @@ ssp_err_t R_GPT_InfoGet (timer_ctrl_t * const p_api_ctrl, timer_info_t * const p
     /** Make sure parameters are valid. */
     SSP_ASSERT(NULL != p_ctrl);
     SSP_ASSERT(NULL != p_info);
-    GPT_ERROR_RETURN(GPT_OPEN == p_ctrl->open, SSP_ERR_NOT_OPEN);
     SSP_ASSERT(NULL != p_ctrl->p_reg);
 #endif
 
+    GPT_ERROR_RETURN(GPT_OPEN == p_ctrl->open, SSP_ERR_NOT_OPEN);
     /** Get and store period */
     GPT_BASE_PTR p_gpt_reg = (GPT_BASE_PTR) p_ctrl->p_reg;
     p_info->period_counts = HW_GPT_TimerCycleGet(p_gpt_reg) + 1;
@@ -468,7 +479,7 @@ ssp_err_t R_GPT_InfoGet (timer_ctrl_t * const p_api_ctrl, timer_info_t * const p
 } /* End of function R_GPT_InfoGet */
 
 /*******************************************************************************************************************//**
- * @brief      Stops counter, disables interrupts, disables output pins, and clears internal driver data.
+ * @brief      Stops counter, disables output pins, and clears internal driver data.
  *
  * @retval     SSP_SUCCESS          Successful close.
  * @retval     SSP_ERR_ASSERTION    The parameter p_ctrl is NULL.
@@ -482,13 +493,12 @@ ssp_err_t R_GPT_Close (timer_ctrl_t * const p_api_ctrl)
 #if GPT_CFG_PARAM_CHECKING_ENABLE
     /** Make sure channel is open.  If not open, return. */
     SSP_ASSERT(NULL != p_ctrl);
-    GPT_ERROR_RETURN(GPT_OPEN == p_ctrl->open, SSP_ERR_NOT_OPEN);
     SSP_ASSERT(NULL != p_ctrl->p_reg);
 #endif
 
-    /** Cleanup. Disable interrupts, stop counter, and disable output. */
+    /** Cleanup. Stop counter and disable output. */
+    GPT_ERROR_RETURN(GPT_OPEN == p_ctrl->open, SSP_ERR_NOT_OPEN);
     GPT_BASE_PTR p_gpt_reg = (GPT_BASE_PTR) p_ctrl->p_reg;
-    HW_GPT_InterruptDisable(p_gpt_reg);
     HW_GPT_CounterStartStop(p_gpt_reg, GPT_STOP);
     if (SSP_INVALID_VECTOR != p_ctrl->irq)
     {
@@ -651,9 +661,6 @@ static void gpt_hardware_initialize (gpt_instance_ctrl_t * const p_ctrl,
             gpt_set_output_pin(p_ctrl, GPT_GTIOCB, p_ext->gtiocb.stop_level, p_cfg->mode, duty_cycle);
         }
     }
-
-    /** Enable GPT interrupts. */
-    HW_GPT_InterruptEnable(p_gpt_reg, GPT_INT_TYPE_OVERFLOW);
 
     /** Enable CPU interrupts if callback is not null.  Also enable interrupts for one shot mode.
      *  @note The GPT hardware does not support one-shot mode natively.  To support one-shot mode, the timer will be
@@ -836,6 +843,7 @@ static uint32_t gpt_clock_frequency_get(gpt_instance_ctrl_t * const p_ctrl)
 /*******************************************************************************************************************//**
  * Converts duty cycle from input value to PCLK counts
  *
+ * @param[in]  shortest_pwm_signal  Shortest PWM signal to generate
  * @param[in]  duty_cycle         Duty cycle configured by user.
  * @param[in]  unit               Duty cycle unit configured by user.
  * @param[in]  period             Period in GPT clock counts.
@@ -848,7 +856,8 @@ static uint32_t gpt_clock_frequency_get(gpt_instance_ctrl_t * const p_ctrl)
  *                                        - Lower bound: (1 / (PCLK frequency))
  *                                        - Upper bound: period
  **********************************************************************************************************************/
-static ssp_err_t gpt_duty_cycle_to_pclk (timer_size_t     const duty_cycle,
+static ssp_err_t gpt_duty_cycle_to_pclk (gpt_shortest_level_t  shortest_pwm_signal,
+                                         timer_size_t     const duty_cycle,
                                          timer_pwm_unit_t const unit,
                                          timer_size_t     const period,
                                          timer_size_t   * const p_duty_cycle_pclk)
@@ -874,6 +883,11 @@ static ssp_err_t gpt_duty_cycle_to_pclk (timer_size_t     const duty_cycle,
             break;
     }
     GPT_ERROR_RETURN(SSP_SUCCESS == err, err);
+
+    if(GPT_SHORTEST_LEVEL_ON == shortest_pwm_signal)
+    {
+        temp_duty_cycle = (uint64_t)period - temp_duty_cycle - 1ULL;
+    }
 
     if (temp_duty_cycle == period)
     {
@@ -921,21 +935,21 @@ static void gpt_set_output_pin (gpt_instance_ctrl_t * const p_ctrl,
          * would never occur and hence there will be only a single pulse*/
         if (TIMER_VARIANT_16_BIT == p_ctrl->variant)
         {
-       	    HW_GPT_CompareMatchSet(p_gpt_reg, gtio, GPT_MAX_CLOCK_COUNTS_16);
+            HW_GPT_CompareMatchSet(p_gpt_reg, gtio, GPT_MAX_CLOCK_COUNTS_16);
         }
         else
         {
-       	    HW_GPT_CompareMatchSet(p_gpt_reg, gtio, GPT_MAX_CLOCK_COUNTS_32);
+            HW_GPT_CompareMatchSet(p_gpt_reg, gtio, GPT_MAX_CLOCK_COUNTS_32);
         }
         if (0 == level)
         {
-       	    HW_GPT_GTIOCCompareMatchOutputSet(p_reg, GPT_OUTPUT_HIGH);
-       	    HW_GPT_GTIOCCycleEndOutputSet(p_reg, GPT_OUTPUT_LOW);
+            HW_GPT_GTIOCCompareMatchOutputSet(p_reg, GPT_OUTPUT_HIGH);
+            HW_GPT_GTIOCCycleEndOutputSet(p_reg, GPT_OUTPUT_LOW);
         }
         else
         {
-       	    HW_GPT_GTIOCCompareMatchOutputSet(p_reg, GPT_OUTPUT_LOW);
-       	    HW_GPT_GTIOCCycleEndOutputSet(p_reg, GPT_OUTPUT_HIGH);
+            HW_GPT_GTIOCCompareMatchOutputSet(p_reg, GPT_OUTPUT_LOW);
+            HW_GPT_GTIOCCycleEndOutputSet(p_reg, GPT_OUTPUT_HIGH);
         }
     }
     else if (TIMER_MODE_PERIODIC == mode)
@@ -944,8 +958,16 @@ static void gpt_set_output_pin (gpt_instance_ctrl_t * const p_ctrl,
     }
     else // (TIMER_MODE_PWM == mode)
     {
-        HW_GPT_GTIOCCycleEndOutputSet(p_reg, GPT_OUTPUT_HIGH);
-        HW_GPT_GTIOCCompareMatchOutputSet(p_reg, GPT_OUTPUT_LOW);
+        if (GPT_SHORTEST_LEVEL_OFF == p_ctrl->shortest_pwm_signal)
+        {
+            HW_GPT_GTIOCCompareMatchOutputSet(p_reg, GPT_OUTPUT_LOW);
+            HW_GPT_GTIOCCycleEndOutputSet(p_reg, GPT_OUTPUT_HIGH);
+        }
+        else
+        {
+            HW_GPT_GTIOCCompareMatchOutputSet(p_reg, GPT_OUTPUT_HIGH);
+            HW_GPT_GTIOCCycleEndOutputSet(p_reg, GPT_OUTPUT_LOW);
+        }
         HW_GPT_SingleBufferEnable(p_gpt_reg, gtio);
         gpt_set_duty_cycle(p_ctrl, duty_cycle, gtio);
     }
@@ -976,8 +998,19 @@ void gpt_counter_overflow_isr (void)
         if (p_ctrl->one_shot)
         {
             HW_GPT_CounterStartStop(p_gpt_reg, GPT_STOP);
+
+            /** Clear the GPT counter, compare match registers and the overflow flag after the one shot pulse has being generated */
             HW_GPT_CounterSet(p_gpt_reg, 0);
-            HW_GPT_InterruptDisable(p_gpt_reg);
+
+            if (p_ctrl->gtioca_output_enabled)
+            {
+                HW_GPT_InitialCompareMatchSet(p_gpt_reg, GPT_GTIOCA, 0);
+            }
+            if (p_ctrl->gtiocb_output_enabled)
+            {
+                HW_GPT_InitialCompareMatchSet(p_gpt_reg, GPT_GTIOCB, 0);
+            }
+
             HW_GPT_InterruptClear(p_gpt_reg);
         }
 

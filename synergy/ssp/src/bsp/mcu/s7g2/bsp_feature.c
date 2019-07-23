@@ -101,6 +101,7 @@ void R_BSP_FeatureRspiGet(bsp_feature_rspi_t * p_rspi_feature)
 {
     p_rspi_feature->clock = (uint8_t) CGC_SYSTEM_CLOCKS_PCLKA;
     p_rspi_feature->has_ssl_level_keep = 1U;
+    p_rspi_feature->swap = 0U;
 }
 
 void R_BSP_FeatureLvdGet(bsp_feature_lvd_t * p_lvd_feature)
@@ -169,12 +170,18 @@ void R_BSP_FeatureCgcGet(bsp_feature_cgc_t const ** pp_cgc_feature)
 void R_BSP_FeatureSdhiGet(bsp_feature_sdhi_t * p_sdhi_feature)
 {
     p_sdhi_feature->has_card_detection = 1U;
+    p_sdhi_feature->supports_8_bit_mmc = 1U;
     p_sdhi_feature->max_clock_frequency = 50000000U;
 }
 
 void R_BSP_FeatureSsiGet(bsp_feature_ssi_t * p_ssi_feature)
 {
     p_ssi_feature->fifo_num_stages = 8U;
+}
+
+void R_BSP_FeatureICUGet(bsp_feature_icu_t * p_icu_feature)
+{
+    p_icu_feature->has_ir_flag = 0U;
 }
 
 #endif

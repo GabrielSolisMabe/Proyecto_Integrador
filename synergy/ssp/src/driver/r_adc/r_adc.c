@@ -73,6 +73,8 @@ Includes   <System Includes> , "Project Includes"
 
 #define ADC_OPEN                              (0x52414443U)
 
+#define ADC_ADADC_AVEE_BIT                    (0x80U)
+
 /***********************************************************************************************************************
 Typedef definitions
 ***********************************************************************************************************************/
@@ -86,9 +88,6 @@ static ssp_err_t r_adc_open_cfg_align_add_clear_check(adc_cfg_t const * const p_
 static ssp_err_t r_adc_open_cfg_trigger_mode_check(adc_cfg_t const * const p_cfg);
 static ssp_err_t r_adc_open_cfg_resolution_check(adc_cfg_t const * const p_cfg, uint8_t resolution);
 static ssp_err_t r_adc_sample_state_cfg_check(adc_instance_ctrl_t * p_ctrl, adc_sample_state_t * p_sample);
-static ssp_err_t r_adc_infoget_param_check(adc_instance_ctrl_t * p_ctrl, adc_info_t * p_adc_info);
-#endif /* (1 == ADC_CFG_PARAM_CHECKING_ENABLE) */
-
 static ssp_err_t r_adc_scan_cfg_check_sample_hold_group(ADC_BASE_PTR              const p_regs,
                                                         adc_channel_cfg_t const * const p_cfg);
 
@@ -100,6 +99,9 @@ static ssp_err_t r_adc_scan_cfg_check_sensors_exclusive(adc_instance_ctrl_t     
 
 static ssp_err_t r_adc_scan_cfg_check_sensors(adc_instance_ctrl_t     * const p_ctrl,
                                               adc_channel_cfg_t const * const p_cfg);
+#endif /* (1 == ADC_CFG_PARAM_CHECKING_ENABLE) */
+static ssp_err_t r_adc_infoget_param_check(adc_instance_ctrl_t * p_ctrl, adc_info_t * p_adc_info);
+
 
 static ssp_err_t r_adc_sensor_cfg_temperature(adc_instance_ctrl_t * const p_ctrl,
                                               ADC_BASE_PTR              const p_regs,
@@ -122,6 +124,7 @@ static ssp_err_t r_adc_scan_cfg_check_addition(ADC_BASE_PTR              const p
 static ssp_err_t r_adc_scan_cfg_check(adc_instance_ctrl_t     * const p_ctrl,
                                       adc_channel_cfg_t const * const p_cfg,
                                       uint32_t          const * const p_valid_channels);
+static ssp_err_t r_adc_check_addition_supported(adc_cfg_t const * const p_cfg);
 #endif /* (1 == ADC_CFG_PARAM_CHECKING_ENABLE) */
 
 static void r_adc_interrupts_cfg(adc_instance_ctrl_t     * const p_ctrl,
@@ -141,11 +144,10 @@ static ssp_err_t r_adc_scan_cfg(adc_instance_ctrl_t     * const p_ctrl,
 static ssp_err_t r_adc_sensor_sample_state_calculation(uint32_t  * const p_sample_states);
 static ssp_err_t r_adc_unused_register_handling(adc_instance_ctrl_t * const p_ctrl);
 static ssp_err_t r_adc_retrieve_temp_sensor_type(adc_instance_ctrl_t * const p_ctrl);
-static ssp_err_t r_adc_check_addition_supported(adc_cfg_t const * const p_cfg);
-
 void adc_scan_end_b_isr(void);
 void adc_scan_end_isr(void);
-
+static int32_t r_adc_lowest_channel_get(uint32_t adc_mask);
+static int32_t r_adc_highest_channel_get(uint32_t adc_mask);
 #if defined(__GNUC__)
 /* This structure is affected by warnings from a GCC compiler bug. This pragma suppresses the warnings in this 
  * structure only.*/
@@ -322,12 +324,13 @@ ssp_err_t R_ADC_SetSampleStateCount(adc_ctrl_t * p_api_ctrl, adc_sample_state_t 
     /** Verify the pointers are valid */
     SSP_ASSERT (NULL != p_ctrl);
     SSP_ASSERT (NULL != p_sample);
-
+#endif
     /** Ensure ADC Unit is already open */
     if (ADC_OPEN != p_ctrl->opened)
     {
         return SSP_ERR_NOT_OPEN;
     }
+#if (1 == ADC_CFG_PARAM_CHECKING_ENABLE)
     /** Verify arguments are legal */
     err = r_adc_sample_state_cfg_check(p_ctrl, p_sample);
     if (SSP_SUCCESS != err)
@@ -370,12 +373,13 @@ ssp_err_t R_ADC_ScanConfigure(adc_ctrl_t * p_api_ctrl, adc_channel_cfg_t const *
     /** Verify the pointers are valid */
     SSP_ASSERT (NULL != p_ctrl);
     SSP_ASSERT (NULL != p_channel_cfg);
-
+#endif
     /** Ensure ADC Unit is already open  */
     if (ADC_OPEN != p_ctrl->opened)
     {
         return SSP_ERR_NOT_OPEN;
     }
+#if (1 == ADC_CFG_PARAM_CHECKING_ENABLE)
     SSP_ASSERT (NULL != p_ctrl->p_reg);
 #endif
 
@@ -410,12 +414,10 @@ ssp_err_t R_ADC_InfoGet(adc_ctrl_t * p_api_ctrl, adc_info_t * p_adc_info)
     adc_instance_ctrl_t * p_ctrl = (adc_instance_ctrl_t *) p_api_ctrl;
     ssp_err_t err = SSP_SUCCESS;
     uint32_t adc_mask = 0;
-    uint32_t adc_mask_result = 0;
     int32_t adc_mask_count = -1;
     __I uint16_t * end_address;
 
-     /** Perform parameter checking  */
-#if (1 == ADC_CFG_PARAM_CHECKING_ENABLE)
+
     /** Verify the parameters are valid */
     err = r_adc_infoget_param_check(p_api_ctrl, p_adc_info);
     /** Return an error if the parameter check failed*/
@@ -423,7 +425,7 @@ ssp_err_t R_ADC_InfoGet(adc_ctrl_t * p_api_ctrl, adc_info_t * p_adc_info)
     {
         return err;
     }
-#endif
+
     /** Get a pointer to the base register for the current unit */
     ADC_BASE_PTR p_regs = (ADC_BASE_PTR) p_ctrl->p_reg;
     /** Retrieve the scan mask of active channels from the control structure */
@@ -431,44 +433,12 @@ ssp_err_t R_ADC_InfoGet(adc_ctrl_t * p_api_ctrl, adc_info_t * p_adc_info)
     /** If at least one channel is configured, determine the highest and lowest configured channels*/
     if (adc_mask != 0U)
     {
-        /** Determine the lowest channel that is configured*/
-        while (0U == adc_mask_result)
-        {
-            adc_mask_count++;
-            adc_mask_result = (uint32_t)(adc_mask & (1U << adc_mask_count));
-        }
-
-        if ((uint32_t)(1U << adc_mask_count) == ADC_MASK_TEMPERATURE)
-        {
-            adc_mask_count = ADC_REG_TEMPERATURE;
-        }
-        else if ((uint32_t)(1U << adc_mask_count) == ADC_MASK_VOLT)
-        {
-            adc_mask_count = ADC_REG_VOLT;
-        }
-
+    	/** Determine the lowest channel that is configured*/
+    	adc_mask_count = r_adc_lowest_channel_get(adc_mask);
         p_adc_info->p_address = HW_ADC_ResultRegAddrGet(p_regs, adc_mask_count);
 
         /** Determine the highest channel that is configured*/
-        /** Set the mask count so that we start with the highest bit of the 32 bit mask */
-        adc_mask_count = 32;
-        /** Initialize the mask result */
-        adc_mask_result = 0U;
-        while (0U == adc_mask_result)
-        {
-            adc_mask_count--;
-            adc_mask_result = (uint32_t)(adc_mask & (1U << adc_mask_count));
-        }
-
-        if ((uint32_t)(1U << adc_mask_count) == ADC_MASK_TEMPERATURE)
-        {
-            adc_mask_count = ADC_REG_TEMPERATURE;
-        }
-        else if ((uint32_t)(1U << adc_mask_count) == ADC_MASK_VOLT)
-        {
-            adc_mask_count = ADC_REG_VOLT;
-        }
-
+        adc_mask_count = r_adc_highest_channel_get(adc_mask);
         end_address = HW_ADC_ResultRegAddrGet(p_regs, adc_mask_count);
 
         /** Determine the size of data that must be read to read all the channels between and including the
@@ -487,7 +457,10 @@ ssp_err_t R_ADC_InfoGet(adc_ctrl_t * p_api_ctrl, adc_info_t * p_adc_info)
     ssp_feature.channel = p_ctrl->unit;
     ssp_feature.unit = 0U;
     ssp_feature.id = SSP_IP_ADC;
-    g_fmi_on_fmi.eventInfoGet(&ssp_feature, SSP_SIGNAL_ADC_SCAN_END, &event_info);
+    
+	/**Verify the return value from fmi event information*/
+    err = g_fmi_on_fmi.eventInfoGet(&ssp_feature, SSP_SIGNAL_ADC_SCAN_END, &event_info);
+    ADC_ERROR_RETURN(SSP_SUCCESS == err, err);
     p_adc_info->elc_event = event_info.event;
     p_adc_info->elc_peripheral = (elc_peripheral_t) (ELC_PERIPHERAL_ADC0 + (2U * p_ctrl->unit));
 
@@ -503,6 +476,7 @@ ssp_err_t R_ADC_InfoGet(adc_ctrl_t * p_api_ctrl, adc_info_t * p_adc_info)
 
     return err;
 }
+
 /*******************************************************************************************************************//**
  * @brief  This function starts a software scan or enables the hardware trigger for a scan depending
  *                          on how the triggers were configured in the Open() call. If the Unit was configured for
@@ -525,12 +499,13 @@ ssp_err_t R_ADC_ScanStart(adc_ctrl_t * p_api_ctrl)
 #if (1 == ADC_CFG_PARAM_CHECKING_ENABLE)
     /** Verify the pointers are valid */
     SSP_ASSERT (NULL != p_ctrl);
-
+#endif
     /** Ensure ADC Unit is already open  */
     if (ADC_OPEN != p_ctrl->opened)
     {
         return SSP_ERR_NOT_OPEN;
     }
+#if (1 == ADC_CFG_PARAM_CHECKING_ENABLE)
     SSP_ASSERT (NULL != p_ctrl->p_reg);
 #endif
 
@@ -579,12 +554,13 @@ ssp_err_t R_ADC_ScanStop(adc_ctrl_t * p_api_ctrl)
 #if (1 == ADC_CFG_PARAM_CHECKING_ENABLE)
     /** Verify the pointers are valid */
     SSP_ASSERT (NULL != p_ctrl);
-
+#endif
     /** Ensure ADC Unit is already open  */
     if (ADC_OPEN != p_ctrl->opened)
     {
         return SSP_ERR_NOT_OPEN;
     }
+#if (1 == ADC_CFG_PARAM_CHECKING_ENABLE)	
     SSP_ASSERT (NULL != p_ctrl->p_reg);
 #endif
 
@@ -627,13 +603,13 @@ ssp_err_t R_ADC_CheckScanDone(adc_ctrl_t * p_api_ctrl)
 #if (1 == ADC_CFG_PARAM_CHECKING_ENABLE)
     /** Verify the pointers are valid */
     SSP_ASSERT (NULL != p_ctrl);
-
+#endif
     /** Ensure ADC Unit is already open  */
     if (ADC_OPEN != p_ctrl->opened)
     {
         return SSP_ERR_NOT_OPEN;
     }
-
+#if (1 == ADC_CFG_PARAM_CHECKING_ENABLE)
     SSP_ASSERT (NULL != p_ctrl->p_reg);
 #endif
 
@@ -684,13 +660,14 @@ ssp_err_t R_ADC_Read(adc_ctrl_t * p_api_ctrl, adc_register_t const  reg_id, adc_
             return SSP_ERR_INVALID_ARGUMENT;
         }
     }
+#endif
 
     /** Verify that the ADC is already open */
     if (ADC_OPEN != p_ctrl->opened)
     {
         return SSP_ERR_NOT_OPEN;
     }
-
+#if (1 == ADC_CFG_PARAM_CHECKING_ENABLE)
     if (NULL == p_data)
     {
         return SSP_ERR_INVALID_POINTER;
@@ -721,6 +698,11 @@ ssp_err_t R_ADC_Read32(adc_ctrl_t * p_api_ctrl, adc_register_t const reg_id, uin
     /** Read the 16-bit result. */
     uint16_t result = 0U;
     uint32_t result_32 = 0U;
+#if (1 == ADC_CFG_PARAM_CHECKING_ENABLE)
+    /** Verify that the pointer is valid. */
+    ADC_ERROR_RETURN(NULL != p_data, SSP_ERR_INVALID_POINTER)
+#endif
+
     ssp_err_t err = R_ADC_Read(p_api_ctrl, reg_id, &result);
     result_32 = result;
     if (SSP_SUCCESS == err)
@@ -755,12 +737,13 @@ ssp_err_t R_ADC_Close(adc_ctrl_t * p_api_ctrl)
 #if (1 == ADC_CFG_PARAM_CHECKING_ENABLE)
     /** Verify the pointers are valid */
     SSP_ASSERT (NULL != p_ctrl);
-
+#endif
     /** Verify that the ADC is already open */
     if (ADC_OPEN != p_ctrl->opened)
     {
         return SSP_ERR_NOT_OPEN;
     }
+#if (1 == ADC_CFG_PARAM_CHECKING_ENABLE)
     SSP_ASSERT (NULL != p_ctrl->p_reg);
 #endif
 
@@ -830,7 +813,7 @@ ssp_err_t R_ADC_VersionGet(ssp_version_t * const p_version)
  * @retval  SSP_ERR_INVALID_HW_CONDITION        Hardware is in invalid state to perform calibration due to ongoing scan
  *                                              or scan trigger is enabled.
  * @retval  SSP_ERR_UNSUPPORTED                 Calibration not supported on this MCU.
- * @retval  SSP_ERR_ASSERTION                   The parameter p_api_ctrl or p_extend is NULL.
+ * @retval  SSP_ERR_ASSERTION                   The parameter p_api_ctrl is NULL.
 ***********************************************************************************************************************/
 ssp_err_t R_ADC_Calibrate(adc_ctrl_t * const p_api_ctrl, void * const p_extend)
 {
@@ -1027,6 +1010,52 @@ static ssp_err_t r_adc_unused_register_handling(adc_instance_ctrl_t * const p_ct
     return SSP_SUCCESS;
 }
 
+/*******************************************************************************************************************//**
+ * @brief   r_adc_infoget_param_check : ADC check the infoGet function parameters
+ *
+ * This function validates the configuration arguments for illegal combinations or options.
+ *
+ * @param[in]  p_ctrl     :  Control Structure
+ * @param[in]  p_adc_info :  User defined structure into which the main infoGet call will populate data
+ *
+ * @retval  SSP_SUCCESS -       Successful
+ * @retval  SSP_ERR_INVALID_ARGUMENT -  ADC is configured for Group mode which infoGet does not support
+ * @retval  SSP_ERR_ASSERTION -        The parameter p_ctrl or p_adc_info or p_ctrl->p_reg is NULL.
+ * @retval  SSP_ERR_NOT_OPEN -         The driver is not initialized.
+***********************************************************************************************************************/
+static ssp_err_t r_adc_infoget_param_check(adc_instance_ctrl_t * p_ctrl, adc_info_t * p_adc_info)
+{
+    ssp_err_t err = SSP_SUCCESS;
+
+#if (1 == ADC_CFG_PARAM_CHECKING_ENABLE)
+    /**Ensure that the pointers are valid */
+    SSP_ASSERT (NULL != p_ctrl);
+    SSP_ASSERT (NULL != p_adc_info);
+#else
+    SSP_PARAMETER_NOT_USED(p_adc_info);
+#endif
+
+    /** Ensure ADC Unit is already open  */
+    if (ADC_OPEN != p_ctrl->opened)
+    {
+        return SSP_ERR_NOT_OPEN;
+    }
+
+#if (1 == ADC_CFG_PARAM_CHECKING_ENABLE)
+
+    /** Return an error if mode is Group Mode since that is not
+     * supported currently */
+    if (ADC_MODE_GROUP_SCAN == p_ctrl->mode)
+    {
+        return SSP_ERR_INVALID_ARGUMENT;
+    }
+    SSP_ASSERT (NULL != p_ctrl->p_reg);
+#endif
+
+    return err;
+}
+
+
 #if (1 == ADC_CFG_PARAM_CHECKING_ENABLE)
 /*******************************************************************************************************************//**
  * @brief   r_adc_sample_state_cfg_check
@@ -1035,6 +1064,8 @@ static ssp_err_t r_adc_unused_register_handling(adc_instance_ctrl_t * const p_ct
  *
  * @param[in]  p_ctrl          :  ADC control structure.
  * @param[in]  p_sample        :  Sample State Configuration
+ * @retval  SSP_SUCCESS -       Successful
+ * @retval  SSP_ERR_INVALID_ARGUMENT -  ADC is configured for invalid sample states count or channels selected for sample state modification are not supported on the MCU.
 ***********************************************************************************************************************/
 static ssp_err_t r_adc_sample_state_cfg_check(adc_instance_ctrl_t * p_ctrl, adc_sample_state_t * p_sample)
 {
@@ -1063,43 +1094,6 @@ static ssp_err_t r_adc_sample_state_cfg_check(adc_instance_ctrl_t * p_ctrl, adc_
     {
         return SSP_SUCCESS;
     }
-}
-
-/*******************************************************************************************************************//**
- * @brief   r_adc_infoget_param_check : ADC check the infoGet function parameters
- *
- * This function validates the configuration arguments for illegal combinations or options.
- *
- * @param[in]  p_ctrl     :  Control Structure
- * @param[in]  p_adc_info :  User defined structure into which the main infoGet call will populate data
- *
- * @retval  SSP_SUCCESS -       Successful
- * @retval  SSP_ERR_INVALID_ARGUMENT -  ADC is configured for Group mode which infoGet does not support
- * @retval  SSP_ERR_ASSERTION -        The parameter p_ctrl or p_adc_info or p_ctrl->p_reg is NULL.
- * @retval  SSP_ERR_NOT_OPEN -         The driver is not initialized.
-***********************************************************************************************************************/
-static ssp_err_t r_adc_infoget_param_check(adc_instance_ctrl_t * p_ctrl, adc_info_t * p_adc_info)
-{
-    ssp_err_t err = SSP_SUCCESS;
-    /**Ensure that the pointers are valid */
-    SSP_ASSERT (NULL != p_ctrl);
-    SSP_ASSERT (NULL != p_adc_info);
-
-    /** Ensure ADC Unit is already open  */
-    if (ADC_OPEN != p_ctrl->opened)
-    {
-        return SSP_ERR_NOT_OPEN;
-    }
-
-    /** Return an error if mode is Group Mode since that is not
-     * supported currently */
-    if (ADC_MODE_GROUP_SCAN == p_ctrl->mode)
-    {
-        return SSP_ERR_INVALID_ARGUMENT;
-    }
-    SSP_ASSERT (NULL != p_ctrl->p_reg);
-
-    return err;
 }
 /*******************************************************************************************************************//**
  * @brief   r_adc_open_cfg_check : ADC check open function configuration
@@ -1156,7 +1150,6 @@ static ssp_err_t r_adc_open_cfg_check(adc_mode_t const  mode, adc_cfg_t const * 
 
     return err;
 }
-
 /*******************************************************************************************************************//**
  * @brief   r_adc_open_cfg_align_add_clear_check : ADC check open function configuration
  *
@@ -1179,13 +1172,6 @@ static ssp_err_t r_adc_open_cfg_align_add_clear_check(adc_cfg_t const * const p_
     err = r_adc_check_addition_supported(p_cfg);
     ADC_ERROR_RETURN(SSP_SUCCESS == err, err);
 
-    if ((ADC_ADD_FOUR < p_cfg->add_average_count)
-            && (ADC_ADD_AVERAGE_TWO != p_cfg->add_average_count)
-            && (ADC_ADD_AVERAGE_FOUR != p_cfg->add_average_count)
-            && (ADC_ADD_AVERAGE_SIXTEEN != p_cfg->add_average_count))
-    {
-        return SSP_ERR_INVALID_ARGUMENT;
-    }
     if ((ADC_CLEAR_AFTER_READ_OFF != p_cfg->clearing) && (ADC_CLEAR_AFTER_READ_ON != p_cfg->clearing))
     {
         return SSP_ERR_INVALID_ARGUMENT;
@@ -1198,21 +1184,29 @@ static ssp_err_t r_adc_check_addition_supported(adc_cfg_t const * const p_cfg)
 {
     bsp_feature_adc_t adc_feature = {0U};
     R_BSP_FeatureAdcGet(&adc_feature);
-    if (!adc_feature.addition_supported)
+
+    if(ADC_ADD_OFF == p_cfg->add_average_count)
     {
-        if ((ADC_ADD_TWO == p_cfg->add_average_count)
-                || (ADC_ADD_THREE == p_cfg->add_average_count)
-                || (ADC_ADD_FOUR == p_cfg->add_average_count)
-                || (ADC_ADD_SIXTEEN == p_cfg->add_average_count))
+        return SSP_SUCCESS;
+    }
+    
+    if(adc_feature.addition_supported) 
+    {
+        if(ADC_ADD_AVERAGE_SIXTEEN == p_cfg->add_average_count)
         {
             return SSP_ERR_INVALID_ARGUMENT;
         }
-        else
+    }
+    else
+    {
+        if(0U == (ADC_ADADC_AVEE_BIT & p_cfg->add_average_count))
         {
-            return SSP_SUCCESS;
+            return SSP_ERR_INVALID_ARGUMENT;
         }
     }
+    
     return SSP_SUCCESS;
+    
 }
 
 /*******************************************************************************************************************//**
@@ -1284,7 +1278,6 @@ static ssp_err_t r_adc_open_cfg_resolution_check(adc_cfg_t const * const p_cfg, 
 
     return SSP_SUCCESS;
 }
-#endif
 
 /*******************************************************************************************************************//**
  * @brief   r_adc_scan_cfg_check_sample_hold_group
@@ -1376,6 +1369,8 @@ static ssp_err_t r_adc_scan_cfg_check_sample_hold(ADC_BASE_PTR              cons
  *
  * @param[in]  p_ctrl         : The ADC instance control block.
  * @param[in]  p_cfg          : The configuration argument passed to R_ADC_ScanConfigure.
+ * @retval  SSP_SUCCESS -       Successful
+ * @retval  SSP_ERR_INVALID_ARGUMENT - both voltage and temperature sensor are used in same configuration or a sensor is used at the same time as regular channel or sensors are used in any mode other than single scan mode
  **********************************************************************************************************************/
 static ssp_err_t r_adc_scan_cfg_check_sensors_exclusive(adc_instance_ctrl_t     * const p_ctrl,
                                                         adc_channel_cfg_t const * const p_cfg)
@@ -1415,6 +1410,8 @@ static ssp_err_t r_adc_scan_cfg_check_sensors_exclusive(adc_instance_ctrl_t     
  *
  * @param[in]  p_ctrl         : The ADC instance control block.
  * @param[in]  p_cfg          : The configuration argument passed to R_ADC_ScanConfigure.
+ * @retval  SSP_SUCCESS -       Successful
+ * @retval  SSP_ERR_INVALID_ARGUMENT - Sensor configuration has been selected for Group B on an MCU which does not allow Group B configuration or sensor is used in Normal/Group A with the double trigger not enabled or MCU does not allow both the sensors to be used simultaneously
  **********************************************************************************************************************/
 static ssp_err_t r_adc_scan_cfg_check_sensors(adc_instance_ctrl_t     * const p_ctrl,
                                               adc_channel_cfg_t const * const p_cfg)
@@ -1457,6 +1454,8 @@ static ssp_err_t r_adc_scan_cfg_check_sensors(adc_instance_ctrl_t     * const p_
 
     return SSP_SUCCESS;
 }
+#endif
+
 /*******************************************************************************************************************//**
  * @brief   r_adc_retrieve_temp_sensor_type
  *
@@ -1518,6 +1517,7 @@ static ssp_err_t r_adc_retrieve_temp_sensor_type(adc_instance_ctrl_t     * const
     return SSP_SUCCESS;
 
 }
+
 /*******************************************************************************************************************//**
  * @brief   r_adc_sensor_cfg_temperature
  *
@@ -1890,9 +1890,7 @@ static ssp_err_t r_adc_scan_cfg_check_addition(ADC_BASE_PTR              const p
 
     return SSP_SUCCESS;
 }
-#endif
 
-#if (1 == ADC_CFG_PARAM_CHECKING_ENABLE)
 /*******************************************************************************************************************//**
  * @brief   r_adc_scan_cfg_check
  *
@@ -2054,6 +2052,8 @@ static ssp_err_t r_adc_scan_cfg(adc_instance_ctrl_t     * const p_ctrl,
     {
         return err;
     }
+#else
+    SSP_PARAMETER_NOT_USED(p_valid_channels);
 #endif
 
     /** Set mask for channels and sensors.
@@ -2077,7 +2077,7 @@ static ssp_err_t r_adc_scan_cfg(adc_instance_ctrl_t     * const p_ctrl,
     /** NOTE: S&H adds to scan time because normal state machine still runs.
      adds 12 or more sample_hold_states ADCLKS to scan time */
     uint16_t adshcr = p_cfg->sample_hold_states;
-    adshcr |= (uint16_t) ((uint16_t) (p_cfg->sample_hold_mask & ADC_MASK_SAMPLE_HOLD_BYPASS_CHANNELS) << ADC_MASK_SAMPLE_HOLD_BYPASS_SHIFT);
+    adshcr = (uint16_t) (adshcr | (uint16_t) ((uint16_t) (p_cfg->sample_hold_mask & ADC_MASK_SAMPLE_HOLD_BYPASS_CHANNELS) << ADC_MASK_SAMPLE_HOLD_BYPASS_SHIFT));
     HW_ADC_SampleHoldSet(p_regs, adshcr);
 
     /** Set group A priority action (not interrupt priority!)
@@ -2186,3 +2186,63 @@ void adc_scan_end_b_isr(void)
     /** Restore context if RTOS is used */
     SF_CONTEXT_RESTORE;
 }
+
+/*******************************************************************************************************************//**
+ * @brief  This function returns the lowest channel index that is configured  in order to read the results of the
+ *         configured channels.
+ * @param[in]  adc_mask  scan mask of active channels retrieved from the control structure
+ * @retval  adc_mask_count  index value of lowest channel
+ **********************************************************************************************************************/
+
+static int32_t r_adc_lowest_channel_get(uint32_t adc_mask)
+{
+    /** Initialize the mask result */
+    uint32_t adc_mask_result = 0U;
+    int32_t adc_mask_count = -1;
+
+    while (0U == adc_mask_result)
+    {
+        adc_mask_count++;
+        adc_mask_result = (uint32_t)(adc_mask & (1U << adc_mask_count));
+    }
+    if ((uint32_t)(1U << adc_mask_count) == ADC_MASK_TEMPERATURE)
+    {
+        adc_mask_count = ADC_REG_TEMPERATURE;
+    }
+    else if ((uint32_t)(1U << adc_mask_count) == ADC_MASK_VOLT)
+    {
+        adc_mask_count = ADC_REG_VOLT;
+    }
+    return adc_mask_count;
+}
+
+/*******************************************************************************************************************//**
+ * @brief  This function returns the highest channel index that is configured  in order to read the results of the
+ *         configured channels.
+ * @param[in]  adc_mask  scan mask of active channels retrieved from the control structure
+ * @retval  adc_mask_count  index value of highest channel
+ **********************************************************************************************************************/
+
+static int32_t r_adc_highest_channel_get(uint32_t adc_mask)
+{
+    /** Set the mask count so that we start with the highest bit of the 32 bit mask */
+    /** Initialize the mask result */
+    uint32_t adc_mask_result = 0U;
+    int32_t adc_mask_count = 32;
+    while (0U == adc_mask_result)
+    {
+        adc_mask_count--;
+        adc_mask_result = (uint32_t)(adc_mask & (1U << adc_mask_count));
+    }
+    if ((uint32_t)(1U << adc_mask_count) == ADC_MASK_TEMPERATURE)
+    {
+        adc_mask_count = ADC_REG_TEMPERATURE;
+    }
+    else if ((uint32_t)(1U << adc_mask_count) == ADC_MASK_VOLT)
+    {
+        adc_mask_count = ADC_REG_VOLT;
+    }
+
+    return adc_mask_count;
+}
+

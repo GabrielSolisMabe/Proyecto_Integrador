@@ -58,18 +58,18 @@ Macro definitions
 
 /* Version of this module's code and API. */
 #define BSP_CODE_VERSION_MAJOR      (1U)
-#define BSP_CODE_VERSION_MINOR      (10U)
+#define BSP_CODE_VERSION_MINOR      (14U)
 #define BSP_API_VERSION_MAJOR       (1U)
 #define BSP_API_VERSION_MINOR       (0U)
 
-#if (0 == BSP_CFG_RTOS || (defined(__GNUC__) && !defined(__ARM_EABI__)) || (defined(__ICCARM__) && !defined(__ARM_EABI__)))
-#define SF_CONTEXT_SAVE
-#define SF_CONTEXT_RESTORE
-#elif 1 == BSP_CFG_RTOS
-#define SF_CONTEXT_SAVE    tx_isr_start(1);
-#define SF_CONTEXT_RESTORE tx_isr_end(1);
+#if 1 == BSP_CFG_RTOS
+#define SF_CONTEXT_SAVE    tx_isr_start(__get_IPSR());
+#define SF_CONTEXT_RESTORE tx_isr_end(__get_IPSR());
 void  tx_isr_start(unsigned long isr_id);
 void  tx_isr_end(unsigned long isr_id);
+#else
+#define SF_CONTEXT_SAVE
+#define SF_CONTEXT_RESTORE
 #endif
 
 /** Function call to insert before returning assertion error. */

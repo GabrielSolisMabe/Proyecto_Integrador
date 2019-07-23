@@ -19,7 +19,7 @@ void system_thread_entry(void)
 
     while(1){
      g_adc0.p_api->read(g_adc0.p_ctrl, ADC_REG_CHANNEL_0, &u16ADC_Data);
-     PwmPercent= (uint16_t)((u16ADC_Data * 100)/245); // Convert data from ADC(0-245) to Duty_cycle (0-100)
+     PwmPercent= (uint16_t)((u16ADC_Data * 100)/982); // Convert data from ADC(0-982) to Duty_cycle (0-100)
      g_timer2.p_api->dutyCycleSet(g_timer2.p_ctrl, PwmPercent, TIMER_PWM_UNIT_PERCENT, 0); //used to change the dutycycle manually
      tx_thread_sleep(10);
      }

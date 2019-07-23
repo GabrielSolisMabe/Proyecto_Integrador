@@ -51,7 +51,7 @@ SSP_HEADER
  * Macro definitions
  **********************************************************************************************************************/
 #define SCI_SPI_CODE_VERSION_MAJOR (1U)
-#define SCI_SPI_CODE_VERSION_MINOR (9U)
+#define SCI_SPI_CODE_VERSION_MINOR (11U)
 
 /***********************************************************************************************************************
  * Typedef definitions

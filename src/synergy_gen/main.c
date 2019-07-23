@@ -63,13 +63,13 @@ void tx_application_define(void *first_unused_memory)
 
 #ifdef TX_USER_ENABLE_TRACE
     TX_USER_ENABLE_TRACE;
-#endif				
+#endif
 
     tx_application_define_user (first_unused_memory);
 }
 
 /*********************************************************************************************************************
- * @brief      This is a weak example initialization error function.  It should be overridden by defining a user function 
+ * @brief      This is a weak example initialization error function.  It should be overridden by defining a user function
  *             with the prototype below.
  *             - void tx_startup_err_callback(void * p_instance, void * p_data)
  *

@@ -57,6 +57,7 @@ typedef struct st_bsp_feature_rspi
 {
     uint8_t     clock;   ///< Which clock the RSPI is connected to
     uint8_t     has_ssl_level_keep        : 1;
+    uint8_t     swap                      : 1;
 } bsp_feature_rspi_t;
 
 /** LVD MCU specific features. */
@@ -186,7 +187,8 @@ typedef struct st_bsp_feature_opamp
 /** SDHI MCU specific features. */
 typedef struct st_bsp_feature_sdhi
 {
-    uint8_t     has_card_detection      : 1;   ///< Whether or not MCU has card detection
+    uint32_t    has_card_detection      : 1;   ///< Whether or not MCU has card detection
+    uint32_t    supports_8_bit_mmc      : 1;   ///< Whether or not MCU supports 8-bit MMC
     uint32_t    max_clock_frequency;           ///< Maximum clock rate supported by the peripheral
 } bsp_feature_sdhi_t;
 
@@ -195,6 +197,13 @@ typedef struct st_bsp_feature_ssi
 {
     uint8_t     fifo_num_stages;               ///< Number of FIFO stages on this MCU
 } bsp_feature_ssi_t;
+
+/** DMAC MCU specific features. */
+typedef struct st_bsp_feature_icu
+{
+    uint8_t     has_ir_flag            : 1;   ///< Whether or not MCU has IR flag in DELSRn register
+} bsp_feature_icu_t;
+
 
 /***********************************************************************************************************************
 Exported global variables (to be accessed by other files)
@@ -282,6 +291,12 @@ void R_BSP_FeatureSdhiGet(bsp_feature_sdhi_t * p_sdhi_feature);
  * @param[out] p_ssi_feature  Pointer to structure to store SSI features.
  **********************************************************************************************************************/
 void R_BSP_FeatureSsiGet(bsp_feature_ssi_t * p_ssi_feature);
+
+/*******************************************************************************************************************//**
+ * Get MCU specific DMAC features
+ * @param[out] p_icu_feature  Pointer to structure to store DMAC features.
+ **********************************************************************************************************************/
+void R_BSP_FeatureICUGet(bsp_feature_icu_t * p_icu_feature);
 
 #endif // BSP_FEATURE_H_
 

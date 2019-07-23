@@ -164,11 +164,6 @@ static void bsp_qspi_xip_mode (bool enter_mode)
         R_QSPI->SFMSDC_b.SFMXD  = BSP_PRV_QSPI_W25Q64FV_XIP_EXIT_CODE;                         /* Set the XIP exit
                                                                                                 * confirmation
                                                                                                 * code */
-        i                       = *(volatile uint32_t *) BSP_PRV_QSPI_DEVICE_PHYSICAL_ADDRESS; /* Read from the device
-                                                                                                * to
-                                                                                                * set the
-                                                                                                * code */
-
         R_QSPI->SFMSDC_b.SFMXEN = false;                                                       /* Exit XIP mode in the
                                                                                                 * QSPI
                                                                                                 * controller
@@ -388,7 +383,7 @@ void bsp_qspi_config_get (uint8_t  * p_manufacturer_id,
     *p_memory_capacity    = device_characteristics.memory_capacity;
     *p_max_eraseable_size = 4U; /* 4k bytes */
     *p_num_address_bytes  = 3U;
-    *p_spi_mode           = flag_status2.qe ? 2U : 0U;
+    *p_spi_mode           = (uint32_t) QSPI_EXTENDED_SPI_PROTOCOL;
     *p_page_size          = BSP_PRV_QSPI_W25Q64FV_PAGE_SIZE;
 #if BSP_PRV_QSPI_XIP_MODE_AFTER_INIT
     *p_xip_mode           = true;

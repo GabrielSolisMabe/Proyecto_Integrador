@@ -172,25 +172,6 @@ __STATIC_INLINE timer_direction_t HW_GPT_DirectionGet (GPT_BASE_PTR p_gpt_base)
 }
 
 /*******************************************************************************************************************//**
- * Enables interrupts for requested triggers.
- * @param  p_gpt_base   Pointer to base register of GPT channel.
- * @param  trigger      See ::gpt_int_trig_t for available values.
- **********************************************************************************************************************/
-__STATIC_INLINE void HW_GPT_InterruptEnable (GPT_BASE_PTR p_gpt_base, gpt_int_trig_t trigger)
-{
-    p_gpt_base->GTINTAD_b.GTINTPR = trigger;
-}
-
-/*******************************************************************************************************************//**
- * Disables interrupts for specified channel.
- * @param  p_gpt_base  Pointer to base register of GPT channel.
- **********************************************************************************************************************/
-__STATIC_INLINE void HW_GPT_InterruptDisable (GPT_BASE_PTR p_gpt_base)
-{
-    p_gpt_base->GTINTAD_b.GTINTPR = GPT_INT_TYPE_NONE;
-}
-
-/*******************************************************************************************************************//**
  * Clears interrupts for specified channel.
  * @param  p_gpt_base  Pointer to base register of GPT channel.
  **********************************************************************************************************************/
@@ -480,7 +461,7 @@ __STATIC_INLINE void HW_GPT_RegisterInit(GPT_BASE_PTR p_gpt_base, uint16_t varia
     p_gpt_base->GTPBR = 0xFFFFFFFFULL;
     p_gpt_base->GTDTCR = 0U;
     p_gpt_base->GTDVU = 0xFFFFFFFFULL;
-#ifdef R_GPTA0_BASE ///< TODO Remove this when iodefine is updated to use union of registers
+#ifdef R_GPTA0_BASE
     if (variant > 0U)
     {
         /* These registers available on GPTA only. */

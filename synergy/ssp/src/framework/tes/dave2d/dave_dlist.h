@@ -20,6 +20,7 @@
  * 2008-01-14 ASc  - changed comments from C++ to C, removed tabs
  * 2012-08-23 MRe  - extended dlist structure for dlist lists
  * 2012-09-25 BSp  - MISRA cleanup
+ * 2017-07-27 HFu  - clearly commented and renamed d2_insertwait...dlist_intern functions
  *-------------------------------------------------------------------------- */
 
 #ifndef __1_dave_dlist_h_H
@@ -136,9 +137,9 @@ D2_EXTERN void d2_mapdlist_vidmem_intern( const d2_dlist *dlist );
 
 D2_EXTERN void d2_cacheflushdlist_intern( const d2_dlist *dlist );
 
-D2_EXTERN d2_s32 d2_insertwaitdlist_intern( d2_device *handle );
+D2_EXTERN d2_s32 d2_insertwaitpipedlist_intern( d2_device *handle );
 
-D2_EXTERN d2_s32 d2_insertwaitpipelinedlist_intern( d2_device *handle );
+D2_EXTERN d2_s32 d2_insertwaitfulldlist_intern( d2_device *handle );
 
 D2_EXTERN void d2_resetdlist_intern( d2_dlist *dlist );
 

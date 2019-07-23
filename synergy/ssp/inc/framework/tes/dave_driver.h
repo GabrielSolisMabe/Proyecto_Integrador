@@ -42,7 +42,7 @@ extern "C" {
 /*--------------------------------------------------------------------------- */
 
 #define D2_VERSION_MAJOR    3
-#define D2_VERSION_MINOR    14
+#define D2_VERSION_MINOR    17
 #define D2_VERSION_STATE    ""  /*"beta"*/
 #define D2_VERSION_BRANCH   0
 

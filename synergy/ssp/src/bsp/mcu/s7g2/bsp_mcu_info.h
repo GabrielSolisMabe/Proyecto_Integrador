@@ -66,11 +66,28 @@ Includes   <System Includes> , "Project Includes"
 /* BSP MCU Specific Includes. */
 #include "bsp_elc.h"
 #include "bsp_cache.h"
+#include "bsp_analog.h"
 
 
 /***********************************************************************************************************************
 Macro definitions
 ***********************************************************************************************************************/
+/* Naming convention for the following defines is BSP_FEATURE_HAS_<PERIPHERAL>_<FEATURE>. */
+#define BSP_FEATURE_HAS_CGC_PLL                 (1)
+#define BSP_FEATURE_HAS_CGC_PLL_SRC_CFG         (1)
+#define BSP_FEATURE_HAS_CGC_USB_CLK             (1)
+#define BSP_FEATURE_HAS_CGC_MIDDLE_SPEED        (0)
+#define BSP_FEATURE_HAS_CGC_LOW_VOLTAGE         (0)
+#define BSP_FEATURE_HAS_CGC_SUBOSC_SPEED        (1)
+#define BSP_FEATURE_HAS_CGC_SDADC_CLK           (0)
+#define BSP_FEATURE_HAS_CGC_LCD_CLK             (0)
+#define BSP_FEATURE_HAS_CGC_EXTERNAL_BUS        (1)
+#define BSP_FEATURE_HAS_CGC_SDRAM_CLK           (1)
+#define BSP_FEATURE_HAS_CGC_PCKA                (1)
+#define BSP_FEATURE_HAS_CGC_PCKB                (1)
+#define BSP_FEATURE_HAS_CGC_PCKC                (1)
+#define BSP_FEATURE_HAS_CGC_PCKD                (1)
+#define BSP_FEATURE_HAS_CGC_FLASH_CLOCK         (1)
 
 /***********************************************************************************************************************
 Typedef definitions
