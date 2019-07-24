@@ -912,7 +912,7 @@
   </v1:configSetting>
   <v1:configSetting configurationId="p100.gpio_mode" altId="p100.gpio_mode.gpio_mode_peripheral"/>
   <v1:configSetting configurationId="p411.gpio_mode" altId="p411.gpio_mode.gpio_mode_in"/>
-  <v1:configSetting configurationId="p412.gpio_mode" altId="p412.gpio_mode.disabled"/>
+  <v1:configSetting configurationId="p412.gpio_mode" altId="p412.gpio_mode.gpio_mode_out.low"/>
   <v1:configSetting configurationId="sci0.sck" altId="sci0.sck.p102">
     <v1:connectionSetting altId="p102.sci0.sck"/>
   </v1:configSetting>
@@ -935,4 +935,6 @@
     <v1:connectionSetting altId="sci0.rxd.p100"/>
   </v1:configSetting>
   <v1:configSetting configurationId="p410" altId="p410.input"/>
+  <v1:configSetting configurationId="p412.gpio_drivecapacity" altId="p412.gpio_speed.gpio_speed_medium"/>
+  <v1:configSetting configurationId="p412" altId="p412.output.low"/>
 </v1:pinSettings>
