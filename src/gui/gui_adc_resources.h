@@ -6,7 +6,7 @@
 /*  site at www.expresslogic.com.                                              */
 /*                                                                             */
 /*  GUIX Studio Revision 5.4.2.9                                               */
-/*  Date (dd.mm.yyyy): 22. 7.2019   Time (hh:mm): 19:03                        */
+/*  Date (dd.mm.yyyy): 23. 7.2019   Time (hh:mm): 19:53                        */
 /*******************************************************************************/
 
 
@@ -75,7 +75,8 @@
 #define GX_PIXELMAP_ID_RADIO_OFF 2
 #define GX_PIXELMAP_ID_CHECKBOX_ON 3
 #define GX_PIXELMAP_ID_CHECKBOX_OFF 4
-#define DISPLAY_1_PIXELMAP_TABLE_SIZE 5
+#define GX_PIXELMAP_ID_MAIN_WINDOW 5
+#define DISPLAY_1_PIXELMAP_TABLE_SIZE 6
 
 /* String Ids                                                                  */
 
