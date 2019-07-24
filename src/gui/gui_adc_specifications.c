@@ -6,7 +6,7 @@
 /*  www.expresslogic.com.                                                      */
 /*                                                                             */
 /*  GUIX Studio Revision 5.4.2.9                                               */
-/*  Date (dd.mm.yyyy): 22. 7.2019   Time (hh:mm): 19:03                        */
+/*  Date (dd.mm.yyyy): 23. 7.2019   Time (hh:mm): 19:53                        */
 /*******************************************************************************/
 
 
@@ -52,7 +52,7 @@ UINT gx_studio_window_create(GX_CONST GX_STUDIO_WIDGET *info, GX_WIDGET *control
 }
 GX_WINDOW_PROPERTIES window1_properties =
 {
-    0                                        /* wallpaper pixelmap id          */
+    GX_PIXELMAP_ID_MAIN_WINDOW               /* wallpaper pixelmap id          */
 };
 GX_PROMPT_PROPERTIES window1_prompt_properties =
 {
@@ -78,7 +78,7 @@ GX_CONST GX_STUDIO_WIDGET window1_prompt_define =
     gx_studio_prompt_create,                 /* create function                */
     GX_NULL,                                 /* drawing function override      */
     GX_NULL,                                 /* event function override        */
-    {105, 112, 154, 141},                    /* widget size                    */
+    {119, 114, 168, 143},                    /* widget size                    */
     GX_NULL,                                 /* no next widget                 */
     GX_NULL,                                 /* no child widgets               */ 
     offsetof(WINDOW1_CONTROL_BLOCK, window1_prompt), /* control block          */
@@ -101,7 +101,7 @@ GX_CONST GX_STUDIO_WIDGET window1_define =
     gx_studio_window_create,                 /* create function                */
     GX_NULL,                                 /* drawing function override      */
     GX_NULL,                                 /* event function override        */
-    {-1, -1, 254, 318},                      /* widget size                    */
+    {13, 1, 268, 320},                       /* widget size                    */
     GX_NULL,                                 /* next widget                    */
     &window1_prompt_define,                  /* child widget                   */
     0,                                       /* control block                  */
