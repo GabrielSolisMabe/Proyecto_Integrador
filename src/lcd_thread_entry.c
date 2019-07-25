@@ -70,8 +70,9 @@ void lcd_thread_entry(void)
         /**
          * 3000 new max rpm's
          * considering a new math function to prevent collapse of the memory
-         * try with current variable type first
-         * (ReceiveBuffer/10) * -36 / 30
+         * opt0.- try with current variable type first
+         * opt1.- Move instruction after the prompt update, so the variable will be long type
+         * opt2.- (ReceiveBuffer/10) * -36 / 30
          */
 
         gx_utility_ltoa((LONG) ReceiveBuffer[0], text, 8);
