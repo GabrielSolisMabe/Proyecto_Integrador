@@ -16,17 +16,18 @@ uint8_t Pulses = 0;
 uint32_t counts = 0, counts_avg[4]={0};
 ioport_level_t Pin=0;
 
-int16_t error, ie, ie_n1=0, Ctrl_Out;
+int16_t error, ie, ie_n1=0, Ctrl_Out, Ctrl_Plot;
 uint16_t rpm_sp=1000,rpm=0;
-uint8_t kp=32, ki=16; // gains for T=10ms
-//static uint8_t kp=16, ki=8; // gains for T=10ms
+//uint8_t kp=32, ki=16; // gains for T=10ms
+uint8_t kp=64, ki=32; // gains for T=100ms
 
-uint16_t Value_Filtered, rpm_Filtered;
+uint16_t Value_Filtered, Value_Filtered2, rpm_Filtered, rpm_Filtered2;
 
 
 void control_motor(void);
 void Motor_status(void);
 uint16_t Filtro(uint16_t valor);
+uint16_t FiltroPB(uint16_t Value);
 
 void system_thread_entry(void)
 {
@@ -64,7 +65,7 @@ void system_thread_entry(void)
         //PwmPercent= (uint16_t)((u16ADC_Data * 100)/982); // Convert data from ADC(0-982) to Duty_cycle (0-100)
         // g_timer2.p_api->dutyCycleSet(g_timer2.p_ctrl, PwmPercent, TIMER_PWM_UNIT_PERCENT, 0); //used to change the dutycycle manually
         //g_ioport.p_api->pinWrite(IOPORT_PORT_01_PIN_14, IOPORT_LEVEL_LOW); //Pin used to check algorithm time
-        tx_thread_sleep(1);
+        tx_thread_sleep(10);
         }
 }
 
@@ -112,20 +113,22 @@ void control_motor(void){
 
     g_adc0.p_api->read(g_adc0.p_ctrl, ADC_REG_CHANNEL_0, &u16ADC_Data);
     rpm_sp= (uint16_t)((u16ADC_Data * 3000)/982); // Convert data from ADC_10Bits(0-982) to rpm (0-3000)
-    rpm = (uint16_t)(15 * Frec_read); // conversion of frec to rpm (frec*60/15)
+    rpm = (uint16_t)(15 * Frec_read2); // conversion of frec to rpm (frec*60/4)
     rpm_Filtered = Filtro(rpm);
+    //rpm_Filtered2 = FiltroPB(rpm);
     error = (int16_t)(rpm_sp - rpm_Filtered);
     //ie = (int16_t)((ki * error) + ie_n1); // For Gains greater than 1
     ie = (int16_t)((error/ki) + ie_n1);  // For Gains smaller than 1
     ie_n1 = ie;
-    ie = ie / 100;// T for 10ms
-    //ie = ie / 10;// T for 100ms
+    //ie = ie / 100;// T for 10ms
+    ie = ie / 10;// T for 100ms
     if(ie > 100) ie = 100;
     if(ie < 0) ie = 0;
     //Ctrl_Out = (int16_t)((kp * error) + ie); // For Gains greater than 1
     Ctrl_Out = (int16_t)((error/kp) + ie); // For Gains smaller than 1
     if(Ctrl_Out > 100) Ctrl_Out = 100;
     if(Ctrl_Out < 10) Ctrl_Out = 10;
+    Ctrl_Plot = (int16_t)(Ctrl_Out * 30);
     PwmPercent = (uint16_t) (100 - Ctrl_Out);  // Inverse logic
     g_timer2.p_api->dutyCycleSet(g_timer2.p_ctrl, PwmPercent, TIMER_PWM_UNIT_PERCENT, 0); //Send the result of the Control to the Motor Driver
 }
@@ -185,4 +188,11 @@ uint16_t Filtro(uint16_t Value){
                   }
 
               return Value_Filtered;
+}
+
+uint16_t FiltroPB(uint16_t Value){ //Filtro Pasa Bajas Fc=0.5Hz
+
+    Value_Filtered2 = (uint16_t)((Value_Filtered2 + (3 * Value))/4);
+
+              return Value_Filtered2;
 }

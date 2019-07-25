@@ -57,7 +57,7 @@ void lcd_thread_entry(void)
     while (1)
     {
         gx_prompt_text_set(&window1.window1_prompt, "10");
-        tx_thread_sleep (1);
+        tx_thread_sleep (10);
     }
 }
 
