@@ -6,7 +6,7 @@
 /*  www.expresslogic.com.                                                      */
 /*                                                                             */
 /*  GUIX Studio Revision 5.4.2.9                                               */
-/*  Date (dd.mm.yyyy): 23. 7.2019   Time (hh:mm): 19:53                        */
+/*  Date (dd.mm.yyyy): 24. 7.2019   Time (hh:mm): 18:58                        */
 /*******************************************************************************/
 
 
@@ -87,6 +87,7 @@ typedef struct WINDOW1_CONTROL_BLOCK_STRUCT
 {
     GX_WINDOW_MEMBERS_DECLARE
     GX_PROMPT window1_prompt;
+    GX_PROMPT window1_prompt_1;
 } WINDOW1_CONTROL_BLOCK;
 
 
