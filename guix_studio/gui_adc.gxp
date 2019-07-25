@@ -1189,7 +1189,7 @@
 <type>PIXELMAP</type>
 <name>MAIN_WINDOW</name>
 <pathinfo>
-<pathname>..\..\test\guix_studio\MAIN_WINDOW.png</pathname>
+<pathname>MAIN_WINDOW.png</pathname>
 <pathtype>project_relative</pathtype>
 </pathinfo>
 <is_default>FALSE</is_default>
