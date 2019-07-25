@@ -59,18 +59,16 @@ void lcd_thread_entry(void)
 
     while (1)
     {
-<<<<<<< HEAD
         gx_prompt_text_set(&window1.window1_prompt, "10");
         tx_thread_sleep (10);
-=======
         tx_queue_receive(&Message_Queue, ReceiveBuffer, TX_WAIT_FOREVER);
 
         //Assign data to send to the widgets
         char text[8];
         char text2[8];
 
-        ReceiveBuffer360 = (GX_VALUE)((ReceiveBuffer[0]*-360/100));//SIGNED SHORT [−32,767, +32,767] - UNSIGNED INT 16 [0, 65536]
-        ReceiveBufferRpm = (GX_VALUE)((ReceiveBuffer[1]*-360/800));// /3000
+        /*ReceiveBuffer360 = (GX_VALUE)((ReceiveBuffer[0]*-360/100));//SIGNED SHORT [−32,767, +32,767] - UNSIGNED INT 16 [0, 65536]
+        ReceiveBufferRpm = (GX_VALUE)((ReceiveBuffer[1]*-360/800));// /3000*/
         /**
          * 3000 new max rpm's
          * considering a new math function to prevent collapse of the memory
@@ -89,7 +87,6 @@ void lcd_thread_entry(void)
         gx_system_canvas_refresh();
 
         tx_thread_sleep(10);
->>>>>>> IMPLEMENTACION-COMM-QUEUE-LCD
     }
 }
 
