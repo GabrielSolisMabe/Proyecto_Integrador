@@ -6,7 +6,7 @@
 /*  site at www.expresslogic.com.                                              */
 /*                                                                             */
 /*  GUIX Studio Revision 5.4.2.9                                               */
-/*  Date (dd.mm.yyyy): 23. 7.2019   Time (hh:mm): 19:53                        */
+/*  Date (dd.mm.yyyy): 24. 7.2019   Time (hh:mm): 19:24                        */
 /*******************************************************************************/
 
 
@@ -5436,14 +5436,16 @@ GX_CONST GX_PIXELMAP *display_1_theme_1_pixelmap_table[] =
 
 GX_CONST GX_UBYTE display_1_STRING_1_English[5] = "duty";
 GX_CONST GX_UBYTE display_1_STRING_2_English[4] = "rpm";
+GX_CONST GX_UBYTE display_1_STRING_3_English[7] = "prompt";
 
 /* String Table for display_1 language English                                 */
 
-GX_CONST GX_UBYTE *display_1_English_string_table[3] =
+GX_CONST GX_UBYTE *display_1_English_string_table[4] =
 {
     GX_NULL,
     display_1_STRING_1_English,
-    display_1_STRING_2_English
+    display_1_STRING_2_English,
+    display_1_STRING_3_English
 
 };
 
