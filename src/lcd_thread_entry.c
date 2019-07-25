@@ -68,13 +68,16 @@ void lcd_thread_entry(void)
         ReceiveBuffer360 = (GX_VALUE)((ReceiveBuffer[0]*-360/100));//SIGNED SHORT [−32,767, +32,767]
         ReceiveBufferRpm = (GX_VALUE)((ReceiveBuffer[1]*-360/800));
 
+        gx_utility_ltoa((LONG) ReceiveBuffer[0], text, 8);
+        gx_utility_ltoa((LONG) ReceiveBuffer[1], text2, 8);
+
         gx_prompt_text_set(&window1.window1_prompt, text);
         gx_prompt_text_set(&window1.window1_prompt_1, text2);
 
         gx_system_dirty_mark((GX_WIDGET *) &window1.window1_prompt);
         gx_system_canvas_refresh();
 
-        tx_thread_sleep (1);
+        tx_thread_sleep(10);
     }
 }
 
