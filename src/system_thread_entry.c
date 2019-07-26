@@ -126,7 +126,7 @@ void Motor_Control(void){
     PwmPercent = (uint16_t) (100 - Ctrl_Out);  // Driver has reverse logical
     g_timer2.p_api->dutyCycleSet(g_timer2.p_ctrl, PwmPercent, TIMER_PWM_UNIT_PERCENT, 0); //Send the result of the Control to the Motor Driver
     Send_DataToLCD[0] = (uint16_t)Ctrl_Out; //Duty Cycle to be sent to LCD_Thread
-    Send_DataToLCD[1] = RPM;                //RPM to be sent to LCD_Thread
+    Send_DataToLCD[1] = RPM_Filtered;                //RPM to be sent to LCD_Thread
 }
 
 void Motor_Status(void)
