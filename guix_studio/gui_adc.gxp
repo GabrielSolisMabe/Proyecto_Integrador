@@ -1211,7 +1211,7 @@
 <type>PIXELMAP</type>
 <name>MAIN_WINDOW</name>
 <pathinfo>
-<pathname>MAIN_WINDOW_RADIAL.png</pathname>
+<pathname>MAIN-WINDOW_1.4.png</pathname>
 <pathtype>project_relative</pathtype>
 </pathinfo>
 <is_default>FALSE</is_default>
@@ -1303,9 +1303,9 @@
 <app_name>prompt_1</app_name>
 <size>
 <left>107</left>
-<top>165</top>
+<top>167</top>
 <right>150</right>
-<bottom>194</bottom>
+<bottom>196</bottom>
 </size>
 <style>1342193668</style>
 <allocation>0</allocation>
@@ -1339,7 +1339,7 @@
 <template>FALSE</template>
 <visible_at_startup>FALSE</visible_at_startup>
 <xcenter>128</xcenter>
-<ycenter>179</ycenter>
+<ycenter>181</ycenter>
 <radius>29</radius>
 <anchor_val>90</anchor_val>
 <current_val>-180</current_val>
@@ -1370,7 +1370,7 @@
 <template>FALSE</template>
 <visible_at_startup>FALSE</visible_at_startup>
 <xcenter>128</xcenter>
-<ycenter>120</ycenter>
+<ycenter>122</ycenter>
 <radius>22</radius>
 <anchor_val>90</anchor_val>
 <current_val>-180</current_val>

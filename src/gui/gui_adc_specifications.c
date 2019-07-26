@@ -6,7 +6,7 @@
 /*  www.expresslogic.com.                                                      */
 /*                                                                             */
 /*  GUIX Studio Revision 5.4.2.9                                               */
-/*  Date (dd.mm.yyyy): 25. 7.2019   Time (hh:mm): 19:22                        */
+/*  Date (dd.mm.yyyy): 26. 7.2019   Time (hh:mm): 09:19                        */
 /*******************************************************************************/
 
 
@@ -78,7 +78,7 @@ GX_PROMPT_PROPERTIES window1_prompt_1_properties =
 GX_RADIAL_PROGRESS_BAR_INFO window1_radial_progress_bar_properties =
 {
     128,                                     /* xcenter                        */
-    180,                                     /* ycenter                        */
+    181,                                     /* ycenter                        */
     29,                                      /* radius                         */
     -180,                                    /* current val                    */
     90,                                      /* anchor val                     */
@@ -93,7 +93,7 @@ GX_RADIAL_PROGRESS_BAR_INFO window1_radial_progress_bar_properties =
 GX_RADIAL_PROGRESS_BAR_INFO window1_radial_progress_bar_1_properties =
 {
     128,                                     /* xcenter                        */
-    120,                                     /* ycenter                        */
+    122,                                     /* ycenter                        */
     22,                                      /* radius                         */
     -180,                                    /* current val                    */
     90,                                      /* anchor val                     */
@@ -122,7 +122,7 @@ GX_CONST GX_STUDIO_WIDGET window1_radial_progress_bar_1_define =
     gx_studio_radial_progress_bar_create,     /* create function               */
     GX_NULL,                                 /* drawing function override      */
     GX_NULL,                                 /* event function override        */
-    {103, 95, 153, 145},                     /* widget size                    */
+    {104, 95, 154, 145},                     /* widget size                    */
     GX_NULL,                                 /* no next widget                 */
     GX_NULL,                                 /* no child widgets               */ 
     offsetof(WINDOW1_CONTROL_BLOCK, window1_radial_progress_bar_1), /* control block */
@@ -145,7 +145,7 @@ GX_CONST GX_STUDIO_WIDGET window1_radial_progress_bar_define =
     gx_studio_radial_progress_bar_create,     /* create function               */
     GX_NULL,                                 /* drawing function override      */
     GX_NULL,                                 /* event function override        */
-    {97, 148, 161, 212},                     /* widget size                    */
+    {96, 147, 160, 211},                     /* widget size                    */
     &window1_radial_progress_bar_1_define,   /* next widget definition         */
     GX_NULL,                                 /* no child widgets               */ 
     offsetof(WINDOW1_CONTROL_BLOCK, window1_radial_progress_bar), /* control block */
@@ -168,7 +168,7 @@ GX_CONST GX_STUDIO_WIDGET window1_prompt_1_define =
     gx_studio_prompt_create,                 /* create function                */
     GX_NULL,                                 /* drawing function override      */
     GX_NULL,                                 /* event function override        */
-    {107, 166, 150, 195},                    /* widget size                    */
+    {107, 167, 150, 196},                    /* widget size                    */
     &window1_radial_progress_bar_define,     /* next widget definition         */
     GX_NULL,                                 /* no child widgets               */ 
     offsetof(WINDOW1_CONTROL_BLOCK, window1_prompt_1), /* control block        */
@@ -191,7 +191,7 @@ GX_CONST GX_STUDIO_WIDGET window1_define =
     gx_studio_window_create,                 /* create function                */
     GX_NULL,                                 /* drawing function override      */
     GX_NULL,                                 /* event function override        */
-    {-1, 0, 254, 319},                       /* widget size                    */
+    {0, 0, 255, 319},                        /* widget size                    */
     GX_NULL,                                 /* next widget                    */
     &window1_prompt_1_define,                /* child widget                   */
     0,                                       /* control block                  */
