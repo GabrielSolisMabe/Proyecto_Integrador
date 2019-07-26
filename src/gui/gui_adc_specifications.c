@@ -6,7 +6,7 @@
 /*  www.expresslogic.com.                                                      */
 /*                                                                             */
 /*  GUIX Studio Revision 5.4.2.9                                               */
-/*  Date (dd.mm.yyyy): 26. 7.2019   Time (hh:mm): 09:54                        */
+/*  Date (dd.mm.yyyy): 26. 7.2019   Time (hh:mm): 09:57                        */
 /*******************************************************************************/
 
 
@@ -138,7 +138,7 @@ GX_CONST GX_STUDIO_WIDGET window1_radial_progress_bar_define =
     0,                                       /* user data                      */
     #endif
     GX_STYLE_BORDER_NONE|GX_STYLE_TRANSPARENT|GX_STYLE_ENABLED|GX_STYLE_RADIAL_PROGRESS_ALIAS,   /* style flags */
-    0,                                       /* status flags                   */
+    GX_STATUS_ACCEPTS_FOCUS,                 /* status flags                   */
     sizeof(GX_RADIAL_PROGRESS_BAR),          /* control block size             */
     GX_COLOR_ID_WIDGET_FILL,                 /* normal color id                */
     GX_COLOR_ID_SELECTED_FILL,               /* selected color id              */
@@ -161,7 +161,7 @@ GX_CONST GX_STUDIO_WIDGET window1_prompt_1_define =
     0,                                       /* user data                      */
     #endif
     GX_STYLE_BORDER_NONE|GX_STYLE_TRANSPARENT|GX_STYLE_ENABLED|GX_STYLE_TEXT_CENTER,   /* style flags */
-    0,                                       /* status flags                   */
+    GX_STATUS_ACCEPTS_FOCUS,                 /* status flags                   */
     sizeof(GX_PROMPT),                       /* control block size             */
     GX_COLOR_ID_SELECTED_TEXT,               /* normal color id                */
     GX_COLOR_ID_TEXT,                        /* selected color id              */
