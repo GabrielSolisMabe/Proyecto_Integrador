@@ -59,35 +59,28 @@ void lcd_thread_entry(void)
 
     while (1)
     {
-        //gx_prompt_text_set(&window1.window1_prompt, "10");
         tx_thread_sleep (10);
+        //Receive queue message from system thread
         tx_queue_receive(&Message_Queue, ReceiveBuffer, TX_WAIT_FOREVER);
 
         //Assign data to send to the widgets
-        //char text[8];
-        char text2[8];
+        char text[8];
 
-        /**
-         * 3000 new max rpm's
-         * considering a new math function to prevent collapse of the memory
-         * opt0.- try with current variable type first
-         * opt1.- Move instruction after the prompt update, so the variable will be long type
-         * opt2.- (ReceiveBuffer/10) * -36 / 30
-         */
+        //Convert data type to the required by the prompt
+        gx_utility_ltoa((LONG) ReceiveBuffer[1], text, 8);
 
-        //gx_utility_ltoa((LONG) ReceiveBuffer[0], text, 8);
-        gx_utility_ltoa((LONG) ReceiveBuffer[1], text2, 8);
+        //Set the new value to the prompt
+        gx_prompt_text_set(&window1.window1_prompt_1, text);
 
-        //gx_prompt_text_set(&window1.window1_prompt, text);
-        gx_prompt_text_set(&window1.window1_prompt_1, text2);
-
+        //Convert data type to the required by the radial bar, and to degrees
         ReceiveBuffer360 = (GX_VALUE)(((LONG)(ReceiveBuffer[0])*-360/100));//SIGNED SHORT [−32,767, +32,767] - UNSIGNED INT 16 [0, 65536]
-        ReceiveBufferRpm = (GX_VALUE)(((LONG)(ReceiveBuffer[1])*-360/3000));// /3000
+        ReceiveBufferRpm = (GX_VALUE)(((LONG)(ReceiveBuffer[1])*-360/3000));
 
+        //Set the value to the radial bar
         gx_radial_progress_bar_value_set(&window1.window1_radial_progress_bar, ReceiveBuffer360);
         gx_radial_progress_bar_value_set(&window1.window1_radial_progress_bar_1, ReceiveBufferRpm);
 
-
+        //Refresh widgets
         gx_system_dirty_mark((GX_WIDGET *) &window1.window1_prompt_1);
         gx_system_dirty_mark((GX_WIDGET *) &window1.window1_radial_progress_bar);
         gx_system_dirty_mark((GX_WIDGET *) &window1.window1_radial_progress_bar_1);
@@ -97,7 +90,7 @@ void lcd_thread_entry(void)
     }
 }
 
-//Comunicacion de pantalla
+//Display irq
 void g_lcd_spi_callback (spi_callback_args_t * p_args)
 {
     if (p_args->event == SPI_EVENT_TRANSFER_COMPLETE)
