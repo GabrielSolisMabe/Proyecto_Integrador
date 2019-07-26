@@ -6,7 +6,7 @@
 /*  site at www.expresslogic.com.                                              */
 /*                                                                             */
 /*  GUIX Studio Revision 5.4.2.9                                               */
-/*  Date (dd.mm.yyyy): 26. 7.2019   Time (hh:mm): 10:05                        */
+/*  Date (dd.mm.yyyy): 26. 7.2019   Time (hh:mm): 13:02                        */
 /*******************************************************************************/
 
 
@@ -10089,11 +10089,13 @@ GX_THEME display_1_theme_1 =
         18,                                  /* thumb width                    */
         20,                                  /* thumb travel min               */
         20,                                  /* thumb travel max               */
+        4,                                   /* thumb border style             */
         0,                                   /* scroll fill pixelmap           */
         0,                                   /* scroll thumb pixelmap          */
         0,                                   /* scroll up pixelmap             */
         0,                                   /* scroll down pixelmap           */
-        GX_COLOR_ID_SCROLL_FILL,             /* scroll fill color              */
+        GX_COLOR_ID_CANVAS,                  /* scroll thumb color             */
+        GX_COLOR_ID_CANVAS,                  /* scroll thumb border color      */
         GX_COLOR_ID_SCROLL_BUTTON,           /* scroll button color            */
     },
     {
@@ -10101,11 +10103,13 @@ GX_THEME display_1_theme_1 =
         18,                                  /* thumb width                    */
         20,                                  /* thumb travel min               */
         20,                                  /* thumb travel max               */
+        4,                                   /* thumb border style             */
         0,                                   /* scroll fill pixelmap           */
         0,                                   /* scroll thumb pixelmap          */
         0,                                   /* scroll up pixelmap             */
         0,                                   /* scroll down pixelmap           */
-        GX_COLOR_ID_SCROLL_FILL,             /* scroll fill color              */
+        GX_COLOR_ID_CANVAS,                  /* scroll thumb color             */
+        GX_COLOR_ID_CANVAS,                  /* scroll thumb border color      */
         GX_COLOR_ID_SCROLL_BUTTON,           /* scroll button color            */
     },
     GX_SCROLLBAR_RELATIVE_THUMB|GX_SCROLLBAR_END_BUTTONS|GX_SCROLLBAR_VERTICAL,

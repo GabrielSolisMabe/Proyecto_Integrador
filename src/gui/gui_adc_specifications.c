@@ -6,7 +6,7 @@
 /*  www.expresslogic.com.                                                      */
 /*                                                                             */
 /*  GUIX Studio Revision 5.4.2.9                                               */
-/*  Date (dd.mm.yyyy): 26. 7.2019   Time (hh:mm): 10:05                        */
+/*  Date (dd.mm.yyyy): 26. 7.2019   Time (hh:mm): 13:02                        */
 /*******************************************************************************/
 
 
@@ -119,6 +119,7 @@ GX_CONST GX_STUDIO_WIDGET window1_radial_progress_bar_1_define =
     sizeof(GX_RADIAL_PROGRESS_BAR),          /* control block size             */
     GX_COLOR_ID_WIDGET_FILL,                 /* normal color id                */
     GX_COLOR_ID_SELECTED_FILL,               /* selected color id              */
+    GX_COLOR_ID_DISABLED_FILL,               /* disabled color id              */
     gx_studio_radial_progress_bar_create,     /* create function               */
     GX_NULL,                                 /* drawing function override      */
     GX_NULL,                                 /* event function override        */
@@ -142,6 +143,7 @@ GX_CONST GX_STUDIO_WIDGET window1_radial_progress_bar_define =
     sizeof(GX_RADIAL_PROGRESS_BAR),          /* control block size             */
     GX_COLOR_ID_WIDGET_FILL,                 /* normal color id                */
     GX_COLOR_ID_SELECTED_FILL,               /* selected color id              */
+    GX_COLOR_ID_DISABLED_FILL,               /* disabled color id              */
     gx_studio_radial_progress_bar_create,     /* create function               */
     GX_NULL,                                 /* drawing function override      */
     GX_NULL,                                 /* event function override        */
@@ -165,6 +167,7 @@ GX_CONST GX_STUDIO_WIDGET window1_prompt_1_define =
     sizeof(GX_PROMPT),                       /* control block size             */
     GX_COLOR_ID_SELECTED_TEXT,               /* normal color id                */
     GX_COLOR_ID_TEXT,                        /* selected color id              */
+    GX_COLOR_ID_DISABLED_FILL,               /* disabled color id              */
     gx_studio_prompt_create,                 /* create function                */
     GX_NULL,                                 /* drawing function override      */
     GX_NULL,                                 /* event function override        */
@@ -188,6 +191,7 @@ GX_CONST GX_STUDIO_WIDGET window1_define =
     sizeof(WINDOW1_CONTROL_BLOCK),           /* control block size             */
     GX_COLOR_ID_WINDOW_FILL,                 /* normal color id                */
     GX_COLOR_ID_WINDOW_FILL,                 /* selected color id              */
+    GX_COLOR_ID_WINDOW_FILL,                 /* disabled color id              */
     gx_studio_window_create,                 /* create function                */
     GX_NULL,                                 /* drawing function override      */
     GX_NULL,                                 /* event function override        */
@@ -207,6 +211,13 @@ static GX_WIDGET *gx_studio_nested_widget_create(GX_BYTE *control, GX_CONST GX_S
 {
     UINT status = GX_SUCCESS;
     GX_WIDGET *widget = GX_NULL;
+    GX_VALUE   list_count = 0;
+    GX_VALUE   list_total_count = 0;
+
+    if(parent && (parent->gx_widget_type == GX_TYPE_MENU))
+    {
+        list_total_count = ((GX_MENU *)parent)->gx_menu_list_total_count;
+    }
 
     while(definition && status == GX_SUCCESS)
     {
@@ -230,6 +241,13 @@ static GX_WIDGET *gx_studio_nested_widget_create(GX_BYTE *control, GX_CONST GX_S
             }
 
             status = definition->create_function(definition, widget, parent);
+
+            if(list_count < list_total_count)
+            {
+                gx_menu_insert((GX_MENU *)parent, widget);
+                ((GX_MENU *)parent)->gx_menu_list_total_count--;
+                list_count++;
+            }
 
             if (status == GX_SUCCESS)
             {
@@ -316,6 +334,7 @@ GX_STUDIO_DISPLAY_INFO gui_adc_display_table[1] =
     "display_1_canvas",
     display_1_theme_table,
     display_1_language_table,
+    DISPLAY_1_THEME_TABLE_SIZE,
     DISPLAY_1_LANGUAGE_TABLE_SIZE,
     DISPLAY_1_STRING_TABLE_SIZE,
     256,                                     /* x resolution                   */
@@ -418,6 +437,7 @@ UINT _gx_synergy_display_driver_setup(GX_DISPLAY *display)
     display -> gx_display_driver_vertical_pattern_line_draw    = _gx_dave2d_vertical_pattern_line_draw_565;
     display -> gx_display_driver_pixel_write                   = _gx_dave2d_pixel_write_565;
     display -> gx_display_driver_pixel_blend                   = _gx_dave2d_pixel_blend_565;
+    display -> gx_display_driver_pixelmap_rotate               = _gx_dave2d_pixelmap_rotate_16bpp;
     display -> gx_display_driver_drawing_initiate              = _gx_dave2d_drawing_initiate;
     display -> gx_display_driver_drawing_complete              = _gx_dave2d_drawing_complete;
     display -> gx_display_driver_canvas_copy                   = _gx_dave2d_canvas_copy;
@@ -435,9 +455,12 @@ UINT _gx_synergy_display_driver_setup(GX_DISPLAY *display)
     display -> gx_display_driver_anti_aliased_line_draw        = _gx_dave2d_aliased_line;
     display -> gx_display_driver_anti_aliased_wide_line_draw   = _gx_dave2d_aliased_wide_line;
     display -> gx_display_driver_pixelmap_blend                = _gx_dave2d_pixelmap_blend;
-    /*display -> gx_display_driver_8bit_glyph_draw               = _gx_dave2d_glyph_8bit_draw;
-    display -> gx_display_driver_4bit_glyph_draw               = _gx_dave2d_glyph_4bit_draw;
-    display -> gx_display_driver_1bit_glyph_draw               = _gx_dave2d_glyph_1bit_draw;*/
+    display -> gx_display_driver_8bit_glyph_draw               = _gx_dave2d_raw_glyph_8bit_draw;
+    display -> gx_display_driver_4bit_glyph_draw               = _gx_dave2d_raw_glyph_4bit_draw;
+    display -> gx_display_driver_1bit_glyph_draw               = _gx_dave2d_raw_glyph_1bit_draw;
+    display -> gx_display_driver_8bit_compressed_glyph_draw    = _gx_dave2d_compressed_glyph_8bit_draw;
+    display -> gx_display_driver_4bit_compressed_glyph_draw    = _gx_dave2d_compressed_glyph_4bit_draw;
+    display -> gx_display_driver_1bit_compressed_glyph_draw    = _gx_dave2d_compressed_glyph_1bit_draw;
     #if defined(GX_ARC_DRAWING_SUPPORT)
     display -> gx_display_driver_anti_aliased_circle_draw      = _gx_dave2d_aliased_circle_draw;
     display -> gx_display_driver_anti_aliased_wide_circle_draw = _gx_dave2d_aliased_circle_draw;
