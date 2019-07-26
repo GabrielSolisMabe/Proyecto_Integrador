@@ -6,7 +6,7 @@
 /*  site at www.expresslogic.com.                                              */
 /*                                                                             */
 /*  GUIX Studio Revision 5.4.2.9                                               */
-/*  Date (dd.mm.yyyy): 25. 7.2019   Time (hh:mm): 18:53                        */
+/*  Date (dd.mm.yyyy): 25. 7.2019   Time (hh:mm): 19:22                        */
 /*******************************************************************************/
 
 
@@ -45,7 +45,9 @@ GX_CONST GX_COLOR display_1_theme_1_color_table[] =
     0x0000a514,
     0x00007bef,
     0x0000ffff,
-    0x00007bef
+    0x00007bef,
+    0x0000b800,
+    0x000004e0
 };
 
 
@@ -10131,7 +10133,7 @@ GX_THEME display_1_theme_1 =
     },
     GX_SCROLLBAR_RELATIVE_THUMB|GX_SCROLLBAR_END_BUTTONS|GX_SCROLLBAR_VERTICAL,
     GX_SCROLLBAR_RELATIVE_THUMB|GX_SCROLLBAR_END_BUTTONS|GX_SCROLLBAR_HORIZONTAL,
-    29,                                      /* color table size               */
+    31,                                      /* color table size               */
     4,                                       /* font table size                */
     6,                                       /* pixelmap table size            */
     0                                        /* palette size                   */

@@ -6,7 +6,7 @@
 /*  site at www.expresslogic.com.                                              */
 /*                                                                             */
 /*  GUIX Studio Revision 5.4.2.9                                               */
-/*  Date (dd.mm.yyyy): 25. 7.2019   Time (hh:mm): 18:53                        */
+/*  Date (dd.mm.yyyy): 25. 7.2019   Time (hh:mm): 19:22                        */
 /*******************************************************************************/
 
 
@@ -59,7 +59,9 @@
 #define GX_COLOR_ID_DISABLED_FILL 26
 #define GX_COLOR_ID_READONLY_TEXT 27
 #define GX_COLOR_ID_READONLY_FILL 28
-#define DISPLAY_1_COLOR_TABLE_SIZE 29
+#define GX_COLOR_ID_RED 29
+#define GX_COLOR_ID_GREEN 30
+#define DISPLAY_1_COLOR_TABLE_SIZE 31
 
 /* Font ID definitions                                                         */
 

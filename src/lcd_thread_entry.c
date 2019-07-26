@@ -67,8 +67,6 @@ void lcd_thread_entry(void)
         //char text[8];
         char text2[8];
 
-        ReceiveBuffer360 = (GX_VALUE)((ReceiveBuffer[0]*-360/100));//SIGNED SHORT [−32,767, +32,767] - UNSIGNED INT 16 [0, 65536]
-        ReceiveBufferRpm = (GX_VALUE)((ReceiveBuffer[1]*-360/3000));// /3000
         /**
          * 3000 new max rpm's
          * considering a new math function to prevent collapse of the memory
@@ -82,6 +80,9 @@ void lcd_thread_entry(void)
 
         //gx_prompt_text_set(&window1.window1_prompt, text);
         gx_prompt_text_set(&window1.window1_prompt_1, text2);
+
+        ReceiveBuffer360 = (GX_VALUE)(((LONG)(ReceiveBuffer[0])*-360/100));//SIGNED SHORT [−32,767, +32,767] - UNSIGNED INT 16 [0, 65536]
+        ReceiveBufferRpm = (GX_VALUE)(((LONG)(ReceiveBuffer[1])*-360/3000));// /3000
 
         gx_radial_progress_bar_value_set(&window1.window1_radial_progress_bar, ReceiveBuffer360);
         gx_radial_progress_bar_value_set(&window1.window1_radial_progress_bar_1, ReceiveBufferRpm);
