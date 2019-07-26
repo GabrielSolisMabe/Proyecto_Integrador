@@ -6,7 +6,7 @@
 /*  www.expresslogic.com.                                                      */
 /*                                                                             */
 /*  GUIX Studio Revision 5.4.2.9                                               */
-/*  Date (dd.mm.yyyy): 24. 7.2019   Time (hh:mm): 19:24                        */
+/*  Date (dd.mm.yyyy): 26. 7.2019   Time (hh:mm): 10:05                        */
 /*******************************************************************************/
 
 
@@ -23,7 +23,6 @@ extern   "C" {
 /* Define widget ids                                                           */
 
 #define ID_WINDOW1 1
-#define prompt1 2
 
 
 /* Define animation ids                                                        */
@@ -86,8 +85,9 @@ typedef struct
 typedef struct WINDOW1_CONTROL_BLOCK_STRUCT
 {
     GX_WINDOW_MEMBERS_DECLARE
-    GX_PROMPT window1_prompt;
     GX_PROMPT window1_prompt_1;
+    GX_RADIAL_PROGRESS_BAR window1_radial_progress_bar;
+    GX_RADIAL_PROGRESS_BAR window1_radial_progress_bar_1;
 } WINDOW1_CONTROL_BLOCK;
 
 
@@ -179,6 +179,7 @@ typedef struct GX_STUDIO_DISPLAY_INFO_STRUCT
 
 /* Declare Studio-generated functions for creating top-level widgets           */
 
+UINT gx_studio_radial_progress_bar_create(GX_CONST GX_STUDIO_WIDGET *info, GX_WIDGET *control_block, GX_WIDGET *parent);
 UINT gx_studio_prompt_create(GX_CONST GX_STUDIO_WIDGET *info, GX_WIDGET *control_block, GX_WIDGET *parent);
 UINT gx_studio_window_create(GX_CONST GX_STUDIO_WIDGET *info, GX_WIDGET *control_block, GX_WIDGET *parent);
 GX_WIDGET *gx_studio_widget_create(GX_BYTE *storage, GX_CONST GX_STUDIO_WIDGET *definition, GX_WIDGET *parent);

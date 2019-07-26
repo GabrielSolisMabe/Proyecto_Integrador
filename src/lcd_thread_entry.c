@@ -5,11 +5,11 @@
 #include "gui/gui_adc_resources.h"
 #include "lcd_setup/lcd.h"
 
-GX_WINDOW_ROOT * p_window_root;
+GX_WINDOW_ROOT * psWindowRoot;// = NULL
 extern GX_CONST GX_STUDIO_WIDGET * gui_adc_widget_table[];
-uint16_t ReceiveBuffer[2] = {0};
-GX_VALUE ReceiveBuffer360;
-GX_VALUE ReceiveBufferRpm;
+uint16_t au16ReceiveBuffer[2] = {0};
+GX_VALUE i16ReceiveBuffer360;
+GX_VALUE i16ReceiveBufferRpm;
 
 /* LCD Thread entry function */
 void lcd_thread_entry(void)
@@ -23,30 +23,30 @@ void lcd_thread_entry(void)
                                     g_sf_el_gx.p_api->setup,
                                     LANGUAGE_ENGLISH,
                                     DISPLAY_1_THEME_1,
-                                    &p_window_root);
+                                    &psWindowRoot);
 
-    g_sf_el_gx.p_api->canvasInit(g_sf_el_gx.p_ctrl, p_window_root);
+    g_sf_el_gx.p_api->canvasInit(g_sf_el_gx.p_ctrl, psWindowRoot);
 
-    GX_CONST GX_STUDIO_WIDGET ** pp_studio_widget = &gui_adc_widget_table[0];
-        GX_WIDGET * p_first_screen = NULL;
+    GX_CONST GX_STUDIO_WIDGET ** ppsStudioWidget = &gui_adc_widget_table[0];
+    GX_WIDGET * psFirstScreen = NULL;
 
-        while (GX_NULL != *pp_studio_widget)
+        while (GX_NULL != *ppsStudioWidget)
         {
 
-            if (0 == strcmp("window1", (char *) (*pp_studio_widget)->widget_name))
+            if (0 == strcmp("window1", (char *) (*ppsStudioWidget)->widget_name))
             {
-                gx_studio_named_widget_create((*pp_studio_widget)->widget_name, (GX_WIDGET *) p_window_root, GX_NULL);
+                gx_studio_named_widget_create((*ppsStudioWidget)->widget_name, (GX_WIDGET *) psWindowRoot, GX_NULL);
             }
             else
             {
-                gx_studio_named_widget_create((*pp_studio_widget)->widget_name, GX_NULL, GX_NULL);
+                gx_studio_named_widget_create((*ppsStudioWidget)->widget_name, GX_NULL, GX_NULL);
             }
 
-            pp_studio_widget++;
+            ppsStudioWidget++;
         }
 
-        gx_widget_attach(p_window_root, p_first_screen);
-        gx_widget_show(p_window_root);
+        gx_widget_attach(psWindowRoot, psFirstScreen);
+        gx_widget_show(psWindowRoot);
 
     /* Lets GUIX run. */
     gx_system_start();
@@ -59,38 +59,38 @@ void lcd_thread_entry(void)
 
     while (1)
     {
-        gx_prompt_text_set(&window1.window1_prompt, "10");
         tx_thread_sleep (10);
-        tx_queue_receive(&Message_Queue, ReceiveBuffer, TX_WAIT_FOREVER);
+        //Receive queue message from system thread
+        tx_queue_receive(&Message_Queue, au16ReceiveBuffer, TX_WAIT_FOREVER);//upt Message_Queue
 
         //Assign data to send to the widgets
-        char text[8];
-        char text2[8];
+        char u8Text[8];
 
-        /*ReceiveBuffer360 = (GX_VALUE)((ReceiveBuffer[0]*-360/100));//SIGNED SHORT [−32,767, +32,767] - UNSIGNED INT 16 [0, 65536]
-        ReceiveBufferRpm = (GX_VALUE)((ReceiveBuffer[1]*-360/800));// /3000*/
-        /**
-         * 3000 new max rpm's
-         * considering a new math function to prevent collapse of the memory
-         * opt0.- try with current variable type first
-         * opt1.- Move instruction after the prompt update, so the variable will be long type
-         * opt2.- (ReceiveBuffer/10) * -36 / 30
-         */
+        //Convert data type to the required by the prompt
+        gx_utility_ltoa((LONG) au16ReceiveBuffer[1], u8Text, 8);
 
-        gx_utility_ltoa((LONG) ReceiveBuffer[0], text, 8);
-        gx_utility_ltoa((LONG) ReceiveBuffer[1], text2, 8);
+        //Set the new value to the prompt
+        gx_prompt_text_set(&window1.window1_prompt_1, u8Text);
 
-        gx_prompt_text_set(&window1.window1_prompt, text);
-        gx_prompt_text_set(&window1.window1_prompt_1, text2);
+        //Convert data type to the required by the radial bar, and to degrees
+        i16ReceiveBuffer360 = (GX_VALUE)(((LONG)(au16ReceiveBuffer[0])*-360/100));//SIGNED SHORT [−32,767, +32,767] - UNSIGNED INT 16 [0, 65536]
+        i16ReceiveBufferRpm = (GX_VALUE)(((LONG)(au16ReceiveBuffer[1])*-360/3000));
 
-        gx_system_dirty_mark((GX_WIDGET *) &window1.window1_prompt);
+        //Set the value to the radial bar
+        gx_radial_progress_bar_value_set(&window1.window1_radial_progress_bar, i16ReceiveBuffer360);
+        gx_radial_progress_bar_value_set(&window1.window1_radial_progress_bar_1, i16ReceiveBufferRpm);
+
+        //Refresh widgets
+        gx_system_dirty_mark((GX_WIDGET *) &window1.window1_prompt_1);
+        gx_system_dirty_mark((GX_WIDGET *) &window1.window1_radial_progress_bar);
+        gx_system_dirty_mark((GX_WIDGET *) &window1.window1_radial_progress_bar_1);
         gx_system_canvas_refresh();
 
         tx_thread_sleep(10);
     }
 }
 
-//Comunicacion de pantalla
+//Display irq
 void g_lcd_spi_callback (spi_callback_args_t * p_args)
 {
     if (p_args->event == SPI_EVENT_TRANSFER_COMPLETE)
