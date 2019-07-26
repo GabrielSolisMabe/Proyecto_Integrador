@@ -554,7 +554,7 @@
   <v1:configSetting configurationId="sci0.txd" altId="sci0.txd.p101">
     <v1:connectionSetting altId="p101.sci0.txd"/>
   </v1:configSetting>
-  <v1:configSetting configurationId="p411.gpio_irq" altId="p411.gpio_irq.gpio_irq_enabled"/>
+  <v1:configSetting configurationId="p411.gpio_irq" altId="p411.gpio_irq.gpio_irq_none"/>
   <v1:configSetting configurationId="sci0.rxd" altId="sci0.rxd.p100">
     <v1:connectionSetting altId="p100.sci0.rxd"/>
   </v1:configSetting>
