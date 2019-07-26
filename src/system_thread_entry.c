@@ -22,6 +22,8 @@ uint16_t u16Value_Filtered, u16RPM_Filtered;
 
 uint16_t au16Send_DataToLCD[2] = {0};
 
+uint8_t u8Mot_status=0;
+
 void SR_Conf_System(void);
 void SR_Motor_Control(void);
 void SR_Motor_Status(void);
@@ -182,89 +184,37 @@ uint16_t FN_u16Filter(uint16_t lu16Value){
     return u16Value_Filtered;
 }
 
-void SR_Motor_Status(void)
-{
+void SR_Motor_Status(void){
     static ioport_level_t lu1P05_status, lu1P06_status;
-    static uint8_t lu8Mot_status=0;
 
     /******      READ INPUTS    ******/
     g_ioport.p_api->pinRead(IOPORT_PORT_00_PIN_05, &lu1P05_status);
     g_ioport.p_api->pinRead(IOPORT_PORT_00_PIN_06, &lu1P06_status);
-    switch(lu8Mot_status)
-      {
-          case 0:
+    if(0 == u8Mot_status){
                 if(lu1P05_status == BTN_PRESSED && lu1P06_status == BTN_PRESSED){
                     FN_Enable_Motor(ON);
-                    lu8Mot_status=1;
                     tx_thread_sleep(100);
                 }
-
-                else {
-                    FN_Enable_Motor(OFF);
-                    lu8Mot_status=0;
-                 }
-                break;
-
-          case 1:
-              if(lu1P05_status == BTN_RELEASED && lu1P06_status == BTN_RELEASED){
+                else FN_Enable_Motor(OFF);
+    }
+    else {
+              if(lu1P05_status == BTN_RELEASED && lu1P06_status == BTN_RELEASED)
                   FN_Enable_Motor(ON);
-                  lu8Mot_status=1;
-              }
-              else {
-                  FN_Enable_Motor(OFF);
-                  lu8Mot_status=0;
-              }
-              break;
-          default:
-              lu8Mot_status=0;
-              break;
-      }
+              else FN_Enable_Motor(OFF);
+    }
 }
 
 void FN_Enable_Motor(bool lu1Status){
     if(1==lu1Status){
         g_ioport.p_api->pinWrite(IOPORT_PORT_06_PIN_00, LED_ON);
         g_ioport.p_api->pinWrite(IOPORT_PORT_04_PIN_12, MOTOR_ON);  //Enable Motor
+        u8Mot_status=1;
     }
     else{
         g_ioport.p_api->pinWrite(IOPORT_PORT_06_PIN_00, LED_OFF);
         g_ioport.p_api->pinWrite(IOPORT_PORT_04_PIN_12, MOTOR_OFF); //Disable Motor
+        u8Mot_status=0;
     }
 
 }
 
-/*
-switch(lu8Mot_status)
-      {
-          case 0:
-                if(lu1P05_status == BTN_PRESSED && lu1P06_status == BTN_PRESSED){
-                    g_ioport.p_api->pinWrite(IOPORT_PORT_06_PIN_00, LED_ON);
-                    g_ioport.p_api->pinWrite(IOPORT_PORT_04_PIN_12, MOTOR_ON); //Enable Motor
-                    lu8Mot_status=1;
-                    tx_thread_sleep(100);
-                }
-
-                else {
-                    g_ioport.p_api->pinWrite(IOPORT_PORT_06_PIN_00, LED_OFF);
-                    g_ioport.p_api->pinWrite(IOPORT_PORT_04_PIN_12, MOTOR_OFF);  //Disable Motor
-                    lu8Mot_status=0;
-                 }
-                break;
-
-          case 1:
-              if(lu1P05_status == BTN_RELEASED && lu1P06_status == BTN_RELEASED){
-                      g_ioport.p_api->pinWrite(IOPORT_PORT_06_PIN_00, LED_ON);
-                      g_ioport.p_api->pinWrite(IOPORT_PORT_04_PIN_12, MOTOR_ON);  //Enable Motor
-                      lu8Mot_status=1;
-              }
-              else {
-                  g_ioport.p_api->pinWrite(IOPORT_PORT_06_PIN_00, LED_OFF);
-                  g_ioport.p_api->pinWrite(IOPORT_PORT_04_PIN_12, MOTOR_OFF); //Disable Motor
-                  lu8Mot_status=0;
-              }
-              break;
-          default:
-              lu8Mot_status=0;
-              break;
-      }
-      */
