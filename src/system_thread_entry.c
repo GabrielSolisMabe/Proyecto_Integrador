@@ -7,25 +7,51 @@
 #define LED_OFF IOPORT_LEVEL_HIGH
 #define MOTOR_ON IOPORT_LEVEL_HIGH
 #define MOTOR_OFF IOPORT_LEVEL_LOW
+#define ON IOPORT_LEVEL_HIGH
+#define OFF IOPORT_LEVEL_LOW
 #define C_FILTER_ORDER  8
 
 uint16_t u16PwmPercent=50;
 uint16_t u16Frec_PWM = 1000, u16Frec_Sensor_op1 = 0, u16Frec_Sensor_op2 = 0;
 uint8_t u8Pulses = 0;
 ioport_level_t u1Pin=0;
-uint16_t u16RPM_SP = 1000, u16RPM = 0, u16DutyCycle_toPlot;
+uint16_t u16RPM_SP = 1000, u16RPM = 0;
 uint8_t u8Kp=64, u8Ki=32; // Gains for T=100ms
 
 uint16_t u16Value_Filtered, u16RPM_Filtered;
 
 uint16_t au16Send_DataToLCD[2] = {0};
 
+void SR_Conf_System(void);
 void SR_Motor_Control(void);
 void SR_Motor_Status(void);
-uint16_t FN_Filter(uint16_t lu16Value);
+uint16_t FN_u16PI_Control(int16_t lu16Error);
+uint16_t FN_u16Filter(uint16_t lu16Value);
+void FN_Enable_Motor(bool lu1Status);
+
+
 
 void system_thread_entry(void)
 {
+
+    SR_Conf_System();
+
+    while(1){
+        //g_ioport.p_api->pinWrite(IOPORT_PORT_01_PIN_14, IOPORT_LEVEL_HIGH); //Pin used to check algorithm time
+        //u1Pin = !u1Pin; g_ioport.p_api->pinWrite(IOPORT_PORT_01_PIN_14, Pin); //Pin used to check the sample time
+        SR_Motor_Status();
+        SR_Motor_Control();
+        //PwmPercent= (uint16_t)((lu16ADC_Data * 100)/982); // Convert data from ADC(0-982) to Duty_cycle (0-100)
+        // g_timer2.p_api->dutyCycleSet(g_timer2.p_ctrl, u16PwmPercent, TIMER_PWM_UNIT_PERCENT, 0); //used to change the dutycycle manually
+        tx_queue_flush(&Message_Queue); //Clean Queue to send the latest data
+        tx_queue_send(&Message_Queue, au16Send_DataToLCD, TX_NO_WAIT);// send data to LCD Thread
+        //g_ioport.p_api->pinWrite(IOPORT_PORT_01_PIN_14, IOPORT_LEVEL_LOW); //Pin used to check algorithm time
+        tx_thread_sleep(10);
+        }
+}
+
+
+void SR_Conf_System(void){
 
     /******   CONFIGURING THE ADC    ******/
     g_adc0.p_api->open(g_adc0.p_ctrl, g_adc0.p_cfg);
@@ -52,20 +78,7 @@ void system_thread_entry(void)
     g_ioport.p_api->pinWrite(IOPORT_PORT_06_PIN_01, LED_OFF);
     g_ioport.p_api->pinWrite(IOPORT_PORT_06_PIN_02, LED_OFF);
 
-    while(1){
-        //g_ioport.p_api->pinWrite(IOPORT_PORT_01_PIN_14, IOPORT_LEVEL_HIGH); //Pin used to check algorithm time
-        //u1Pin = !u1Pin; g_ioport.p_api->pinWrite(IOPORT_PORT_01_PIN_14, Pin); //Pin used to check the sample time
-        SR_Motor_Status();
-        SR_Motor_Control();
-        //PwmPercent= (uint16_t)((lu16ADC_Data * 100)/982); // Convert data from ADC(0-982) to Duty_cycle (0-100)
-        // g_timer2.p_api->dutyCycleSet(g_timer2.p_ctrl, u16PwmPercent, TIMER_PWM_UNIT_PERCENT, 0); //used to change the dutycycle manually
-        tx_queue_flush(&Message_Queue); //Clean Queue to send the latest data
-        tx_queue_send(&Message_Queue, au16Send_DataToLCD, TX_NO_WAIT);// send data to LCD Thread
-        //g_ioport.p_api->pinWrite(IOPORT_PORT_01_PIN_14, IOPORT_LEVEL_LOW); //Pin used to check algorithm time
-        tx_thread_sleep(10);
-        }
 }
-
 
 void external_irq5_callback(external_irq_callback_args_t *p_args)
 {
@@ -99,6 +112,33 @@ void timer1_callback(timer_callback_args_t * p_args)
 
 void SR_Motor_Control(void){
 
+
+    static uint16_t lu16ADC_Data, lu16Ctrl_Out;
+    static int16_t li16Error;
+
+    g_adc0.p_api->read(g_adc0.p_ctrl, ADC_REG_CHANNEL_0, &lu16ADC_Data);
+
+    u16RPM_SP= (uint16_t)((lu16ADC_Data * 3000)/982); // Convert data from ADC_10Bits(0-982) to rpm (0-3000)
+
+    u16RPM = (uint16_t)(15 * u16Frec_Sensor_op2); // Conversion from Frec to RPM (Frec*60/4)
+
+    u16RPM_Filtered = FN_u16Filter(u16RPM);
+
+    li16Error = (int16_t)(u16RPM_SP - u16RPM_Filtered);
+
+    lu16Ctrl_Out = FN_u16PI_Control(li16Error);
+
+    u16PwmPercent = (uint16_t) (100 - lu16Ctrl_Out);  // Driver has reverse logical
+
+    g_timer2.p_api->dutyCycleSet(g_timer2.p_ctrl, u16PwmPercent, TIMER_PWM_UNIT_PERCENT, 0); //Send the result of the Control to the Motor Driver
+
+    au16Send_DataToLCD[0] = lu16Ctrl_Out; //Duty Cycle to be sent to LCD_Thread
+
+    au16Send_DataToLCD[1] = u16RPM_Filtered;                //RPM to be sent to LCD_Thread
+}
+
+uint16_t FN_u16PI_Control(int16_t li16Error){
+
     /********** PI Control formula **********
     Ctrl_Out= (1/kp)*e + Integr_Error;
     where:
@@ -106,28 +146,40 @@ void SR_Motor_Control(void){
     Integr_Error=(1/ki)*Integr_Error*Ts + Integr_Error_n1;
     Where: Ts = sample time, Integr_Error_n1= Error integral accumulated
      */
-    static int16_t li16Ctrl_Out, li16Error, li16Integr_Error, li16Integr_Error_n1 = 0;
-    static uint16_t lu16ADC_Data;
+    static int16_t li16Ctrl_Out, li16Integr_Error, li16Integr_Error_n1 = 0;
     static uint8_t u8Ts_Inv = 10;
 
-    g_adc0.p_api->read(g_adc0.p_ctrl, ADC_REG_CHANNEL_0, &lu16ADC_Data);
-    u16RPM_SP= (uint16_t)((lu16ADC_Data * 3000)/982); // Convert data from ADC_10Bits(0-982) to rpm (0-3000)
-    u16RPM = (uint16_t)(15 * u16Frec_Sensor_op2); // Conversion from Frec to RPM (Frec*60/4)
-    u16RPM_Filtered = FN_Filter(u16RPM);
-    li16Error = (int16_t)(u16RPM_SP - u16RPM_Filtered);
     li16Integr_Error = (int16_t)((li16Error/u8Ki) + li16Integr_Error_n1);
+
     li16Integr_Error_n1 = li16Integr_Error;
+
     li16Integr_Error = (int16_t)(li16Integr_Error / u8Ts_Inv);// Integral multiplied x 0.1 ms (Sample time)
+
     if(li16Integr_Error > 100) li16Integr_Error = 100;
+
     if(li16Integr_Error < 0) li16Integr_Error = 0;
+
     li16Ctrl_Out = (int16_t)((li16Error/u8Kp) + li16Integr_Error);
+
     if(li16Ctrl_Out > 100) li16Ctrl_Out = 100;
+
     if(li16Ctrl_Out < 0) li16Ctrl_Out = 0;
-    u16DutyCycle_toPlot = (uint16_t)(li16Ctrl_Out * 30); //Duty Cycle to plot on debugging with RPMs
-    u16PwmPercent = (uint16_t) (100 - li16Ctrl_Out);  // Driver has reverse logical
-    g_timer2.p_api->dutyCycleSet(g_timer2.p_ctrl, u16PwmPercent, TIMER_PWM_UNIT_PERCENT, 0); //Send the result of the Control to the Motor Driver
-    au16Send_DataToLCD[0] = (uint16_t)li16Ctrl_Out; //Duty Cycle to be sent to LCD_Thread
-    au16Send_DataToLCD[1] = u16RPM_Filtered;                //RPM to be sent to LCD_Thread
+
+    return (uint16_t)li16Ctrl_Out;
+
+}
+
+uint16_t FN_u16Filter(uint16_t lu16Value){
+
+    if(C_FILTER_ORDER > 1)
+        {
+        u16Value_Filtered = (uint16_t)((lu16Value + (C_FILTER_ORDER - 1) * u16Value_Filtered) / C_FILTER_ORDER);
+        }
+    else
+        {
+        u16Value_Filtered = lu16Value;
+        }
+    return u16Value_Filtered;
 }
 
 void SR_Motor_Status(void)
@@ -139,6 +191,50 @@ void SR_Motor_Status(void)
     g_ioport.p_api->pinRead(IOPORT_PORT_00_PIN_05, &lu1P05_status);
     g_ioport.p_api->pinRead(IOPORT_PORT_00_PIN_06, &lu1P06_status);
     switch(lu8Mot_status)
+      {
+          case 0:
+                if(lu1P05_status == BTN_PRESSED && lu1P06_status == BTN_PRESSED){
+                    FN_Enable_Motor(ON);
+                    lu8Mot_status=1;
+                    tx_thread_sleep(100);
+                }
+
+                else {
+                    FN_Enable_Motor(OFF);
+                    lu8Mot_status=0;
+                 }
+                break;
+
+          case 1:
+              if(lu1P05_status == BTN_RELEASED && lu1P06_status == BTN_RELEASED){
+                  FN_Enable_Motor(ON);
+                  lu8Mot_status=1;
+              }
+              else {
+                  FN_Enable_Motor(OFF);
+                  lu8Mot_status=0;
+              }
+              break;
+          default:
+              lu8Mot_status=0;
+              break;
+      }
+}
+
+void FN_Enable_Motor(bool lu1Status){
+    if(1==lu1Status){
+        g_ioport.p_api->pinWrite(IOPORT_PORT_06_PIN_00, LED_ON);
+        g_ioport.p_api->pinWrite(IOPORT_PORT_04_PIN_12, MOTOR_ON);  //Enable Motor
+    }
+    else{
+        g_ioport.p_api->pinWrite(IOPORT_PORT_06_PIN_00, LED_OFF);
+        g_ioport.p_api->pinWrite(IOPORT_PORT_04_PIN_12, MOTOR_OFF); //Disable Motor
+    }
+
+}
+
+/*
+switch(lu8Mot_status)
       {
           case 0:
                 if(lu1P05_status == BTN_PRESSED && lu1P06_status == BTN_PRESSED){
@@ -171,17 +267,4 @@ void SR_Motor_Status(void)
               lu8Mot_status=0;
               break;
       }
-}
-
-uint16_t FN_Filter(uint16_t lu16Value){
-
-    if(C_FILTER_ORDER > 1)
-        {
-        u16Value_Filtered = (uint16_t)((lu16Value + (C_FILTER_ORDER - 1) * u16Value_Filtered) / C_FILTER_ORDER);
-        }
-    else
-        {
-        u16Value_Filtered = lu16Value;
-        }
-    return u16Value_Filtered;
-}
+      */
