@@ -6,7 +6,7 @@
 /*  www.expresslogic.com.                                                      */
 /*                                                                             */
 /*  GUIX Studio Revision 5.4.2.9                                               */
-/*  Date (dd.mm.yyyy): 26. 7.2019   Time (hh:mm): 09:47                        */
+/*  Date (dd.mm.yyyy): 26. 7.2019   Time (hh:mm): 09:54                        */
 /*******************************************************************************/
 
 
@@ -138,7 +138,7 @@ GX_CONST GX_STUDIO_WIDGET window1_radial_progress_bar_define =
     0,                                       /* user data                      */
     #endif
     GX_STYLE_BORDER_NONE|GX_STYLE_TRANSPARENT|GX_STYLE_ENABLED|GX_STYLE_RADIAL_PROGRESS_ALIAS,   /* style flags */
-    GX_STATUS_ACCEPTS_FOCUS,                 /* status flags                   */
+    0,                                       /* status flags                   */
     sizeof(GX_RADIAL_PROGRESS_BAR),          /* control block size             */
     GX_COLOR_ID_WIDGET_FILL,                 /* normal color id                */
     GX_COLOR_ID_SELECTED_FILL,               /* selected color id              */
@@ -437,7 +437,7 @@ UINT _gx_synergy_display_driver_setup(GX_DISPLAY *display)
     display -> gx_display_driver_pixelmap_blend                = _gx_dave2d_pixelmap_blend;
     /*display -> gx_display_driver_8bit_glyph_draw               = _gx_dave2d_glyph_8bit_draw;
     display -> gx_display_driver_4bit_glyph_draw               = _gx_dave2d_glyph_4bit_draw;
-    display -> gx_display_driver_1bit_glyph_draw               = _gx_dave2d_glyph_1bit_draw;*//
+    display -> gx_display_driver_1bit_glyph_draw               = _gx_dave2d_glyph_1bit_draw;*/
     #if defined(GX_ARC_DRAWING_SUPPORT)
     display -> gx_display_driver_anti_aliased_circle_draw      = _gx_dave2d_aliased_circle_draw;
     display -> gx_display_driver_anti_aliased_wide_circle_draw = _gx_dave2d_aliased_circle_draw;
