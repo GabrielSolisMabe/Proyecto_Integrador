@@ -7,10 +7,12 @@
 
 GX_WINDOW_ROOT * psWindowRoot;// = NULL
 extern GX_CONST GX_STUDIO_WIDGET * gui_adc_widget_table[];
+GX_CONST GX_STUDIO_WIDGET ** ppsStudioWidget = &gui_adc_widget_table[0];//global
 uint16_t au16ReceiveBuffer[2] = {0};
 GX_VALUE i16ReceiveBuffer360;
 GX_VALUE i16ReceiveBufferRpm;
 
+void SR_Config(void);
 void SR_CreateWidgets(void);
 void SR_UpdateLcd(void);
 /* LCD Thread entry function */
@@ -28,7 +30,7 @@ void lcd_thread_entry(void)
     g_spi_lcdc.p_api->open(g_spi_lcdc.p_ctrl, g_spi_lcdc.p_cfg);
 
     //Function to create the gui widgets
-    SR_CreateWidgets();
+    SR_Config();
     /** Setup the ILI9341V (SK-S7G2) **/
     ILI9341V_Init();
 
@@ -54,7 +56,7 @@ void g_lcd_spi_callback (spi_callback_args_t * p_args)
     }
 }
 
-void SR_CreateWidgets()
+void SR_Config()
 {
     gx_studio_display_configure(DISPLAY_1,
                                         g_sf_el_gx.p_api->setup,
@@ -64,26 +66,30 @@ void SR_CreateWidgets()
 
         g_sf_el_gx.p_api->canvasInit(g_sf_el_gx.p_ctrl, psWindowRoot);
 
-        GX_CONST GX_STUDIO_WIDGET ** ppsStudioWidget = &gui_adc_widget_table[0];
-        GX_WIDGET * psFirstScreen = NULL;
+        GX_WIDGET * lpsFirstScreen = NULL;
 
-            while (GX_NULL != *ppsStudioWidget)
-            {
+        SR_CreateWidgets();
 
-                if (0 == strcmp("window1", (char *) (*ppsStudioWidget)->widget_name))
+        gx_widget_attach(psWindowRoot, lpsFirstScreen);
+        gx_widget_show(psWindowRoot);
+}
+
+void SR_CreateWidgets()
+{
+    while (GX_NULL != *ppsStudioWidget)
                 {
-                    gx_studio_named_widget_create((*ppsStudioWidget)->widget_name, (GX_WIDGET *) psWindowRoot, GX_NULL);
-                }
-                else
-                {
-                    gx_studio_named_widget_create((*ppsStudioWidget)->widget_name, GX_NULL, GX_NULL);
-                }
 
-                ppsStudioWidget++;
-            }
+                    if (0 == strcmp("window1", (char *) (*ppsStudioWidget)->widget_name))
+                    {
+                        gx_studio_named_widget_create((*ppsStudioWidget)->widget_name, (GX_WIDGET *) psWindowRoot, GX_NULL);
+                    }
+                    else
+                    {
+                        gx_studio_named_widget_create((*ppsStudioWidget)->widget_name, GX_NULL, GX_NULL);
+                    }
 
-            gx_widget_attach(psWindowRoot, psFirstScreen);
-            gx_widget_show(psWindowRoot);
+                    ppsStudioWidget++;
+                }
 }
 
 void SR_UpdateLcd()
