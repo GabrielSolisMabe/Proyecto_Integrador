@@ -18,8 +18,7 @@ void SR_CreateWidgets(void);
 void SR_UpdateLcd(void);
 
 /* LCD Thread entry function */
-void lcd_thread_entry(void)
-{
+void lcd_thread_entry(void)     {
     /* Initializes GUIX. */
     gx_system_initialize();
 
@@ -38,10 +37,10 @@ void lcd_thread_entry(void)
     /* Setup the ILI9341V (SK-S7G2) */
     ILI9341V_Init();
 
-    while (1)
-    {
+    while (1)       {
         tx_thread_sleep (10);
         /* Receive queue message from system thread */
+        //tx_queue_flush(&Message_Queue);
         tx_queue_receive(&Message_Queue, au16ReceiveBuffer, TX_WAIT_FOREVER);
 
         /* Assign data to send to the widgets */
@@ -52,16 +51,12 @@ void lcd_thread_entry(void)
 }
 
 /* Display irq */
-void g_lcd_spi_callback (spi_callback_args_t * p_args)
-{
+void g_lcd_spi_callback (spi_callback_args_t * p_args)      {
     if (p_args->event == SPI_EVENT_TRANSFER_COMPLETE)
-    {
-       tx_semaphore_ceiling_put(&g_main_semaphore_lcdc, 1);
-    }
+    {   tx_semaphore_ceiling_put(&g_main_semaphore_lcdc, 1);    }
 }
 
-void SR_Config()
-{
+void SR_Config()        {
     gx_studio_display_configure(DISPLAY_1,
                                         g_sf_el_gx.p_api->setup,
                                         LANGUAGE_ENGLISH,
@@ -79,26 +74,19 @@ void SR_Config()
         gx_widget_show(psWindowRoot);
 }
 
-void SR_CreateWidgets()
-{
+void SR_CreateWidgets()     {
     while (GX_NULL != *ppsStudioWidget)
                 {
-
                     if (0 == strcmp("window1", (char *) (*ppsStudioWidget)->widget_name))
-                    {
-                        gx_studio_named_widget_create((*ppsStudioWidget)->widget_name, (GX_WIDGET *) psWindowRoot, GX_NULL);
-                    }
-                    else
-                    {
-                        gx_studio_named_widget_create((*ppsStudioWidget)->widget_name, GX_NULL, GX_NULL);
-                    }
+                    {  gx_studio_named_widget_create((*ppsStudioWidget)->widget_name, (GX_WIDGET *) psWindowRoot, GX_NULL); }
 
-                    ppsStudioWidget++;
-                }
+                    else
+                    { gx_studio_named_widget_create((*ppsStudioWidget)->widget_name, GX_NULL, GX_NULL);     }
+
+                    ppsStudioWidget++;     }
 }
 
-void SR_UpdateLcd()
-{
+void SR_UpdateLcd()     {
     char lu8Text[8];
 
             //Convert data type to the required by the prompt
