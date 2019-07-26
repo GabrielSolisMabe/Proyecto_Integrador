@@ -6,7 +6,7 @@
 /*  www.expresslogic.com.                                                      */
 /*                                                                             */
 /*  GUIX Studio Revision 5.4.2.9                                               */
-/*  Date (dd.mm.yyyy): 26. 7.2019   Time (hh:mm): 13:05                        */
+/*  Date (dd.mm.yyyy): 26. 7.2019   Time (hh:mm): 17:34                        */
 /*******************************************************************************/
 
 
@@ -138,7 +138,7 @@ GX_CONST GX_STUDIO_WIDGET window1_radial_progress_bar_define =
     #if defined(GX_WIDGET_USER_DATA)
     0,                                       /* user data                      */
     #endif
-    GX_STYLE_BORDER_NONE|GX_STYLE_TRANSPARENT|GX_STYLE_ENABLED|GX_STYLE_RADIAL_PROGRESS_ALIAS,   /* style flags */
+    GX_STYLE_BORDER_NONE|GX_STYLE_TRANSPARENT|GX_STYLE_ENABLED|GX_STYLE_PROGRESS_TEXT_DRAW|GX_STYLE_RADIAL_PROGRESS_ALIAS,   /* style flags */
     GX_STATUS_ACCEPTS_FOCUS,                 /* status flags                   */
     sizeof(GX_RADIAL_PROGRESS_BAR),          /* control block size             */
     GX_COLOR_ID_WIDGET_FILL,                 /* normal color id                */
@@ -163,7 +163,7 @@ GX_CONST GX_STUDIO_WIDGET window1_prompt_1_define =
     0,                                       /* user data                      */
     #endif
     GX_STYLE_BORDER_NONE|GX_STYLE_TRANSPARENT|GX_STYLE_ENABLED|GX_STYLE_TEXT_CENTER,   /* style flags */
-    GX_STATUS_ACCEPTS_FOCUS,                 /* status flags                   */
+    0,                                       /* status flags                   */
     sizeof(GX_PROMPT),                       /* control block size             */
     GX_COLOR_ID_SELECTED_TEXT,               /* normal color id                */
     GX_COLOR_ID_TEXT,                        /* selected color id              */
@@ -171,7 +171,7 @@ GX_CONST GX_STUDIO_WIDGET window1_prompt_1_define =
     gx_studio_prompt_create,                 /* create function                */
     GX_NULL,                                 /* drawing function override      */
     GX_NULL,                                 /* event function override        */
-    {107, 167, 150, 196},                    /* widget size                    */
+    {200, 167, 243, 196},                    /* widget size                    */
     &window1_radial_progress_bar_define,     /* next widget definition         */
     GX_NULL,                                 /* no child widgets               */ 
     offsetof(WINDOW1_CONTROL_BLOCK, window1_prompt_1), /* control block        */
