@@ -30,11 +30,11 @@ void SR_Motor_Status(void);
 uint16_t FN_u16PI_Control(int16_t lu16Error);
 uint16_t FN_u16Filter(uint16_t lu16Value);
 void FN_Enable_Motor(bool lu1Status);
+uint16_t FN_u16Read_RPM_SP(void);
 
 
 
-void system_thread_entry(void)
-{
+void system_thread_entry(void){
 
     SR_Conf_System();
 
@@ -43,8 +43,6 @@ void system_thread_entry(void)
         //u1Pin = !u1Pin; g_ioport.p_api->pinWrite(IOPORT_PORT_01_PIN_14, Pin); //Pin used to check the sample time
         SR_Motor_Status();
         SR_Motor_Control();
-        //PwmPercent= (uint16_t)((lu16ADC_Data * 100)/982); // Convert data from ADC(0-982) to Duty_cycle (0-100)
-        // g_timer2.p_api->dutyCycleSet(g_timer2.p_ctrl, u16PwmPercent, TIMER_PWM_UNIT_PERCENT, 0); //used to change the dutycycle manually
         tx_queue_flush(&Message_Queue); //Clean Queue to send the latest data
         tx_queue_send(&Message_Queue, au16Send_DataToLCD, TX_NO_WAIT);// send data to LCD Thread
         //g_ioport.p_api->pinWrite(IOPORT_PORT_01_PIN_14, IOPORT_LEVEL_LOW); //Pin used to check algorithm time
@@ -79,11 +77,9 @@ void SR_Conf_System(void){
     g_ioport.p_api->pinWrite(IOPORT_PORT_06_PIN_00, LED_OFF);
     g_ioport.p_api->pinWrite(IOPORT_PORT_06_PIN_01, LED_OFF);
     g_ioport.p_api->pinWrite(IOPORT_PORT_06_PIN_02, LED_OFF);
-
 }
 
-void external_irq5_callback(external_irq_callback_args_t *p_args)
-{
+void external_irq5_callback(external_irq_callback_args_t *p_args){
     static uint32_t lu32Counts = 0, alu32Counts_avg[4]={0};
 
     SSP_PARAMETER_NOT_USED(p_args);
@@ -95,12 +91,10 @@ void external_irq5_callback(external_irq_callback_args_t *p_args)
     alu32Counts_avg[2] = alu32Counts_avg[1];
     alu32Counts_avg[1] = lu32Counts;
     u8Pulses++;
-
 }
 
 
-void timer1_callback(timer_callback_args_t * p_args)
-{
+void timer1_callback(timer_callback_args_t * p_args){
     static uint16_t lu16Frec_n = 0, lu16Frec_n1 = 0;
 
     if (TIMER_EVENT_EXPIRED  == p_args->event)
@@ -114,13 +108,10 @@ void timer1_callback(timer_callback_args_t * p_args)
 
 void SR_Motor_Control(void){
 
-
-    static uint16_t lu16ADC_Data, lu16Ctrl_Out;
+    static uint16_t lu16Ctrl_Out;
     static int16_t li16Error;
 
-    g_adc0.p_api->read(g_adc0.p_ctrl, ADC_REG_CHANNEL_0, &lu16ADC_Data);
-
-    u16RPM_SP= (uint16_t)((lu16ADC_Data * 3000)/982); // Convert data from ADC_10Bits(0-982) to rpm (0-3000)
+    u16RPM_SP= (uint16_t)((FN_u16Read_RPM_SP() * 3000)/982); // Convert data from ADC_10Bits(0-982) to rpm (0-3000)
 
     u16RPM = (uint16_t)(15 * u16Frec_Sensor_op2); // Conversion from Frec to RPM (Frec*60/4)
 
@@ -168,19 +159,28 @@ uint16_t FN_u16PI_Control(int16_t li16Error){
     if(li16Ctrl_Out < 0) li16Ctrl_Out = 0;
 
     return (uint16_t)li16Ctrl_Out;
+}
 
+uint16_t FN_u16Read_RPM_SP(void){
+
+    static uint16_t lu16ADC_Data, alu16ADC_Data[2];
+
+    g_adc0.p_api->read(g_adc0.p_ctrl, ADC_REG_CHANNEL_0, &lu16ADC_Data);
+
+    lu16ADC_Data = (uint16_t)((lu16ADC_Data + alu16ADC_Data[0] + alu16ADC_Data[1])/3);
+    alu16ADC_Data[1] = alu16ADC_Data[0];
+    alu16ADC_Data[0] = lu16ADC_Data;
+
+    return lu16ADC_Data;
 }
 
 uint16_t FN_u16Filter(uint16_t lu16Value){
 
     if(C_FILTER_ORDER > 1)
-        {
         u16Value_Filtered = (uint16_t)((lu16Value + (C_FILTER_ORDER - 1) * u16Value_Filtered) / C_FILTER_ORDER);
-        }
     else
-        {
         u16Value_Filtered = lu16Value;
-        }
+
     return u16Value_Filtered;
 }
 
@@ -215,6 +215,5 @@ void FN_Enable_Motor(bool lu1Status){
         g_ioport.p_api->pinWrite(IOPORT_PORT_04_PIN_12, MOTOR_OFF); //Disable Motor
         u8Mot_status=0;
     }
-
 }
 
