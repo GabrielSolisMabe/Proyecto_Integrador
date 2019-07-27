@@ -6,7 +6,7 @@
 /*  site at www.expresslogic.com.                                              */
 /*                                                                             */
 /*  GUIX Studio Revision 5.4.2.9                                               */
-/*  Date (dd.mm.yyyy): 26. 7.2019   Time (hh:mm): 10:05                        */
+/*  Date (dd.mm.yyyy): 26. 7.2019   Time (hh:mm): 17:34                        */
 /*******************************************************************************/
 
 
@@ -22,6 +22,7 @@
 #define DISPLAY_1_X_RESOLUTION 256
 #define DISPLAY_1_Y_RESOLUTION 320
 #define DISPLAY_1_THEME_1 0
+#define DISPLAY_1_THEME_TABLE_SIZE 1
 
 /* Language definitions                                                        */
 

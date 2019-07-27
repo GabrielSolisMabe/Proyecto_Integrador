@@ -3,7 +3,7 @@
 <project>
 <header>
 <project_version>55</project_version>
-<guix_version>50300</guix_version>
+<guix_version>50401</guix_version>
 <studio_version>5040209</studio_version>
 <project_name>gui_adc</project_name>
 <source_path>..\src\gui</source_path>
@@ -27,7 +27,7 @@
 <custom_resource_enabled>FALSE</custom_resource_enabled>
 <app_execute_xpos>0</app_execute_xpos>
 <app_execute_ypos>0</app_execute_ypos>
-<is_widget_position_locked>TRUE</is_widget_position_locked>
+<is_widget_position_locked>FALSE</is_widget_position_locked>
 <num_displays>1</num_displays>
 <max_displays>4</max_displays>
 <num_languages>1</num_languages>
@@ -1302,14 +1302,14 @@
 <type>prompt</type>
 <app_name>prompt_1</app_name>
 <size>
-<left>107</left>
+<left>200</left>
 <top>167</top>
-<right>150</right>
+<right>243</right>
 <bottom>196</bottom>
 </size>
-<style>1342193668</style>
+<style>1342193664</style>
 <allocation>0</allocation>
-<accepts_focus>TRUE</accepts_focus>
+<accepts_focus>FALSE</accepts_focus>
 <normal_fill_color>SELECTED_TEXT</normal_fill_color>
 <selected_fill_color>TEXT</selected_fill_color>
 <disabled_fill_color>DISABLED_FILL</disabled_fill_color>
@@ -1330,7 +1330,7 @@
 <right>160</right>
 <bottom>211</bottom>
 </size>
-<style>1342177792</style>
+<style>1342177824</style>
 <allocation>0</allocation>
 <accepts_focus>TRUE</accepts_focus>
 <normal_fill_color>WIDGET_FILL</normal_fill_color>
