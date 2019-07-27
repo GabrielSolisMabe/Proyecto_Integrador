@@ -1302,9 +1302,9 @@
 <type>prompt</type>
 <app_name>prompt_1</app_name>
 <size>
-<left>200</left>
+<left>107</left>
 <top>167</top>
-<right>243</right>
+<right>150</right>
 <bottom>196</bottom>
 </size>
 <style>1342193664</style>
@@ -1330,7 +1330,7 @@
 <right>160</right>
 <bottom>211</bottom>
 </size>
-<style>1342177824</style>
+<style>1342177792</style>
 <allocation>0</allocation>
 <accepts_focus>TRUE</accepts_focus>
 <normal_fill_color>WIDGET_FILL</normal_fill_color>
