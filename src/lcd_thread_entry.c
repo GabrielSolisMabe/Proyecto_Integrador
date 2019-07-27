@@ -11,7 +11,6 @@ GX_CONST GX_STUDIO_WIDGET ** ppsStudioWidget = &gui_adc_widget_table[0];//global
 uint16_t au16ReceiveBuffer[2] = {0};
 GX_VALUE i16ReceiveBuffer360;
 GX_VALUE i16ReceiveBufferRpm;
-LONG i32CastBuff = 0;
 
 /* Subrutines */
 void SR_Config(void);
@@ -97,13 +96,12 @@ void SR_UpdateLcd()     {
             gx_prompt_text_set(&window1.window1_prompt_1, lu8Text);
 
             //Convert data type to the required by the radial bar, and to degrees
-            i32CastBuff = ((LONG)(au16ReceiveBuffer[0]*-360)/100);
-            i16ReceiveBuffer360 = (GX_VALUE)(i32CastBuff);//SIGNED SHORT [−32,767, +32,767] - UNSIGNED INT 16 [0, 65536]
+            i16ReceiveBuffer360 = (GX_VALUE)((LONG)(au16ReceiveBuffer[0]*-360/100));//SIGNED SHORT [−32,767, +32,767] - UNSIGNED INT 16 [0, 65536]
             i16ReceiveBufferRpm = (GX_VALUE)((LONG)(au16ReceiveBuffer[1]*-360/3000));
 
             //Set the value to the radial bar
-            gx_radial_progress_bar_value_set(&window1.window1_radial_progress_bar, i16ReceiveBuffer360);
-            gx_radial_progress_bar_value_set(&window1.window1_radial_progress_bar_1, i16ReceiveBufferRpm);
+            gx_radial_progress_bar_value_set(&window1.window1_radial_progress_bar_1, i16ReceiveBuffer360);
+            gx_radial_progress_bar_value_set(&window1.window1_radial_progress_bar, i16ReceiveBufferRpm);
 
             //Refresh widgets
             gx_system_dirty_mark((GX_WIDGET *) &window1.window1_prompt_1);
