@@ -4,8 +4,9 @@
 #include "gui/gui_adc_specifications.h"
 #include "gui/gui_adc_resources.h"
 #include "lcd_setup/lcd.h"
-#define ERROR_HANDLER_STATUS(a) if(TX_SUCCESS != a) while(1);
-#define ERROR_HANDLER_ERR(b) if(SSP_SUCCESS != b) while(1);
+
+#define ERROR_HANDLER_STATUS(a) if (TX_SUCCESS != a && TX_NO_EVENTS != a) while(1)
+#define ERROR_HANDLER_ERR(b) if(SSP_SUCCESS != b) while(1)
 
 GX_WINDOW_ROOT * psWindowRoot = NULL;
 extern GX_CONST GX_STUDIO_WIDGET * gui_adc_widget_table[];
@@ -25,19 +26,19 @@ void SR_UpdateLcd(void);
 void lcd_thread_entry(void)     {
     /* Initializes GUIX. */
     u16Status = gx_system_initialize();
-    //ERROR_HANDLER_STATUS(u16Status)
+    ERROR_HANDLER_STATUS(u16Status);
 
     /* Initializes GUIX drivers. */
     u16Status = g_sf_el_gx.p_api->open(g_sf_el_gx.p_ctrl, g_sf_el_gx.p_cfg);
-    //ERROR_HANDLER_STATUS(u16Status)
+    ERROR_HANDLER_STATUS(u16Status);
 
     /* Lets GUIX run. */
     u16Status = gx_system_start();
-    //ERROR_HANDLER_STATUS(u16Status)
+    ERROR_HANDLER_STATUS(u16Status);
 
     /* Open the SPI driver to initialize the LCD (SK-S7G2) */
     sErr = g_spi_lcdc.p_api->open(g_spi_lcdc.p_ctrl, g_spi_lcdc.p_cfg);
-    //ERROR_HANDLER_ERR(sErr)
+    ERROR_HANDLER_ERR(sErr);
 
     /* Function to configure the display */
     SR_Config();
@@ -63,7 +64,6 @@ void g_lcd_spi_callback (spi_callback_args_t * p_args)      {
 }
 
 void SR_Config()        {
-        SR_CreateWidgets();
         gx_studio_display_configure(DISPLAY_1,
                                         g_sf_el_gx.p_api->setup,
                                         LANGUAGE_ENGLISH,
@@ -71,16 +71,15 @@ void SR_Config()        {
                                         &psWindowRoot);
 
         sErr = g_sf_el_gx.p_api->canvasInit(g_sf_el_gx.p_ctrl, psWindowRoot);
-        //ERROR_HANDLER_ERR(sErr)
+        ERROR_HANDLER_ERR(sErr);
 
         GX_WIDGET * lpsFirstScreen = NULL;
 
         /* Function to create the guix widgets */
-        //SR_CreateWidgets();
+        SR_CreateWidgets();
 
-        //u16Status =
-                gx_widget_attach(psWindowRoot, lpsFirstScreen);
-        //ERROR_HANDLER_STATUS(u16Status)
+        u16Status = gx_widget_attach(psWindowRoot, lpsFirstScreen);
+        ERROR_HANDLER_STATUS(u16Status);
 
         gx_widget_show(psWindowRoot);
 }
@@ -115,8 +114,8 @@ void SR_UpdateLcd()     {
             gx_radial_progress_bar_value_set(&window1.window1_radial_progress_bar, i16ReceiveBufferRpm);
 
             //Refresh widgets
-            gx_system_dirty_mark((GX_WIDGET *) &window1.window1_prompt_1);
+            /*gx_system_dirty_mark((GX_WIDGET *) &window1.window1_prompt_1);
             gx_system_dirty_mark((GX_WIDGET *) &window1.window1_radial_progress_bar);
-            gx_system_dirty_mark((GX_WIDGET *) &window1.window1_radial_progress_bar_1);
+            gx_system_dirty_mark((GX_WIDGET *) &window1.window1_radial_progress_bar_1);*/
             gx_system_canvas_refresh();
 }
