@@ -56,7 +56,7 @@ void lcd_thread_entry(void)     {
     }
 }
 
-/* Display irq */
+/* IRQ Display*/
 void g_lcd_spi_callback (spi_callback_args_t * p_args)      {
     if (p_args->event == SPI_EVENT_TRANSFER_COMPLETE)
     {   tx_semaphore_ceiling_put(&g_main_semaphore_lcdc, 1);    }
