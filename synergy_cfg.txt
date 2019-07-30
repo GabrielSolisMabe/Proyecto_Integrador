@@ -13,19 +13,19 @@ Synergy Configuration
     
   S7G2 Family
     OFS0 register settings: Select fields below
-         IWDT Start Mode: IWDT is Disabled
+         IWDT Start Mode: IWDT is automatically activated after a reset (Autostart mode)
          IWDT Timeout Period: 2048 cycles
          IWDT Dedicated Clock Frequency Divisor: 128
          IWDT Window End Position:  0% (no window end position)
          IWDT Window Start Position: 100% (no window start position)
          IWDT Reset Interrupt Request Select: Reset is enabled
          IWDT Stop Control: Stop counting when in Sleep, Snooze mode, or Software Standby
-         WDT Start Mode Select: Stop WDT after a reset (register-start mode)
-         WDT Timeout Period: 16384 cycles
-         WDT Clock Frequency Division Ratio: 128
+         WDT Start Mode Select: Automatically activate WDT after a reset (auto-start mode)
+         WDT Timeout Period: 8192 cycles
+         WDT Clock Frequency Division Ratio: 2048
          WDT Window End Position:  0% (no window end position)
          WDT Window Start Position: 100% (no window start position)
-         WDT Reset Interrupt Request: Reset
+         WDT Reset Interrupt Request: NMI
          WDT Stop Control: Stop counting when entering Sleep mode
     OFS1 register settings: Select fields below
          Voltage Detection 0 Circuit Start: Voltage monitor 0 reset is disabled after reset
@@ -134,7 +134,7 @@ Synergy Configuration
       P408 43 - - - - Disabled - - "CTSU0: TS04; ETHERC0: CRS_DV; GPT10: GTIOCB; IRQ0: IRQ07; OPS0: GTOWLO; SCI3: RXD_MISO; SCI3: SCL; USBFS0: ID; USBHS0: ID" 
       P409 42 - - - - Disabled - - "CTSU0: TS05; ETHERC0: RX_ER; GPT10: GTIOCA; IRQ0: IRQ06; OPS0: GTOWUP; SCI3: SDA; SCI3: TXD_MOSI; USBFS0: EXICEN; USBHS0: EXICEN" 
       P410 41 GPIO - - IRQ5 "Input mode" - None "AGT1: AGTOB; CTSU0: TS06; ETHERC0: RXD1; GPT9: GTIOCB; IRQ0: IRQ05; OPS0: GTOVLO; SCI0: RXD_MISO; SCI0: SCL; SCI3: SCK; SDHI0: DAT1; SPI0: MISO" 
-      P411 40 GPIO - - IRQ4 "Input mode" - None "AGT1: AGTOA; CTSU0: TS07; ETHERC0: RXD0; GPT9: GTIOCA; IRQ0: IRQ04; OPS0: GTOVUP; SCI0: SDA; SCI0: TXD_MOSI; SCI3: CTS_RTS_SS; SDHI0: DAT0; SPI0: MOSI" 
+      P411 40 GPIO - - None "Input mode" - None "AGT1: AGTOA; CTSU0: TS07; ETHERC0: RXD0; GPT9: GTIOCA; IRQ0: IRQ04; OPS0: GTOVUP; SCI0: SDA; SCI0: TXD_MOSI; SCI3: CTS_RTS_SS; SDHI0: DAT0; SPI0: MOSI" 
       P412 39 GPIO - Medium - "Output mode (Initial Low)" CMOS None "CTSU0: TS08; ETHERC0: REF50CK; OPS0: GTOULO; SCI0: SCK; SDHI0: CMD; SPI0: RSPCK" 
       P413 38 GPIO GPIO15 Medium - "Output mode (Initial Low)" CMOS None "CTSU0: TS09; ETHERC0: TXD0; OPS0: GTOUUP; SCI0: CTS_RTS_SS; SDHI0: CLK; SPI0: SSL0" 
       P414 37 - - - - Disabled - - "CTSU0: TS10; ETHERC0: TXD1; SDHI0: WP; SPI0: SSL1" 
@@ -297,6 +297,9 @@ Synergy Configuration
     Parameter Checking: Default (BSP)
     
   Module "External IRQ Driver on r_icu"
+    Parameter Checking: Default (BSP)
+    
+  Module "Watchdog Driver on r_wdt"
     Parameter Checking: Default (BSP)
     
   HAL
@@ -741,6 +744,18 @@ Synergy Configuration
       GTIOCB Stop Level: Pin Level Low
       Callback: timer1_callback
       Overflow Interrupt Priority: Priority 7
+      
+    Instance "g_wdt0 Watchdog Driver on r_wdt"
+      Name: g_wdt0
+      Start Mode: Auto
+      Start Watchdog After Configuration: True
+      Timeout: 8,192 Cycles
+      Clock Division Ratio: PCLK/2048
+      Window Start Position: 100% (Window Position Not Specified)
+      Window End Position: 0% (Window Position Not Specified)
+      Reset Control: NMI Generated
+      Stop Control: WDT Count Disabled in Low Power Mode
+      NMI Callback: wdt0_callback
       
     Object "Message_Queue Queue"
       Name: MessageQueue

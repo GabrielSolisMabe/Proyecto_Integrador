@@ -7,6 +7,22 @@ static void system_thread_func(ULONG thread_input);
 static uint8_t system_thread_stack[1024] BSP_PLACE_IN_SECTION_V2(".stack.system_thread") BSP_ALIGN_VARIABLE_V2(BSP_STACK_ALIGNMENT);
 void tx_startup_err_callback(void *p_instance, void *p_data);
 void tx_startup_common_init(void);
+static wdt_instance_ctrl_t g_wdt0_ctrl;
+
+static const wdt_cfg_t g_wdt0_cfg =
+{ .start_mode = WDT_START_MODE_AUTO,
+  .autostart = true,
+  .timeout = WDT_TIMEOUT_8192,
+  .clock_division = WDT_CLOCK_DIVISION_2048,
+  .window_start = WDT_WINDOW_START_100,
+  .window_end = WDT_WINDOW_END_0,
+  .reset_control = WDT_RESET_CONTROL_NMI,
+  .stop_control = WDT_STOP_CONTROL_ENABLE,
+  .p_callback = wdt0_callback, };
+
+/* Instance structure to use this module. */
+const wdt_instance_t g_wdt0 =
+{ .p_ctrl = &g_wdt0_ctrl, .p_cfg = &g_wdt0_cfg, .p_api = &g_wdt_on_wdt };
 #if (7) != BSP_IRQ_DISABLED
 #if !defined(SSP_SUPPRESS_ISR_g_timer1) && !defined(SSP_SUPPRESS_ISR_GPT1)
 SSP_VECTOR_DEFINE_CHAN(gpt_counter_overflow_isr, GPT, COUNTER_OVERFLOW, 1);
@@ -143,6 +159,7 @@ const adc_instance_t g_adc0 =
 { .p_ctrl = &g_adc0_ctrl, .p_cfg = &g_adc0_cfg, .p_channel_cfg = &g_adc0_channel_cfg, .p_api = &g_adc_on_adc };
 TX_QUEUE Message_Queue;
 static uint8_t queue_memory_Message_Queue[20];
+
 extern bool g_ssp_common_initialized;
 extern uint32_t g_ssp_common_thread_count;
 extern TX_SEMAPHORE g_ssp_common_initialized_semaphore;

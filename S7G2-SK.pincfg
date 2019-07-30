@@ -155,17 +155,17 @@
   <v1:configSetting configurationId="adc0.an00" altId="adc0.an00.p000">
     <v1:connectionSetting altId="p000.adc0.an00"/>
   </v1:configSetting>
-  <v1:configSetting configurationId="adc0.an04" altId="adc0.an04.none"></v1:configSetting>
-  <v1:configSetting configurationId="adc0.an03" altId="adc0.an03.none"></v1:configSetting>
-  <v1:configSetting configurationId="adc0.an02" altId="adc0.an02.none"></v1:configSetting>
+  <v1:configSetting configurationId="adc0.an04" altId="adc0.an04.none"/>
+  <v1:configSetting configurationId="adc0.an03" altId="adc0.an03.none"/>
+  <v1:configSetting configurationId="adc0.an02" altId="adc0.an02.none"/>
   <v1:configSetting configurationId="p900.gpio_mode" altId="p900.gpio_mode.gpio_mode_peripheral"/>
-  <v1:configSetting configurationId="adc0.an01" altId="adc0.an01.none"></v1:configSetting>
+  <v1:configSetting configurationId="adc0.an01" altId="adc0.an01.none"/>
   <v1:configSetting configurationId="p800.gpio_mode" altId="p800.gpio_mode.gpio_mode_out.low"/>
   <v1:configSetting configurationId="p908.gpio_drivecapacity" altId="p908.gpio_speed.gpio_speed_medium"/>
   <v1:configSetting configurationId="p315.gpio_drivecapacity" altId="p315.gpio_speed.gpio_speed_medium"/>
   <v1:configSetting configurationId="p101.gpio_mode" altId="p101.gpio_mode.gpio_mode_peripheral"/>
   <v1:configSetting configurationId="p900.gpio_drivecapacity" altId="p900.gpio_speed.gpio_speed_high"/>
-  <v1:configSetting configurationId="adc0.an06" altId="adc0.an06.none"></v1:configSetting>
+  <v1:configSetting configurationId="adc0.an06" altId="adc0.an06.none"/>
   <v1:configSetting configurationId="spi0.mode" altId="spi0.mode.disabled"/>
   <v1:configSetting configurationId="etherc1.rmii.mode" altId="etherc1.rmii.mode.disabled"/>
   <v1:configSetting configurationId="p000.gpio_mode" altId="p000.gpio_mode.gpio_mode_an"/>
@@ -571,4 +571,5 @@
   <v1:configSetting configurationId="p410" altId="p410.input"/>
   <v1:configSetting configurationId="p412.gpio_drivecapacity" altId="p412.gpio_speed.gpio_speed_medium"/>
   <v1:configSetting configurationId="p412" altId="p412.output.low"/>
+  <v1:configSetting configurationId="p411.gpio_pupd" altId="p411.gpio_pupd.gpio_pupd_ip_up"/>
 </v1:pinSettings>

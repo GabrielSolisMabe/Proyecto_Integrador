@@ -9,6 +9,8 @@ extern "C" void system_thread_entry(void);
 #else
 extern void system_thread_entry(void);
 #endif
+#include "r_wdt.h"
+#include "r_wdt_api.h"
 #include "r_gpt.h"
 #include "r_timer_api.h"
 #include "r_icu.h"
@@ -18,6 +20,11 @@ extern void system_thread_entry(void);
 #ifdef __cplusplus
 extern "C"
 {
+#endif
+/** WDT on WDT Instance. */
+extern const wdt_instance_t g_wdt0;
+#ifndef wdt0_callback
+void wdt0_callback(wdt_callback_args_t *p_args);
 #endif
 /** Timer on GPT Instance. */
 extern const timer_instance_t g_timer1;

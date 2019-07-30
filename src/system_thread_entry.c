@@ -10,6 +10,7 @@
 #define ON IOPORT_LEVEL_HIGH
 #define OFF IOPORT_LEVEL_LOW
 #define C_FILTER_ORDER  8
+#define TS_NUMBER 5
 
 uint16_t u16PwmPercent=50;
 uint16_t u16Frec_PWM = 1000, u16Frec_Sensor_op1 = 0, u16Frec_Sensor_op2 = 0;
@@ -18,11 +19,14 @@ ioport_level_t u1Pin=0;
 uint16_t u16RPM_SP = 1000, u16RPM = 0;
 uint8_t u8Kp=64, u8Ki=32; // Gains for T=100ms
 
-uint16_t u16Value_Filtered, u16RPM_Filtered;
-
 uint16_t au16Send_DataToLCD[2] = {0};
 
 uint8_t u8Mot_status=0;
+uint8_t u8Faults_Counter = 0;
+uint8_t U8Ts_Number = 5;
+
+uint32_t u32WDT_Counter ;
+wdt_status_t u1WDT_Status;
 
 void SR_Conf_System(void);
 void SR_Motor_Control(void);
@@ -31,22 +35,32 @@ uint16_t FN_u16PI_Control(int16_t lu16Error);
 uint16_t FN_u16Filter(uint16_t lu16Value);
 void FN_Enable_Motor(bool lu1Status);
 uint16_t FN_u16Read_RPM_SP(void);
-
+void SR_Fault_handle(void);
+void SR_Toggling_LED(void);
 
 
 void system_thread_entry(void){
 
+
     SR_Conf_System();
+
 
     while(1){
         //g_ioport.p_api->pinWrite(IOPORT_PORT_01_PIN_14, IOPORT_LEVEL_HIGH); //Pin used to check algorithm time
-        //u1Pin = !u1Pin; g_ioport.p_api->pinWrite(IOPORT_PORT_01_PIN_14, Pin); //Pin used to check the sample time
-        SR_Motor_Status();
+        u1Pin = !u1Pin; g_ioport.p_api->pinWrite(IOPORT_PORT_01_PIN_14, u1Pin); //Pin used to check the sample time
+        SR_Fault_handle();
+        SR_Toggling_LED(); // Red LED at 1 Hz: working correctly, Red LED 10 Hz: There is a Motor Fault
         SR_Motor_Control();
         tx_queue_flush(&Message_Queue); //Clean Queue to send the latest data
         tx_queue_send(&Message_Queue, au16Send_DataToLCD, TX_NO_WAIT);// send data to LCD Thread
         //g_ioport.p_api->pinWrite(IOPORT_PORT_01_PIN_14, IOPORT_LEVEL_LOW); //Pin used to check algorithm time
         tx_thread_sleep(10);
+
+        /****** Refresh IWDT ******/
+        g_wdt0.p_api->counterGet(g_wdt0.p_ctrl, &u32WDT_Counter); //Counter don't working, it seems like disabled by the OS
+        g_wdt0.p_api->refresh(g_wdt0.p_ctrl);
+        g_wdt0.p_api->statusGet( g_wdt0.p_ctrl, &u1WDT_Status);
+
         }
 }
 
@@ -77,6 +91,9 @@ void SR_Conf_System(void){
     g_ioport.p_api->pinWrite(IOPORT_PORT_06_PIN_00, LED_OFF);
     g_ioport.p_api->pinWrite(IOPORT_PORT_06_PIN_01, LED_OFF);
     g_ioport.p_api->pinWrite(IOPORT_PORT_06_PIN_02, LED_OFF);
+
+    /****** Initialize WDT  ******/
+    g_wdt0.p_api->open(g_wdt0.p_ctrl, g_wdt0.p_cfg);
 }
 
 void external_irq5_callback(external_irq_callback_args_t *p_args){
@@ -108,16 +125,16 @@ void timer1_callback(timer_callback_args_t * p_args){
 
 void SR_Motor_Control(void){
 
-    static uint16_t lu16Ctrl_Out;
+    static uint16_t lu16Ctrl_Out, lu16RPM_Filtered;
     static int16_t li16Error;
 
     u16RPM_SP= (uint16_t)((FN_u16Read_RPM_SP() * 3000)/982); // Convert data from ADC_10Bits(0-982) to rpm (0-3000)
 
     u16RPM = (uint16_t)(15 * u16Frec_Sensor_op2); // Conversion from Frec to RPM (Frec*60/4)
 
-    u16RPM_Filtered = FN_u16Filter(u16RPM);
+    lu16RPM_Filtered = FN_u16Filter(u16RPM);
 
-    li16Error = (int16_t)(u16RPM_SP - u16RPM_Filtered);
+    li16Error = (int16_t)(u16RPM_SP - lu16RPM_Filtered);
 
     lu16Ctrl_Out = FN_u16PI_Control(li16Error);
 
@@ -127,7 +144,7 @@ void SR_Motor_Control(void){
 
     au16Send_DataToLCD[0] = lu16Ctrl_Out; //Duty Cycle to be sent to LCD_Thread
 
-    au16Send_DataToLCD[1] = u16RPM_Filtered;                //RPM to be sent to LCD_Thread
+    au16Send_DataToLCD[1] = lu16RPM_Filtered;                //RPM to be sent to LCD_Thread
 }
 
 uint16_t FN_u16PI_Control(int16_t li16Error){
@@ -175,14 +192,16 @@ uint16_t FN_u16Read_RPM_SP(void){
 }
 
 uint16_t FN_u16Filter(uint16_t lu16Value){
+    static float lf32Value_Filtered = 0;
 
     if(C_FILTER_ORDER > 1)
-        u16Value_Filtered = (uint16_t)((lu16Value + (C_FILTER_ORDER - 1) * u16Value_Filtered) / C_FILTER_ORDER);
+        lf32Value_Filtered = (float)((lu16Value + (float)((C_FILTER_ORDER - 1) * lf32Value_Filtered)) / C_FILTER_ORDER);
     else
-        u16Value_Filtered = lu16Value;
+        lf32Value_Filtered = lu16Value;
 
-    return u16Value_Filtered;
+    return (uint16_t)lf32Value_Filtered;
 }
+
 
 void SR_Motor_Status(void){
     static ioport_level_t lu1P05_status, lu1P06_status;
@@ -217,3 +236,40 @@ void FN_Enable_Motor(bool lu1Status){
     }
 }
 
+void SR_Fault_handle(void){
+    static ioport_level_t lu1P411_status, lu8Fault_Status = 0;
+
+    g_ioport.p_api->pinRead(IOPORT_PORT_04_PIN_11, &lu1P411_status);
+    if(IOPORT_LEVEL_LOW == lu1P411_status ){
+        FN_Enable_Motor(OFF);
+        U8Ts_Number = 0; //Blinking Red LED at 10 Hz
+        lu8Fault_Status=1;
+    }
+    else{
+        U8Ts_Number = 5; //Blinking Red LED at 1 Hz
+        SR_Motor_Status();
+        if(1 == lu8Fault_Status){
+            u8Faults_Counter++;
+            lu8Fault_Status = 0;
+        }
+    }
+
+}
+
+void SR_Toggling_LED(void){
+    static ioport_level_t lu1LED=0;
+    static uint8_t lu8Ts_Counter = 1;
+
+    if(lu8Ts_Counter++ > U8Ts_Number){
+        lu1LED = !lu1LED;
+        g_ioport.p_api->pinWrite(IOPORT_PORT_06_PIN_01, lu1LED); // Toggling Red LED at 1 Hz
+        lu8Ts_Counter = 1;
+    }
+}
+
+
+void wdt0_callback(wdt_callback_args_t * p_args){
+    SSP_PARAMETER_NOT_USED(p_args);
+    g_ioport.p_api->pinWrite(IOPORT_PORT_06_PIN_02, LED_ON); //Turn ON Yellow LED
+
+}

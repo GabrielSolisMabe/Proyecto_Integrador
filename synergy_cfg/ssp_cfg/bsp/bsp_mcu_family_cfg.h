@@ -23,11 +23,11 @@
 #define BSP_VECTOR_TABLE_MAX_ENTRIES       (112U)
 #define BSP_MCU_VBATT_SUPPORT       (1)
 
-#define OFS_SEQ1 0xA001A001 | (1 << 1) | (3 << 2)
+#define OFS_SEQ1 0xA001A001 | (0 << 1) | (3 << 2)
 #define OFS_SEQ2 (15 << 4) | (3 << 8) | (3 << 10)
-#define OFS_SEQ3 (1 << 12) | (1 << 14) | (1 << 17)
-#define OFS_SEQ4 (3 << 18) |(15 << 20) | (3 << 24) | (3 << 26)
-#define OFS_SEQ5 (1 << 28) | (1 << 30)           
+#define OFS_SEQ3 (1 << 12) | (1 << 14) | (0 << 17)
+#define OFS_SEQ4 (2 << 18) |(7 << 20) | (3 << 24) | (3 << 26)
+#define OFS_SEQ5 (0 << 28) | (1 << 30)           
 #define BSP_CFG_ROM_REG_OFS0 (OFS_SEQ1 | OFS_SEQ2 | OFS_SEQ3 | OFS_SEQ4 | OFS_SEQ5)           
 #define BSP_CFG_ROM_REG_OFS1 (0xFFFFFEF8 | (1 << 2) | (3) |  (1 << 8))
 #endif /* BSP_MCU_FAMILY_CFG_H_ */
