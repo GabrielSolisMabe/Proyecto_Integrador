@@ -254,7 +254,7 @@ const ioport_pin_cfg_t g_bsp_pin_cfg_data[] = {
 	},
 	{
 		.pin = IOPORT_PORT_09_PIN_01,
-		.pin_cfg = (IOPORT_CFG_DRIVE_MID | IOPORT_CFG_PERIPHERAL_PIN | IOPORT_PERIPHERAL_LCD_GRAPHICS),
+		.pin_cfg = (IOPORT_CFG_DRIVE_HIGH | IOPORT_CFG_PERIPHERAL_PIN | IOPORT_PERIPHERAL_LCD_GRAPHICS),
 	},
 	{
 		.pin = IOPORT_PORT_09_PIN_05,
@@ -266,7 +266,7 @@ const ioport_pin_cfg_t g_bsp_pin_cfg_data[] = {
 	},
 	{
 		.pin = IOPORT_PORT_09_PIN_07,
-		.pin_cfg = (IOPORT_CFG_DRIVE_MID | IOPORT_CFG_PERIPHERAL_PIN | IOPORT_PERIPHERAL_LCD_GRAPHICS),
+		.pin_cfg = (IOPORT_CFG_DRIVE_HIGH | IOPORT_CFG_PERIPHERAL_PIN | IOPORT_PERIPHERAL_LCD_GRAPHICS),
 	},
 	{
 		.pin = IOPORT_PORT_09_PIN_08,

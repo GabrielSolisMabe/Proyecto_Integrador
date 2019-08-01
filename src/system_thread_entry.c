@@ -14,7 +14,7 @@ void system_thread_entry(void){
         //g_ioport.p_api->pinWrite(IOPORT_PORT_01_PIN_14, IOPORT_LEVEL_HIGH); //Pin used to check algorithm time
         u1Pin = !u1Pin; g_ioport.p_api->pinWrite(IOPORT_PORT_01_PIN_14, u1Pin); //Pin used to check the sample time
         SR_Fault_handle();
-        SR_Toggling_LED(); // Red LED at 1 Hz: working correctly, Red LED 10 Hz: There is a Motor Fault
+        SR_Blinking_LED(); // Red LED at 1 Hz: working correctly, Red LED 10 Hz: There is a Motor Fault
         SR_Motor_Control();
         SError = tx_queue_flush(&Message_Queue); //Clean Queue to send the latest data
         SError = tx_queue_send(&Message_Queue, au16Send_DataToLCD, TX_NO_WAIT);// send data to LCD Thread
@@ -97,7 +97,7 @@ void SR_Motor_Control(void){
     static uint16_t lu16Ctrl_Out, lu16RPM_Filtered;
     static int16_t li16Error;
 
-    u16RPM_SP= (uint16_t)((FN_u16Read_RPM_SP() * 3000)/982); // Convert data from ADC_10Bits(0-982) to rpm (0-3000)
+    u16RPM_SP = FN_u16Read_RPM_SP();
 
     u16RPM = (uint16_t)(15 * u16Frec_Sensor_op2); // Conversion from Frec to RPM (Frec*60/4)
 
@@ -149,7 +149,7 @@ uint16_t FN_u16PI_Control(int16_t li16Error){
 
 uint16_t FN_u16Read_RPM_SP(void){
 
-    static uint16_t lu16ADC_Data, alu16ADC_Data[2];
+    static uint16_t lu16ADC_Data, alu16ADC_Data[2], lu16RPM_SP;
 
     SError = g_adc0.p_api->read(g_adc0.p_ctrl, ADC_REG_CHANNEL_0, &lu16ADC_Data);
 
@@ -157,7 +157,9 @@ uint16_t FN_u16Read_RPM_SP(void){
     alu16ADC_Data[1] = alu16ADC_Data[0];
     alu16ADC_Data[0] = lu16ADC_Data;
 
-    return lu16ADC_Data;
+    lu16RPM_SP = (uint16_t)((lu16ADC_Data * 3000)/982); // Convert data from ADC_10Bits(0-982) to rpm (0-3000)
+
+    return lu16RPM_SP;
 }
 
 uint16_t FN_u16Filter(uint16_t lu16Value){
@@ -225,7 +227,7 @@ void SR_Fault_handle(void){
 
 }
 
-void SR_Toggling_LED(void){
+void SR_Blinking_LED(void){
     static ioport_level_t lu1LED=0;
     static uint8_t lu8Ts_Counter = 1;
 

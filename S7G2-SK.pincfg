@@ -229,9 +229,6 @@
   <v1:configSetting configurationId="p908" altId="p908.glcdc0.lcd_data14">
     <v1:connectionSetting altId="glcdc0.lcd_data14.p908"/>
   </v1:configSetting>
-  <v1:configSetting configurationId="p907" altId="p907.glcdc0.lcd_data13">
-    <v1:connectionSetting altId="glcdc0.lcd_data13.p907"/>
-  </v1:configSetting>
   <v1:configSetting configurationId="p615.gpio_drivecapacity" altId="p615.gpio_speed.gpio_speed_medium"/>
   <v1:configSetting configurationId="usbhs0.mode" altId="usbhs0.mode.custom"/>
   <v1:configSetting configurationId="p413.gpio_mode" altId="p413.gpio_mode.gpio_mode_out.low"/>
@@ -264,7 +261,6 @@
     <v1:connectionSetting altId="glcdc0.lcd_data00.p804"/>
   </v1:configSetting>
   <v1:configSetting configurationId="p607.gpio_mode" altId="p607.gpio_mode.gpio_mode_peripheral"/>
-  <v1:configSetting configurationId="p907.gpio_mode" altId="p907.gpio_mode.gpio_mode_peripheral"/>
   <v1:configSetting configurationId="can0.mode" altId="can0.mode.disabled"/>
   <v1:configSetting configurationId="p407.gpio_mode" altId="p407.gpio_mode.gpio_mode_peripheral"/>
   <v1:configSetting configurationId="p507.gpio_mode" altId="p507.gpio_mode.gpio_mode_in"/>
@@ -273,10 +269,9 @@
   <v1:configSetting configurationId="p307.gpio_mode" altId="p307.gpio_mode.gpio_mode_out.low"/>
   <v1:configSetting configurationId="p107.gpio_mode" altId="p107.gpio_mode.gpio_mode_out.low"/>
   <v1:configSetting configurationId="pa01.gpio_drivecapacity" altId="pa01.gpio_speed.gpio_speed_medium"/>
-  <v1:configSetting configurationId="p907.gpio_drivecapacity" altId="p907.gpio_speed.gpio_speed_medium"/>
   <v1:configSetting configurationId="usbfs0.mode" altId="usbfs0.mode.custom"/>
   <v1:configSetting configurationId="p309.gpio_mode" altId="p309.gpio_mode.gpio_mode_out.low"/>
-  <v1:configSetting configurationId="p901.gpio_drivecapacity" altId="p901.gpio_speed.gpio_speed_medium"/>
+  <v1:configSetting configurationId="p901.gpio_drivecapacity" altId="p901.gpio_speed.gpio_speed_high"/>
   <v1:configSetting configurationId="p314.gpio_mode" altId="p314.gpio_mode.gpio_mode_peripheral"/>
   <v1:configSetting configurationId="p615" altId="p615.glcdc0.lcd_data10">
     <v1:connectionSetting altId="glcdc0.lcd_data10.p615"/>
@@ -457,7 +452,6 @@
   <v1:propertySetting propertyId="p906.symbolic_name" value="GLCD_Controller__Pin_Option_B_LCD_DATA12_B"/>
   <v1:propertySetting propertyId="p601.symbolic_name" value="GPIO9"/>
   <v1:propertySetting propertyId="pa00.symbolic_name" value="GLCD_Controller__Pin_Option_B_LCD_DATA05_B"/>
-  <v1:propertySetting propertyId="p901.symbolic_name" value="GLCD_Controller__Pin_Option_B_LCD_DATA15_B"/>
   <v1:propertySetting propertyId="p400.symbolic_name" value="GPIO10"/>
   <v1:propertySetting propertyId="p606.symbolic_name" value="GLCD_Controller__Pin_Option_B_LCD_DATA03_B"/>
   <v1:propertySetting propertyId="p800.symbolic_name" value="GPIO13"/>
@@ -497,7 +491,6 @@
   <v1:propertySetting propertyId="p315.symbolic_name" value="GLCD_Controller__Pin_Option_B_LCD_TCON0_B"/>
   <v1:propertySetting propertyId="p615.symbolic_name" value="GLCD_Controller__Pin_Option_B_LCD_DATA10_B"/>
   <v1:propertySetting propertyId="p307.symbolic_name" value="GPIO36"/>
-  <v1:propertySetting propertyId="p907.symbolic_name" value="GLCD_Controller__Pin_Option_B_LCD_DATA13_B"/>
   <v1:propertySetting propertyId="p804.symbolic_name" value="GLCD_Controller__Pin_Option_B_LCD_DATA00_B"/>
   <v1:propertySetting propertyId="p806.symbolic_name" value="GPIO30"/>
   <v1:propertySetting propertyId="p308.symbolic_name" value="GPIO35"/>
@@ -572,4 +565,11 @@
   <v1:configSetting configurationId="p412.gpio_drivecapacity" altId="p412.gpio_speed.gpio_speed_medium"/>
   <v1:configSetting configurationId="p412" altId="p412.output.low"/>
   <v1:configSetting configurationId="p411.gpio_pupd" altId="p411.gpio_pupd.gpio_pupd_ip_up"/>
+  <v1:configSetting configurationId="glcdc0.lcd_data17" altId="glcdc0.lcd_data17.none"/>
+  <v1:configSetting configurationId="glcdc0.lcd_data16" altId="glcdc0.lcd_data16.none"/>
+  <v1:configSetting configurationId="p907.gpio_mode" altId="p907.gpio_mode.gpio_mode_peripheral"/>
+  <v1:configSetting configurationId="p907.gpio_drivecapacity" altId="p907.gpio_speed.gpio_speed_high"/>
+  <v1:configSetting configurationId="p907" altId="p907.glcdc0.lcd_data13">
+    <v1:connectionSetting altId="glcdc0.lcd_data13.p907"/>
+  </v1:configSetting>
 </v1:pinSettings>

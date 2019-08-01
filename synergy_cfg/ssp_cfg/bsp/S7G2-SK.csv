@@ -531,12 +531,12 @@ SDHI1: DAT7"
 "P806","172","GPIO","GPIO30","Medium","","Output mode (Initial Low)","CMOS","None","GLCDC0: LCD_EXTCLK"
 "P900","58","GLCDC0_LCD_CLK","GLCD_Controller__Pin_Option_B_LCD_CLK_B","High","","Peripheral mode","CMOS","None","BUS0: A23
 GLCDC0: LCD_CLK"
-"P901","59","GLCDC0_LCD_DATA15","GLCD_Controller__Pin_Option_B_LCD_DATA15_B","Medium","","Peripheral mode","CMOS","None","GLCDC0: LCD_DATA15"
+"P901","59","GLCDC0_LCD_DATA15","","High","","Peripheral mode","CMOS","None","GLCDC0: LCD_DATA15"
 "P905","73","GLCDC0_LCD_DATA11","GLCD_Controller__Pin_Option_B_LCD_DATA11_B","Medium","","Peripheral mode","CMOS","None","BUS0: CS4
 GLCDC0: LCD_DATA11"
 "P906","72","GLCDC0_LCD_DATA12","GLCD_Controller__Pin_Option_B_LCD_DATA12_B","Medium","","Peripheral mode","CMOS","None","BUS0: CS5
 GLCDC0: LCD_DATA12"
-"P907","71","GLCDC0_LCD_DATA13","GLCD_Controller__Pin_Option_B_LCD_DATA13_B","Medium","","Peripheral mode","CMOS","None","BUS0: CS6
+"P907","71","GLCDC0_LCD_DATA13","","High","","Peripheral mode","CMOS","None","BUS0: CS6
 GLCDC0: LCD_DATA13"
 "P908","70","GLCDC0_LCD_DATA14","GLCD_Controller__Pin_Option_B_LCD_DATA14_B","Medium","","Peripheral mode","CMOS","None","BUS0: CS7
 GLCDC0: LCD_DATA14"
