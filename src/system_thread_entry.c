@@ -13,9 +13,10 @@ void system_thread_entry(void){
     {
         //g_ioport.p_api->pinWrite(IOPORT_PORT_01_PIN_14, IOPORT_LEVEL_HIGH); //Pin used to check algorithm time
         u1Pin = !u1Pin; g_ioport.p_api->pinWrite(IOPORT_PORT_01_PIN_14, u1Pin); //Pin used to check the sample time
-        SR_Fault_handle();
+        SR_Fault_handle(); //Check if there is Fault, if not, check the switches status.
         SR_Blinking_LED(); // Red LED at 1 Hz: working correctly, Red LED 10 Hz: There is a Motor Fault
-        SR_Motor_Control();
+        if(1 == u8Mot_status)
+            SR_Motor_Control();
         SError = tx_queue_flush(&Message_Queue); //Clean Queue to send the latest data
         SError = tx_queue_send(&Message_Queue, au16Send_DataToLCD, TX_NO_WAIT);// send data to LCD Thread
         //g_ioport.p_api->pinWrite(IOPORT_PORT_01_PIN_14, IOPORT_LEVEL_LOW); //Pin used to check algorithm time
@@ -29,6 +30,7 @@ void system_thread_entry(void){
         SR_Error_handle();
     }
 }
+
 
 
 void SR_Conf_System(void)
@@ -66,16 +68,15 @@ void SR_Conf_System(void)
 }
 
 void external_irq5_callback(external_irq_callback_args_t *p_args){
-    static uint32_t lu32Counts = 0, alu32Counts_avg[4]={0};
+    static uint32_t lu32Counts = 0, alu32Counts_avg[3]={0};
 
     SSP_PARAMETER_NOT_USED(p_args);
     SError = g_timer0.p_api->counterGet(g_timer0.p_ctrl, &lu32Counts); // read the period clocks
     SError = g_timer0.p_api->reset(g_timer0.p_ctrl); // restart the Timer for a new period measurement
-    alu32Counts_avg[0] = (uint32_t)((lu32Counts + alu32Counts_avg[1] + alu32Counts_avg[2] + alu32Counts_avg[3])/4); // Counts average of the last 4 measurements
+    lu32Counts = (uint32_t)((lu32Counts + alu32Counts_avg[0] + alu32Counts_avg[1] + alu32Counts_avg[2])/4); // Average of the last 4 measurements
     u16Frec_Sensor_op1 = (uint16_t)(FREC_CLK_TIMER/alu32Counts_avg[0]); // conversion of time to frec
-    alu32Counts_avg[3] = alu32Counts_avg[2]; //Update previous values
-    alu32Counts_avg[2] = alu32Counts_avg[1];
-    alu32Counts_avg[1] = lu32Counts;
+    alu32Counts_avg[2] = alu32Counts_avg[1]; //Update previous values
+    alu32Counts_avg[1] = alu32Counts_avg[0];
     u8Pulses++;
 }
 
@@ -113,7 +114,7 @@ void SR_Motor_Control(void){
 
     au16Send_DataToLCD[0] = lu16Ctrl_Out; //Duty Cycle to be sent to LCD_Thread
 
-    au16Send_DataToLCD[1] = lu16RPM_Filtered;                //RPM to be sent to LCD_Thread
+    au16Send_DataToLCD[1] = lu16RPM_Filtered; //RPM to be sent to LCD_Thread
 }
 
 uint16_t FN_u16PI_Control(int16_t li16Error){
@@ -204,6 +205,8 @@ void FN_Enable_Motor(bool lu1Status){
         SError = g_ioport.p_api->pinWrite(IOPORT_PORT_06_PIN_00, LED_OFF);
         SError = g_ioport.p_api->pinWrite(IOPORT_PORT_04_PIN_12, MOTOR_OFF); //Disable Motor
         u8Mot_status=0;
+        au16Send_DataToLCD[0] = 0; // To send 0 duty cycle
+        au16Send_DataToLCD[1] = 0; // To send 0 RPM
     }
 }
 
@@ -248,7 +251,7 @@ void wdt0_callback(wdt_callback_args_t * p_args){
 
 void SR_Error_handle(void)
 {
-    if(SSP_SUCCESS != SError)
+    if(SSP_SUCCESS != SError) // if There is any error turn on all LEDs
     {
         SError = g_ioport.p_api->pinWrite(IOPORT_PORT_06_PIN_00, LED_ON);
         SError = g_ioport.p_api->pinWrite(IOPORT_PORT_06_PIN_01, LED_ON);
