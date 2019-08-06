@@ -9,8 +9,7 @@ void system_thread_entry(void){
     SR_Conf_System();
 
 
-    while(1)
-    {
+    while(1){
         //g_ioport.p_api->pinWrite(IOPORT_PORT_01_PIN_14, IOPORT_LEVEL_HIGH); //Pin used to check algorithm time
         u1Pin = !u1Pin; g_ioport.p_api->pinWrite(IOPORT_PORT_01_PIN_14, u1Pin); //Pin used to check the sample time
         SR_Fault_handle(); //Check if there is Fault, if not, check the switches status.
@@ -33,8 +32,7 @@ void system_thread_entry(void){
 
 
 
-void SR_Conf_System(void)
-{
+void SR_Conf_System(void){
 
     /******   CONFIGURING THE ADC    ******/
     SError = g_adc0.p_api->open(g_adc0.p_ctrl, g_adc0.p_cfg);
@@ -127,13 +125,13 @@ uint16_t FN_u16PI_Control(int16_t li16Error){
     Where: Ts = sample time, Integr_Error_n1= Error integral accumulated
      */
     static int16_t li16Ctrl_Out, li16Integr_Error, li16Integr_Error_n1 = 0;
-    static uint8_t u8Ts_Inv = 10;
+    static uint8_t lu8Ts_Inv = 10;
 
     li16Integr_Error = (int16_t)((li16Error/u8Ki) + li16Integr_Error_n1);
 
     li16Integr_Error_n1 = li16Integr_Error;
 
-    li16Integr_Error = (int16_t)(li16Integr_Error / u8Ts_Inv);// Integral multiplied x 0.1 ms (Sample time)
+    li16Integr_Error = (int16_t)(li16Integr_Error / lu8Ts_Inv);// Integral multiplied x 0.1 ms (Sample time)
 
     if(li16Integr_Error > 100) li16Integr_Error = 100;
 
