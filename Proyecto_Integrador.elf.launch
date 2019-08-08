@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <launchConfiguration type="com.renesas.cdt.launch.dsf.gdbremote.launchConfigurationType">
-<stringAttribute key="com.renesas.cdt.core.imageFileName" value="${workspace_loc:\New_testing_LCD\Debug/New_testing_LCD.elf}"/>
+<stringAttribute key="com.renesas.cdt.core.imageFileName" value="${workspace_loc:\Proyecto_Integrador\Debug/Proyecto_Integrador.elf}"/>
 <stringAttribute key="com.renesas.cdt.core.initCommands" value=""/>
 <stringAttribute key="com.renesas.cdt.core.ipAddress" value="localhost"/>
 <stringAttribute key="com.renesas.cdt.core.jtagDevice" value="J-Link ARM"/>
@@ -23,7 +23,7 @@
 <stringAttribute key="com.renesas.cdt.core.stopAt" value="main"/>
 <stringAttribute key="com.renesas.cdt.core.targetDevice" value="R7FS7G27H"/>
 <booleanAttribute key="com.renesas.cdt.core.useRemoteTarget" value="true"/>
-<stringAttribute key="com.renesas.cdt.debug.ioview.dsf.registerSelection0" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#13;&#10;&lt;selectedRegisterList ioFilePath=&quot;C:\Renesas\e2_studio\DebugComp\Synergy\Iofiles\R7FS7G27H.sfrx&quot;/&gt;&#13;&#10;"/>
+<stringAttribute key="com.renesas.cdt.debug.ioview.dsf.registerSelection0" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#13;&#10;&lt;selectedRegisterList ioFilePath=&quot;C:\Renesas\e2_studio740\DebugComp\Synergy\Iofiles\R7FS7G27H.sfrx&quot;/&gt;&#13;&#10;"/>
 <stringAttribute key="com.renesas.cdt.launch.dsf.IO_MAP" value="${support_area_loc}"/>
 <booleanAttribute key="com.renesas.cdt.launch.dsf.USE_DEFAULT_IO_MAP" value="true"/>
 <stringAttribute key="com.renesas.cdt.launch.dsf.launchSeqType" value="com.renesas.cdt.launch.dsf.launchSequence.e2GdbServer"/>
@@ -53,8 +53,8 @@
 <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.useProjBinaryForSymbols" value="true"/>
 <stringAttribute key="org.eclipse.cdt.dsf.gdb.DEBUG_NAME" value="arm-none-eabi-gdb"/>
 <booleanAttribute key="org.eclipse.cdt.dsf.gdb.NON_STOP" value="true"/>
-<stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="Debug/New_testing_LCD.elf"/>
-<stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="New_testing_LCD"/>
+<stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="Debug/Proyecto_Integrador.elf"/>
+<stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="Proyecto_Integrador"/>
 <stringAttribute key="org.eclipse.dsf.launch.MEMORY_BLOCKS" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#13;&#10;&lt;memoryBlockExpressionList context=&quot;reserved-for-future-use&quot;/&gt;&#13;&#10;"/>
 <stringAttribute key="process_factory_id" value="org.eclipse.cdt.dsf.gdb.GdbProcessFactory"/>
 </launchConfiguration>

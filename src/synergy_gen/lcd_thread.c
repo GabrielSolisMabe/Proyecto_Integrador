@@ -116,7 +116,7 @@ const spi_cfg_t g_spi_lcdc_cfg =
 #endif
 #undef SYNERGY_NOT_DEFINED	
   .p_callback = g_lcd_spi_callback,
-  .p_context = (void *) &g_spi_lcdc, .rxi_ipl = (2), .txi_ipl = (2), .tei_ipl = (2), .eri_ipl = (2), .p_extend =
+  .p_context = (void *) &g_spi_lcdc, .rxi_ipl = (3), .txi_ipl = (3), .tei_ipl = (3), .eri_ipl = (3), .p_extend =
           &g_spi_lcdc_cfg_extend, };
 /* Instance structure to use this module. */
 const spi_instance_t g_spi_lcdc =

@@ -219,10 +219,10 @@
       <property id="module.driver.spi.bitrate" value="100000"/>
       <property id="module.driver.spi.bitrate_modulation" value="module.driver.spi.bitrate_modulation.false"/>
       <property id="module.driver.spi.p_callback" value="g_lcd_spi_callback"/>
-      <property id="module.driver.spi.rxi_ipl" value="board.icu.common.irq.priority2"/>
-      <property id="module.driver.spi.txi_ipl" value="board.icu.common.irq.priority2"/>
-      <property id="module.driver.spi.tei_ipl" value="board.icu.common.irq.priority2"/>
-      <property id="module.driver.spi.eri_ipl" value="board.icu.common.irq.priority2"/>
+      <property id="module.driver.spi.rxi_ipl" value="board.icu.common.irq.priority3"/>
+      <property id="module.driver.spi.txi_ipl" value="board.icu.common.irq.priority3"/>
+      <property id="module.driver.spi.tei_ipl" value="board.icu.common.irq.priority3"/>
+      <property id="module.driver.spi.eri_ipl" value="board.icu.common.irq.priority3"/>
     </module>
     <module id="module.driver.transfer_on_dtc.1476036979">
       <property id="module.driver.transfer.name" value="g_transfer0"/>
@@ -581,7 +581,7 @@
       <property id="module.driver.external_irq.pclk_div" value="module.driver.external_irq.pclk_div.pclk_div_by_64"/>
       <property id="module.driver.external_irq.interrupt_enable" value="module.driver.external_irq.interrupt_enable.true"/>
       <property id="module.driver.external_irq.p_callback" value="external_irq5_callback"/>
-      <property id="module.driver.external_irq.irq_ipl" value="board.icu.common.irq.priority6"/>
+      <property id="module.driver.external_irq.irq_ipl" value="board.icu.common.irq.priority1"/>
     </module>
     <module id="module.driver.timer_on_gpt.140911849">
       <property id="module.driver.timer.name" value="g_timer0"/>
@@ -615,7 +615,7 @@
       <property id="module.driver.timer.gtiocb_output_enabled" value="module.driver.timer.gtiocb_output_enabled.false"/>
       <property id="module.driver.timer.gtiocb_stop_level" value="module.driver.timer.gtiocb_stop_level.pin_level_low"/>
       <property id="module.driver.timer.p_callback" value="timer1_callback"/>
-      <property id="module.driver.timer.irq_ipl" value="board.icu.common.irq.priority7"/>
+      <property id="module.driver.timer.irq_ipl" value="board.icu.common.irq.priority2"/>
     </module>
     <module id="module.driver.watchdog_on_wdt.1911876521">
       <property id="module.driver.watchdog.name" value="g_wdt0"/>
@@ -669,7 +669,7 @@
       <property id="_symbol" value="system_thread"/>
       <property id="rtos.threadx.thread.name" value="System Thread"/>
       <property id="rtos.threadx.thread.stack" value="1024"/>
-      <property id="rtos.threadx.thread.priority" value="1"/>
+      <property id="rtos.threadx.thread.priority" value="0"/>
       <property id="rtos.threadx.thread.autostart" value="rtos.threadx.thread.autostart.enabled"/>
       <property id="rtos.threadx.thread.timeslice" value="1"/>
       <stack module="module.driver.adc_on_adc.159521040"/>

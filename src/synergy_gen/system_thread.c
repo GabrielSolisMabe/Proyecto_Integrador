@@ -23,7 +23,7 @@ static const wdt_cfg_t g_wdt0_cfg =
 /* Instance structure to use this module. */
 const wdt_instance_t g_wdt0 =
 { .p_ctrl = &g_wdt0_ctrl, .p_cfg = &g_wdt0_cfg, .p_api = &g_wdt_on_wdt };
-#if (7) != BSP_IRQ_DISABLED
+#if (2) != BSP_IRQ_DISABLED
 #if !defined(SSP_SUPPRESS_ISR_g_timer1) && !defined(SSP_SUPPRESS_ISR_GPT1)
 SSP_VECTOR_DEFINE_CHAN(gpt_counter_overflow_isr, GPT, COUNTER_OVERFLOW, 1);
 #endif
@@ -46,7 +46,7 @@ static const timer_cfg_t g_timer1_cfg =
   .p_callback = timer1_callback,
   .p_context = &g_timer1,
   .p_extend = &g_timer1_extend,
-  .irq_ipl = (7), };
+  .irq_ipl = (2), };
 /* Instance structure to use this module. */
 const timer_instance_t g_timer1 =
 { .p_ctrl = &g_timer1_ctrl, .p_cfg = &g_timer1_cfg, .p_api = &g_timer_on_gpt };
@@ -70,7 +70,7 @@ static const timer_cfg_t g_timer0_cfg =
 /* Instance structure to use this module. */
 const timer_instance_t g_timer0 =
 { .p_ctrl = &g_timer0_ctrl, .p_cfg = &g_timer0_cfg, .p_api = &g_timer_on_gpt };
-#if (6) != BSP_IRQ_DISABLED
+#if (1) != BSP_IRQ_DISABLED
 #if !defined(SSP_SUPPRESS_ISR_g_external_irq5) && !defined(SSP_SUPPRESS_ISR_ICU5)
 SSP_VECTOR_DEFINE( icu_irq_isr, ICU, IRQ5);
 #endif
@@ -85,7 +85,7 @@ static const external_irq_cfg_t g_external_irq5_cfg =
   .p_callback = external_irq5_callback,
   .p_context = &g_external_irq5,
   .p_extend = NULL,
-  .irq_ipl = (6), };
+  .irq_ipl = (1), };
 /* Instance structure to use this module. */
 const external_irq_instance_t g_external_irq5 =
 { .p_ctrl = &g_external_irq5_ctrl, .p_cfg = &g_external_irq5_cfg, .p_api = &g_external_irq_on_icu };
@@ -180,7 +180,7 @@ void system_thread_create(void)
 
     UINT err;
     err = tx_thread_create (&system_thread, (CHAR *) "System Thread", system_thread_func, (ULONG) NULL,
-                            &system_thread_stack, 1024, 1, 1, 1, TX_AUTO_START);
+                            &system_thread_stack, 1024, 0, 0, 1, TX_AUTO_START);
     if (TX_SUCCESS != err)
     {
         tx_startup_err_callback (&system_thread, 0);

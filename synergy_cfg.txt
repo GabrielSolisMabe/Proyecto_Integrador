@@ -108,7 +108,7 @@ Synergy Configuration
       P212 24 CGC0_EXTAL - - None "Peripheral mode" CMOS None "AGT1: AGTEE; CGC0: EXTAL; IRQ0: IRQ03; POEG3: GTETRG; SCI1: RXD_MISO; SCI1: SCL" 
       P213 23 CGC0_XTAL - - None "Peripheral mode" CMOS None "ADC1: ADTRG; CGC0: XTAL; IRQ0: IRQ02; POEG2: GTETRG; SCI1: SDA; SCI1: TXD_MOSI" 
       P300 88 DEBUG0_TCK JTAG_TCK Low - "Peripheral mode" CMOS None "DEBUG0: SWCLK; DEBUG0: TCK; GPT0: GTIOCA; SPI1: SSL1" 
-      P301 87 GLCDC0_LCD_DATA13 - High None "Peripheral mode" CMOS None "BUS0: A06; GLCDC0: LCD_DATA13; GPT4: GTIOCB; IRQ0: IRQ06; OPS0: GTOULO; SCI2: RXD_MISO; SCI2: SCL; SPI1: SSL2" 
+      P301 87 - - - - Disabled - - "BUS0: A06; GLCDC0: LCD_DATA13; GPT4: GTIOCB; IRQ0: IRQ06; OPS0: GTOULO; SCI2: RXD_MISO; SCI2: SCL; SPI1: SSL2" 
       P302 86 - - - - Disabled - - "BUS0: A07; GLCDC0: LCD_DATA14; GPT4: GTIOCA; IRQ0: IRQ05; OPS0: GTOUUP; SCI2: SDA; SCI2: TXD_MOSI; SPI1: SSL3" 
       P303 85 GPIO GPIO39 - - "Input mode" - None "BUS0: A08; GLCDC0: LCD_DATA15; GPT7: GTIOCB" 
       P304 82 - - - - Disabled - - "BUS0: A09; GLCDC0: LCD_DATA16; GPT7: GTIOCA; IRQ0: IRQ09; SCI6: RXD_MISO; SCI6: SCL" 
@@ -185,7 +185,7 @@ Synergy Configuration
       P901 59 GLCDC0_LCD_DATA15 - High - "Peripheral mode" CMOS None "GLCDC0: LCD_DATA15" 
       P905 73 GLCDC0_LCD_DATA11 GLCD_Controller__Pin_Option_B_LCD_DATA11_B Medium - "Peripheral mode" CMOS None "BUS0: CS4; GLCDC0: LCD_DATA11" 
       P906 72 GLCDC0_LCD_DATA12 GLCD_Controller__Pin_Option_B_LCD_DATA12_B Medium - "Peripheral mode" CMOS None "BUS0: CS5; GLCDC0: LCD_DATA12" 
-      P907 71 - - - - Disabled - - "BUS0: CS6; GLCDC0: LCD_DATA13" 
+      P907 71 GLCDC0_LCD_DATA13 - High - "Peripheral mode" CMOS None "BUS0: CS6; GLCDC0: LCD_DATA13" 
       P908 70 GLCDC0_LCD_DATA14 GLCD_Controller__Pin_Option_B_LCD_DATA14_B Medium - "Peripheral mode" CMOS None "BUS0: CS7; GLCDC0: LCD_DATA14" 
       PA00 114 GLCDC0_LCD_DATA05 GLCD_Controller__Pin_Option_B_LCD_DATA05_B Medium - "Peripheral mode" CMOS None "GLCDC0: LCD_DATA05" 
       PA01 113 GLCDC0_LCD_DATA06 GLCD_Controller__Pin_Option_B_LCD_DATA06_B Medium - "Peripheral mode" CMOS None "GLCDC0: LCD_DATA06" 
@@ -334,10 +334,10 @@ Synergy Configuration
       Bitrate: 100000
       Bit Rate Modulation Enable: Disable
       Callback: g_lcd_spi_callback
-      Receive Interrupt Priority: Priority 2
-      Transmit Interrupt Priority: Priority 2
-      Transmit End Interrupt Priority: Priority 2
-      Error Interrupt Priority: Priority 2
+      Receive Interrupt Priority: Priority 3
+      Transmit Interrupt Priority: Priority 3
+      Transmit End Interrupt Priority: Priority 3
+      Error Interrupt Priority: Priority 3
       
       Instance "g_transfer0 Transfer Driver on r_dtc SCI0 TXI"
         Name: g_transfer0
@@ -597,7 +597,7 @@ Synergy Configuration
     Symbol: system_thread
     Name: System Thread
     Stack size (bytes): 1024
-    Priority: 1
+    Priority: 0
     Auto start: Enabled
     Time slicing interval (ticks): 1
     
@@ -709,7 +709,7 @@ Synergy Configuration
       Digital Filtering Sample Clock (Only valid when Digital Filtering is Enabled): PCLK / 64
       Interrupt enabled after initialization: True
       Callback: external_irq5_callback
-      Pin Interrupt Priority: Priority 6
+      Pin Interrupt Priority: Priority 1
       
     Instance "g_timer0 Timer Driver on r_gpt"
       Name: g_timer0
@@ -743,7 +743,7 @@ Synergy Configuration
       GTIOCB Output Enabled: False
       GTIOCB Stop Level: Pin Level Low
       Callback: timer1_callback
-      Overflow Interrupt Priority: Priority 7
+      Overflow Interrupt Priority: Priority 2
       
     Instance "g_wdt0 Watchdog Driver on r_wdt"
       Name: g_wdt0

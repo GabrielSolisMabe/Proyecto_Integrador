@@ -11,22 +11,23 @@ void system_thread_entry(void){
 
     while(1){
         //g_ioport.p_api->pinWrite(IOPORT_PORT_01_PIN_14, IOPORT_LEVEL_HIGH); //Pin used to check algorithm time
-        u1Pin = !u1Pin; g_ioport.p_api->pinWrite(IOPORT_PORT_01_PIN_14, u1Pin); //Pin used to check the sample time
+        //u1Pin = !u1Pin; g_ioport.p_api->pinWrite(IOPORT_PORT_01_PIN_14, u1Pin); //Pin used to check the sample time
         SR_Fault_handle(); //Check if there is Fault, if not, check the switches status.
         SR_Blinking_LED(); // Red LED at 1 Hz: working correctly, Red LED 10 Hz: There is a Motor Fault
         if(1 == u8Mot_status)
             SR_Motor_Control();
         SError = tx_queue_flush(&Message_Queue); //Clean Queue to send the latest data
         SError = tx_queue_send(&Message_Queue, au16Send_DataToLCD, TX_NO_WAIT);// send data to LCD Thread
-        //g_ioport.p_api->pinWrite(IOPORT_PORT_01_PIN_14, IOPORT_LEVEL_LOW); //Pin used to check algorithm time
-        SError = tx_thread_sleep(10);
 
         /****** Refresh IWDT ******/
-        SError = g_wdt0.p_api->counterGet(g_wdt0.p_ctrl, &u32WDT_Counter); //Counter don't working, it seems like disabled by the OS
+        //SError = g_wdt0.p_api->counterGet(g_wdt0.p_ctrl, &u32WDT_Counter); //Counter don't working, it seems like disabled by the OS
         SError = g_wdt0.p_api->refresh(g_wdt0.p_ctrl);
-        SError = g_wdt0.p_api->statusGet(g_wdt0.p_ctrl, &u1WDT_Status);
+        //SError = g_wdt0.p_api->statusGet(g_wdt0.p_ctrl, &u1WDT_Status);
 
-        SR_Error_handle();
+        SR_Error_handle(); //Check that the APIs don't return error
+
+        //g_ioport.p_api->pinWrite(IOPORT_PORT_01_PIN_14, IOPORT_LEVEL_LOW); //Pin used to check algorithm time
+        SError = tx_thread_sleep(10);
     }
 }
 
@@ -93,16 +94,16 @@ void timer1_callback(timer_callback_args_t * p_args){
 
 void SR_Motor_Control(void){
 
-    static uint16_t lu16Ctrl_Out, lu16RPM_Filtered;
+    static uint16_t lu16Ctrl_Out;
     static int16_t li16Error;
 
     u16RPM_SP = FN_u16Read_RPM_SP();
 
     u16RPM = (uint16_t)(15 * u16Frec_Sensor_op2); // Conversion from Frec to RPM (Frec*60/4)
 
-    lu16RPM_Filtered = FN_u16Filter(u16RPM);
+    u16RPM_Filtered = FN_u16Filter(u16RPM);
 
-    li16Error = (int16_t)(u16RPM_SP - lu16RPM_Filtered);
+    li16Error = (int16_t)(u16RPM_SP - u16RPM_Filtered);
 
     lu16Ctrl_Out = FN_u16PI_Control(li16Error);
 
@@ -112,7 +113,7 @@ void SR_Motor_Control(void){
 
     au16Send_DataToLCD[0] = lu16Ctrl_Out; //Duty Cycle to be sent to LCD_Thread
 
-    au16Send_DataToLCD[1] = lu16RPM_Filtered; //RPM to be sent to LCD_Thread
+    au16Send_DataToLCD[1] = u16RPM_Filtered; //RPM to be sent to LCD_Thread
 }
 
 uint16_t FN_u16PI_Control(int16_t li16Error){
@@ -251,6 +252,7 @@ void SR_Error_handle(void)
 {
     if(SSP_SUCCESS != SError) // if There is any error turn on all LEDs
     {
+        FN_Enable_Motor(OFF); //Turn OFF the Motor
         SError = g_ioport.p_api->pinWrite(IOPORT_PORT_06_PIN_00, LED_ON);
         SError = g_ioport.p_api->pinWrite(IOPORT_PORT_06_PIN_01, LED_ON);
         SError = g_ioport.p_api->pinWrite(IOPORT_PORT_06_PIN_02, LED_ON);

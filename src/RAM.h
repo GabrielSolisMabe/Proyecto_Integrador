@@ -24,7 +24,7 @@
 
 ssp_err_t SError;
 uint16_t u16PwmPercent=50;
-uint16_t u16Frec_PWM = 1000, u16Frec_Sensor_op1 = 0, u16Frec_Sensor_op2 = 0;
+uint16_t u16Frec_PWM = 1000, u16RPM_Filtered, u16Frec_Sensor_op1 = 0, u16Frec_Sensor_op2 = 0;
 uint8_t u8Pulses = 0;
 ioport_level_t u1Pin=0;
 uint16_t u16RPM_SP = 1000, u16RPM = 0;
