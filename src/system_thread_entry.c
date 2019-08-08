@@ -1,6 +1,6 @@
 #include <system_thread.h>
 #include <RAM.h>
-#include <system.h>
+#include <system_thread_entry.h>
 
 
 void system_thread_entry(void){

@@ -4,6 +4,7 @@
 #include "gui/gui_adc_specifications.h"
 #include "gui/gui_adc_resources.h"
 #include "lcd_setup/lcd.h"
+#include <lcd_thread_entry.h>
 
 #define ERROR_HANDLER_STATUS(a) if (TX_SUCCESS != a && TX_NO_EVENTS != a) while(1)
 #define ERROR_HANDLER_ERR(b) if(SSP_SUCCESS != b) while(1)
@@ -17,10 +18,6 @@ GX_VALUE i16ReceiveBufferRpm;
 ssp_err_t sErr;
 UINT u16Status;
 
-/* Subrutines */
-void SR_Config(void);
-void SR_CreateWidgets(void);
-void SR_UpdateLcd(void);
 
 /* LCD Thread entry function */
 void lcd_thread_entry(void)     {

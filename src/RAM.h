@@ -2,7 +2,7 @@
  * RAM.h
  *
  *  Created on: 30/07/2019
- *      Author: jpjmexip
+ *      Author: A. Pintor
  */
 
 #ifndef RAM_H_

@@ -5,8 +5,8 @@
  *      Author: jpjmexip
  */
 
-#ifndef SYSTEM_H_
-#define SYSTEM_H_
+#ifndef SYSTEM_THREAD_ENTRY_H_
+#define SYSTEM_THREAD_ENTRY_H_
 
 #include <stdbool.h>
 
@@ -21,4 +21,4 @@ void SR_Fault_handle(void);
 void SR_Blinking_LED(void);
 void SR_Error_handle(void);
 
-#endif /* SYSTEM_H_ */
+#endif /* SYSTEM_THREAD_ENTRY_H_ */
