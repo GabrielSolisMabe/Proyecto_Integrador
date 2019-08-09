@@ -103,7 +103,7 @@ void SR_UpdateLcd()     {
 
         //Set the new value to the prompt
         gx_prompt_text_set(&window1.window1_rpm_prompt, lu8TextRpm);
-        gx_prompt_text_set(&window1.window1_rpm_prompt, lu8TextSp);
+        gx_prompt_text_set(&window1.window1_sp_prompt, lu8TextSp);
 
         //Convert data type to the required by the radial bar, and to degrees
         i16ReceiveBuffer360 = (GX_VALUE)((LONG)(au16ReceiveBuffer[0]*-360/100));//SIGNED SHORT [−32,767, +32,767] - UNSIGNED INT 16 [0, 65536]
