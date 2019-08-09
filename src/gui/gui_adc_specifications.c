@@ -6,7 +6,7 @@
 /*  www.expresslogic.com.                                                      */
 /*                                                                             */
 /*  GUIX Studio Revision 5.4.2.9                                               */
-/*  Date (dd.mm.yyyy): 27. 7.2019   Time (hh:mm): 10:53                        */
+/*  Date (dd.mm.yyyy):  9. 8.2019   Time (hh:mm): 10:03                        */
 /*******************************************************************************/
 
 
@@ -68,17 +68,17 @@ GX_WINDOW_PROPERTIES window1_properties =
 {
     GX_PIXELMAP_ID_MAIN_WINDOW               /* wallpaper pixelmap id          */
 };
-GX_PROMPT_PROPERTIES window1_prompt_1_properties =
+GX_PROMPT_PROPERTIES window1_rpm_prompt_properties =
 {
     GX_STRING_ID_STRING_2,                   /* string id                      */
     GX_FONT_ID_PROMPT,                       /* font id                        */
     GX_COLOR_ID_TEXT,                        /* normal text color              */
     GX_COLOR_ID_SELECTED_TEXT                /* selected text color            */
 };
-GX_RADIAL_PROGRESS_BAR_INFO window1_radial_progress_bar_properties =
+GX_RADIAL_PROGRESS_BAR_INFO window1_rpm_radial_properties =
 {
-    128,                                     /* xcenter                        */
-    181,                                     /* ycenter                        */
+    147,                                     /* xcenter                        */
+    150,                                     /* ycenter                        */
     29,                                      /* radius                         */
     -180,                                    /* current val                    */
     90,                                      /* anchor val                     */
@@ -90,10 +90,10 @@ GX_RADIAL_PROGRESS_BAR_INFO window1_radial_progress_bar_properties =
     GX_COLOR_ID_SLIDER_NEEDLE_FILL,          /* normal brush color             */
     GX_COLOR_ID_RED,                         /* selected brush color           */
 };
-GX_RADIAL_PROGRESS_BAR_INFO window1_radial_progress_bar_1_properties =
+GX_RADIAL_PROGRESS_BAR_INFO window1_duty_radial_properties =
 {
-    128,                                     /* xcenter                        */
-    122,                                     /* ycenter                        */
+    67,                                      /* xcenter                        */
+    149,                                     /* ycenter                        */
     22,                                      /* radius                         */
     -180,                                    /* current val                    */
     90,                                      /* anchor val                     */
@@ -105,10 +105,41 @@ GX_RADIAL_PROGRESS_BAR_INFO window1_radial_progress_bar_1_properties =
     GX_COLOR_ID_SLIDER_NEEDLE_FILL,          /* normal brush color             */
     GX_COLOR_ID_GREEN,                       /* selected brush color           */
 };
-
-GX_CONST GX_STUDIO_WIDGET window1_radial_progress_bar_1_define =
+GX_PROMPT_PROPERTIES window1_sp_prompt_properties =
 {
-    "radial_progress_bar_1",
+    GX_STRING_ID_STRING_3,                   /* string id                      */
+    GX_FONT_ID_PROMPT,                       /* font id                        */
+    GX_COLOR_ID_TEXT,                        /* normal text color              */
+    GX_COLOR_ID_SELECTED_TEXT                /* selected text color            */
+};
+
+GX_CONST GX_STUDIO_WIDGET window1_sp_prompt_define =
+{
+    "sp_prompt",
+    GX_TYPE_PROMPT,                          /* widget type                    */
+    GX_ID_NONE,                              /* widget id                      */
+    #if defined(GX_WIDGET_USER_DATA)
+    0,                                       /* user data                      */
+    #endif
+    GX_STYLE_BORDER_NONE|GX_STYLE_TRANSPARENT|GX_STYLE_ENABLED|GX_STYLE_TEXT_CENTER,   /* style flags */
+    GX_STATUS_ACCEPTS_FOCUS,                 /* status flags                   */
+    sizeof(GX_PROMPT),                       /* control block size             */
+    GX_COLOR_ID_WIDGET_FILL,                 /* normal color id                */
+    GX_COLOR_ID_SELECTED_FILL,               /* selected color id              */
+    GX_COLOR_ID_DISABLED_FILL,               /* disabled color id              */
+    gx_studio_prompt_create,                 /* create function                */
+    GX_NULL,                                 /* drawing function override      */
+    GX_NULL,                                 /* event function override        */
+    {122, 187, 165, 216},                    /* widget size                    */
+    GX_NULL,                                 /* no next widget                 */
+    GX_NULL,                                 /* no child widgets               */ 
+    offsetof(WINDOW1_CONTROL_BLOCK, window1_sp_prompt), /* control block       */
+    (void *) &window1_sp_prompt_properties   /* extended properties            */
+};
+
+GX_CONST GX_STUDIO_WIDGET window1_duty_radial_define =
+{
+    "duty_radial",
     GX_TYPE_RADIAL_PROGRESS_BAR,             /* widget type                    */
     GX_ID_NONE,                              /* widget id                      */
     #if defined(GX_WIDGET_USER_DATA)
@@ -123,16 +154,16 @@ GX_CONST GX_STUDIO_WIDGET window1_radial_progress_bar_1_define =
     gx_studio_radial_progress_bar_create,     /* create function               */
     GX_NULL,                                 /* drawing function override      */
     GX_NULL,                                 /* event function override        */
-    {104, 95, 154, 145},                     /* widget size                    */
-    GX_NULL,                                 /* no next widget                 */
+    {42, 124, 92, 174},                      /* widget size                    */
+    &window1_sp_prompt_define,               /* next widget definition         */
     GX_NULL,                                 /* no child widgets               */ 
-    offsetof(WINDOW1_CONTROL_BLOCK, window1_radial_progress_bar_1), /* control block */
-    (void *) &window1_radial_progress_bar_1_properties /* extended properties  */
+    offsetof(WINDOW1_CONTROL_BLOCK, window1_duty_radial), /* control block     */
+    (void *) &window1_duty_radial_properties /* extended properties            */
 };
 
-GX_CONST GX_STUDIO_WIDGET window1_radial_progress_bar_define =
+GX_CONST GX_STUDIO_WIDGET window1_rpm_radial_define =
 {
-    "radial_progress_bar",
+    "rpm_radial",
     GX_TYPE_RADIAL_PROGRESS_BAR,             /* widget type                    */
     GX_ID_NONE,                              /* widget id                      */
     #if defined(GX_WIDGET_USER_DATA)
@@ -147,16 +178,16 @@ GX_CONST GX_STUDIO_WIDGET window1_radial_progress_bar_define =
     gx_studio_radial_progress_bar_create,     /* create function               */
     GX_NULL,                                 /* drawing function override      */
     GX_NULL,                                 /* event function override        */
-    {96, 147, 160, 211},                     /* widget size                    */
-    &window1_radial_progress_bar_1_define,   /* next widget definition         */
+    {115, 118, 179, 182},                    /* widget size                    */
+    &window1_duty_radial_define,             /* next widget definition         */
     GX_NULL,                                 /* no child widgets               */ 
-    offsetof(WINDOW1_CONTROL_BLOCK, window1_radial_progress_bar), /* control block */
-    (void *) &window1_radial_progress_bar_properties /* extended properties    */
+    offsetof(WINDOW1_CONTROL_BLOCK, window1_rpm_radial), /* control block      */
+    (void *) &window1_rpm_radial_properties  /* extended properties            */
 };
 
-GX_CONST GX_STUDIO_WIDGET window1_prompt_1_define =
+GX_CONST GX_STUDIO_WIDGET window1_rpm_prompt_define =
 {
-    "prompt_1",
+    "rpm_prompt",
     GX_TYPE_PROMPT,                          /* widget type                    */
     GX_ID_NONE,                              /* widget id                      */
     #if defined(GX_WIDGET_USER_DATA)
@@ -171,11 +202,11 @@ GX_CONST GX_STUDIO_WIDGET window1_prompt_1_define =
     gx_studio_prompt_create,                 /* create function                */
     GX_NULL,                                 /* drawing function override      */
     GX_NULL,                                 /* event function override        */
-    {107, 167, 150, 196},                    /* widget size                    */
-    &window1_radial_progress_bar_define,     /* next widget definition         */
+    {126, 135, 169, 164},                    /* widget size                    */
+    &window1_rpm_radial_define,              /* next widget definition         */
     GX_NULL,                                 /* no child widgets               */ 
-    offsetof(WINDOW1_CONTROL_BLOCK, window1_prompt_1), /* control block        */
-    (void *) &window1_prompt_1_properties    /* extended properties            */
+    offsetof(WINDOW1_CONTROL_BLOCK, window1_rpm_prompt), /* control block      */
+    (void *) &window1_rpm_prompt_properties  /* extended properties            */
 };
 
 GX_CONST GX_STUDIO_WIDGET window1_define =
@@ -197,7 +228,7 @@ GX_CONST GX_STUDIO_WIDGET window1_define =
     GX_NULL,                                 /* event function override        */
     {0, 0, 255, 319},                        /* widget size                    */
     GX_NULL,                                 /* next widget                    */
-    &window1_prompt_1_define,                /* child widget                   */
+    &window1_rpm_prompt_define,              /* child widget                   */
     0,                                       /* control block                  */
     (void *) &window1_properties             /* extended properties            */
 };

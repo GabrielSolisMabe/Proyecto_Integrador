@@ -94,25 +94,25 @@ void SR_CreateWidgets()     {
 }
 
 void SR_UpdateLcd()     {
-    char lu8Text[8];
+    char lu8TextRpm[8];
+    char lu8TextSp[8];
 
-            //Convert data type to the required by the prompt
-            gx_utility_ltoa((LONG) au16ReceiveBuffer[1], lu8Text, 8);
+        //Convert data type to the required by the prompt
+        gx_utility_ltoa((LONG) au16ReceiveBuffer[1], lu8TextRpm, 8);
+        gx_utility_ltoa((LONG) au16ReceiveBuffer[2], lu8TextSp, 8);
 
-            //Set the new value to the prompt
-            gx_prompt_text_set(&window1.window1_prompt_1, lu8Text);
+        //Set the new value to the prompt
+        gx_prompt_text_set(&window1.window1_rpm_prompt, lu8TextRpm);
+        gx_prompt_text_set(&window1.window1_rpm_prompt, lu8TextSp);
 
-            //Convert data type to the required by the radial bar, and to degrees
-            i16ReceiveBuffer360 = (GX_VALUE)((LONG)(au16ReceiveBuffer[0]*-360/100));//SIGNED SHORT [−32,767, +32,767] - UNSIGNED INT 16 [0, 65536]
-            i16ReceiveBufferRpm = (GX_VALUE)((LONG)(au16ReceiveBuffer[1]*-360/3000));
+        //Convert data type to the required by the radial bar, and to degrees
+        i16ReceiveBuffer360 = (GX_VALUE)((LONG)(au16ReceiveBuffer[0]*-360/100));//SIGNED SHORT [−32,767, +32,767] - UNSIGNED INT 16 [0, 65536]
+        i16ReceiveBufferRpm = (GX_VALUE)((LONG)(au16ReceiveBuffer[1]*-360/3000));
 
-            //Set the value to the radial bar
-            gx_radial_progress_bar_value_set(&window1.window1_radial_progress_bar_1, i16ReceiveBuffer360);
-            gx_radial_progress_bar_value_set(&window1.window1_radial_progress_bar, i16ReceiveBufferRpm);
+        //Set the value to the radial bar
+        gx_radial_progress_bar_value_set(&window1.window1_duty_radial, i16ReceiveBuffer360);
+        gx_radial_progress_bar_value_set(&window1.window1_rpm_radial, i16ReceiveBufferRpm);
 
-            //Refresh widgets
-            /*gx_system_dirty_mark((GX_WIDGET *) &window1.window1_prompt_1);
-            gx_system_dirty_mark((GX_WIDGET *) &window1.window1_radial_progress_bar);
-            gx_system_dirty_mark((GX_WIDGET *) &window1.window1_radial_progress_bar_1);*/
-            gx_system_canvas_refresh();
+        //Refresh widgets
+        gx_system_canvas_refresh();
 }
