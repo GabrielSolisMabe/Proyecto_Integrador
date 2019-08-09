@@ -159,7 +159,9 @@ uint16_t FN_u16Read_RPM_SP(void){
     alu16ADC_Data[1] = alu16ADC_Data[0];
     alu16ADC_Data[0] = lu16ADC_Data;
 
-    lu16RPM_SP = (uint16_t)((lu16ADC_Data * 3000)/982); // Convert data from ADC_10Bits(0-982) to rpm (0-3000)
+    lu16RPM_SP = (uint16_t)((lu16ADC_Data * 3000)/979); // Convert data from ADC_10Bits(0-979) to rpm (0-3000)
+
+    if(lu16RPM_SP>3000)lu16RPM_SP = 3000;
 
     return lu16RPM_SP;
 }
@@ -208,6 +210,7 @@ void FN_Enable_Motor(bool lu1Status){
         u8Mot_status=0;
         au16Send_DataToLCD[0] = 0; // To send 0 duty cycle
         au16Send_DataToLCD[1] = 0; // To send 0 RPM
+        au16Send_DataToLCD[2] = FN_u16Read_RPM_SP(); // To send RPM_SP
     }
 }
 
