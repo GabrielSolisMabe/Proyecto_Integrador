@@ -12,7 +12,7 @@
 GX_WINDOW_ROOT * psWindowRoot = NULL;
 extern GX_CONST GX_STUDIO_WIDGET * gui_adc_widget_table[];
 GX_CONST GX_STUDIO_WIDGET ** ppsStudioWidget = &gui_adc_widget_table[0];//global
-uint16_t au16ReceiveBuffer[2] = {0};
+uint16_t au16ReceiveBuffer[4] = {0};
 GX_VALUE i16ReceiveBuffer360;
 GX_VALUE i16ReceiveBufferRpm;
 ssp_err_t sErr;

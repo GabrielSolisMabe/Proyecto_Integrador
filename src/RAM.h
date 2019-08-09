@@ -30,7 +30,7 @@ ioport_level_t u1Pin=0;
 uint16_t u16RPM_SP = 1000, u16RPM = 0;
 uint8_t u8Kp=64, u8Ki=32; // Gains for T=100ms
 
-uint16_t au16Send_DataToLCD[2] = {0};
+uint16_t au16Send_DataToLCD[4] = {0};
 
 uint8_t u8Mot_status=0;
 uint8_t u8Faults_Counter = 0;

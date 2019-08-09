@@ -681,7 +681,7 @@
       <object id="rtos.threadx.object.queue.56958902">
         <property id="rtos.threadx.object.queue.name" value="MessageQueue"/>
         <property id="rtos.threadx.object.queue.symbol" value="Message_Queue"/>
-        <property id="rtos.threadx.object.queue.msg_size" value="1"/>
+        <property id="rtos.threadx.object.queue.msg_size" value="2"/>
         <property id="rtos.threadx.object.queue.queue_size" value="20"/>
       </object>
     </context>

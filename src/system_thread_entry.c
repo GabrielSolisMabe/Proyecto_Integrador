@@ -114,6 +114,8 @@ void SR_Motor_Control(void){
     au16Send_DataToLCD[0] = lu16Ctrl_Out; //Duty Cycle to be sent to LCD_Thread
 
     au16Send_DataToLCD[1] = u16RPM_Filtered; //RPM to be sent to LCD_Thread
+
+    au16Send_DataToLCD[2] = u16RPM_SP; //RPM_SP to be sent to LCD_Thread
 }
 
 uint16_t FN_u16PI_Control(int16_t li16Error){

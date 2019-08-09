@@ -171,7 +171,7 @@ void system_thread_create(void)
 
     /* Initialize each kernel object. */
     UINT err_Message_Queue;
-    err_Message_Queue = tx_queue_create (&Message_Queue, (CHAR *) "MessageQueue", 1, &queue_memory_Message_Queue,
+    err_Message_Queue = tx_queue_create (&Message_Queue, (CHAR *) "MessageQueue", 2, &queue_memory_Message_Queue,
                                          sizeof(queue_memory_Message_Queue));
     if (TX_SUCCESS != err_Message_Queue)
     {

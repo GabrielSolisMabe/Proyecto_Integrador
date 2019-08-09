@@ -760,7 +760,7 @@ Synergy Configuration
     Object "Message_Queue Queue"
       Name: MessageQueue
       Symbol: Message_Queue
-      Message Size (Words): 1
+      Message Size (Words): 2
       Queue Size (Bytes): 20
       
   Messaging
