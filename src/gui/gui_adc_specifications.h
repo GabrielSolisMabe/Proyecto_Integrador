@@ -6,7 +6,7 @@
 /*  www.expresslogic.com.                                                      */
 /*                                                                             */
 /*  GUIX Studio Revision 5.4.2.9                                               */
-/*  Date (dd.mm.yyyy): 27. 7.2019   Time (hh:mm): 10:53                        */
+/*  Date (dd.mm.yyyy):  9. 8.2019   Time (hh:mm): 10:03                        */
 /*******************************************************************************/
 
 
@@ -86,9 +86,10 @@ typedef struct
 typedef struct WINDOW1_CONTROL_BLOCK_STRUCT
 {
     GX_WINDOW_MEMBERS_DECLARE
-    GX_PROMPT window1_prompt_1;
-    GX_RADIAL_PROGRESS_BAR window1_radial_progress_bar;
-    GX_RADIAL_PROGRESS_BAR window1_radial_progress_bar_1;
+    GX_PROMPT window1_rpm_prompt;
+    GX_RADIAL_PROGRESS_BAR window1_rpm_radial;
+    GX_RADIAL_PROGRESS_BAR window1_duty_radial;
+    GX_PROMPT window1_sp_prompt;
 } WINDOW1_CONTROL_BLOCK;
 
 
